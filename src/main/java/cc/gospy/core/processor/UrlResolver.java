@@ -14,11 +14,7 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.scheduler.filter;
+package cc.gospy.core.processor;
 
-import cc.gospy.core.Task;
-
-@FunctionalInterface
-public interface TaskFilter {
-    boolean validate(Task task);
+public interface UrlResolver {
 }

@@ -14,11 +14,16 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.scheduler.filter;
+package cc.gospy.core.fetcher.impl;
 
+import cc.gospy.core.Page;
 import cc.gospy.core.Task;
+import cc.gospy.core.fetcher.Fetcher;
 
-@FunctionalInterface
-public interface TaskFilter {
-    boolean validate(Task task);
+// TODO
+public class PhantomJSFetcher implements Fetcher {
+    @Override
+    public Page fetch(Task task) throws Throwable {
+        return null;
+    }
 }

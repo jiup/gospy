@@ -14,33 +14,44 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.scheduler;
+package cc.gospy.core;
 
-public class Task implements Comparable<Task> {
+import java.io.Serializable;
+import java.util.Map;
+
+public class Task implements Serializable, Comparable<Task> {
 
     public enum Priority {EMERGENCY, HIGH, MEDIUM, LOW}
 
     private Priority priority;
     private String url;
+    private String protocol;
+    private Map<String, Object> extra;
     private long createTime;
     private long lastVisitTime;
+    private int depth;
     private int expectedVisitPeriod; // in seconds, period should less than 24 days
     private int visitCount;
 
     public Task(String url) {
-        this(Priority.MEDIUM, url, 0);
+        this(Priority.MEDIUM, url, 0, 0);
     }
 
-    public Task(String url, int expectedVisitPeriod) {
-        this(Priority.MEDIUM, url, expectedVisitPeriod);
-    }
-
-    public Task(Priority priority, String url, int expectedVisitPeriod) {
+    public Task(Priority priority, String url, int depth, int expectedVisitPeriod) {
         assert url != null;
         this.priority = priority;
         this.url = url;
+        this.depth = depth;
         this.createTime = System.currentTimeMillis();
         this.expectedVisitPeriod = expectedVisitPeriod;
+        this.init();
+    }
+
+    private void init() {
+        int prefixIndex = url.indexOf(":/");
+        if (prefixIndex > 0)
+            protocol = url.substring(0, prefixIndex);
+        else protocol = "undefined";
     }
 
     @Override
@@ -55,13 +66,12 @@ public class Task implements Comparable<Task> {
 
         Task task = (Task) o;
 
-        return url.equals(task.url);
-
+        return url.concat(extra.toString()).equals(task.url.concat(task.extra.toString()));
     }
 
     @Override
     public int hashCode() {
-        return url.hashCode();
+        return url.concat(extra.toString()).hashCode();
     }
 
     @Override
@@ -71,6 +81,10 @@ public class Task implements Comparable<Task> {
 
     public void addVisitCount() {
         visitCount++;
+    }
+
+    public void setDepth(int depth) {
+        this.depth = depth;
     }
 
     public void setPriority(Priority priority) {
@@ -85,6 +99,10 @@ public class Task implements Comparable<Task> {
         this.lastVisitTime = lastVisitTime;
     }
 
+    public void setExtra(Map<String, Object> extra) {
+        this.extra = extra;
+    }
+
     public Priority getPriority() {
         return priority;
     }
@@ -93,12 +111,24 @@ public class Task implements Comparable<Task> {
         return url;
     }
 
+    public String getProtocol() {
+        return protocol;
+    }
+
+    public Map<String, Object> getExtra() {
+        return extra;
+    }
+
     public long getCreateTime() {
         return createTime;
     }
 
     public long getLastVisitTime() {
         return lastVisitTime;
+    }
+
+    public int getDepth() {
+        return depth;
     }
 
     public int getExpectedVisitPeriod() {

@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-package cc.gospy.core;
+package cc.gospy.core.fetcher;
 
-public class Spider {
-    public void go() {
+import cc.gospy.core.Page;
+import cc.gospy.core.Task;
 
-    }
+public interface Fetcher {
+    Page fetch(Task task) throws Throwable;
+//    void onError(Task task, Throwable cause);
 }

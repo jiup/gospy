@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.scheduler.filter;
+package cc.gospy.core.processor;
 
-import cc.gospy.core.Task;
+import cc.gospy.core.Page;
 
-@FunctionalInterface
-public interface TaskFilter {
-    boolean validate(Task task);
+public abstract class Processor {
+    protected abstract String[] extractLinks(Page page);
+
+    protected String[] process(Page page) {
+        return extractLinks(page);
+    }
 }

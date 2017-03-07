@@ -16,7 +16,7 @@
 
 package cc.gospy.core.scheduler.filter.impl;
 
-import cc.gospy.core.scheduler.Task;
+import cc.gospy.core.Task;
 import cc.gospy.core.scheduler.filter.TaskFilter;
 
 import java.util.regex.Pattern;
