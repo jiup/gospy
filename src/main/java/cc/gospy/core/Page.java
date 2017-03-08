@@ -69,7 +69,7 @@ public class Page {
     @Override
     public String toString() {
         return "Page{" +
-                "content=" + content +
+                "content=" + content.size() +
                 ", statusCode=" + statusCode +
                 ", responseTime=" + responseTime +
                 ", mimeType='" + mimeType + '\'' +
