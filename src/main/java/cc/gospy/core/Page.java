@@ -24,7 +24,7 @@ public class Page {
     private ByteArrayOutputStream content;
     private int statusCode;
     private long responseTime;
-    private String mimeType;
+    private String contentType;
     private Map<String, Object> extra;
 
     public Task getTask() {
@@ -59,12 +59,12 @@ public class Page {
         this.responseTime = responseTime;
     }
 
-    public String getMimeType() {
-        return mimeType;
+    public String getContentType() {
+        return contentType;
     }
 
-    public void setMimeType(String mimeType) {
-        this.mimeType = mimeType;
+    public void setContentType(String contentType) {
+        this.contentType = contentType;
     }
 
     public Map<String, Object> getExtra() {
@@ -82,7 +82,7 @@ public class Page {
                 ", content=" + content +
                 ", statusCode=" + statusCode +
                 ", responseTime=" + responseTime +
-                ", mimeType='" + mimeType + '\'' +
+                ", contentType='" + contentType + '\'' +
                 ", extra=" + extra +
                 '}';
     }

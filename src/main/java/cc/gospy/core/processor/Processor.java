@@ -23,4 +23,6 @@ import java.util.List;
 
 public abstract interface Processor {
     List<Task> process(Task task, Page page);
+
+    void exceptionCaught(Throwable throwable, Task task, Page page);
 }

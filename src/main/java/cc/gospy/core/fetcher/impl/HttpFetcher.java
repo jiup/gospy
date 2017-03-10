@@ -19,6 +19,7 @@ package cc.gospy.core.fetcher.impl;
 import cc.gospy.core.Page;
 import cc.gospy.core.Task;
 import cc.gospy.core.fetcher.Fetcher;
+import cc.gospy.core.fetcher.UserAgent;
 import org.apache.http.*;
 import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.client.config.RequestConfig;
@@ -267,14 +268,14 @@ public class HttpFetcher implements Fetcher {
                             .setConnectionRequestTimeout(TIMEOUT)
                             .setConnectTimeout(TIMEOUT)
                             .setSocketTimeout(TIMEOUT).build());
-                    request.setHeader("User-Agent", "Gospy-HttpFetcher/3.10");
+                    request.setHeader("User-Agent", UserAgent.Default);
                 }
                 , response -> {
                     Page page = new Page();
                     ByteArrayOutputStream responseBody = new ByteArrayOutputStream();
                     page.setStatusCode(response.getStatusLine().getStatusCode());
                     HttpEntity entity = response.getEntity();
-                    page.setMimeType(entity.getContentType().getValue());
+                    page.setContentType(entity.getContentType().getValue());
                     entity.writeTo(responseBody);
                     page.setContent(responseBody);
                     Map<String, Object> responseHeader = new HashMap<>();
