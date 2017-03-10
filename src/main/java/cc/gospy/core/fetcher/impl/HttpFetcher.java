@@ -59,8 +59,17 @@ import java.util.concurrent.TimeUnit;
 
 public class HttpFetcher implements Fetcher {
 
-    public static final int TIMEOUT = 3000;
-    public static final HttpFetcher DefaultHttpFetcher = new HttpFetcher();
+    public static final HttpFetcher getDefault() {
+        HttpFetcher fetcher = new HttpFetcher();
+        try {
+            fetcher.init();
+        } catch (KeyManagementException | NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return fetcher;
+    }
+
+    private static final int TIMEOUT = 3000;
 
     public static class Builder {
         private HttpFetcher fetcher;
@@ -69,8 +78,13 @@ public class HttpFetcher implements Fetcher {
             fetcher = new HttpFetcher();
         }
 
-        public Builder beforeRequest(BeforeRequest request) {
-            fetcher.configurator = request;
+        public Builder before(BeforeExecute configurator) {
+            fetcher.configurator = configurator;
+            return this;
+        }
+
+        public Builder after(AfterExecute loader) {
+            fetcher.loader = loader;
             return this;
         }
 
@@ -99,13 +113,9 @@ public class HttpFetcher implements Fetcher {
             return this;
         }
 
-        public Builder setUseProxy(boolean useProxy) {
-            fetcher.useProxy = useProxy;
-            return this;
-        }
-
         public Builder setProxyAddress(InetSocketAddress proxyAddress) {
             fetcher.proxyAddress = proxyAddress;
+            fetcher.useProxy = true;
             return this;
         }
 
@@ -236,24 +246,50 @@ public class HttpFetcher implements Fetcher {
     }
 
     @FunctionalInterface
-    public interface BeforeRequest {
+    public interface BeforeExecute {
         void setRequestConfig(HttpRequestBase request);
     }
 
-    private BeforeRequest configurator;
+    @FunctionalInterface
+    public interface AfterExecute {
+        Page loadPage(CloseableHttpResponse response) throws Throwable;
+    }
+
+    private BeforeExecute configurator;
+    private AfterExecute loader;
     private CloseableHttpClient client;
 
     private HttpFetcher() {
-        this(request -> request.setConfig(RequestConfig.custom()
-                .setRedirectsEnabled(false)
-                .setConnectionRequestTimeout(TIMEOUT)
-                .setConnectTimeout(TIMEOUT)
-                .setSocketTimeout(TIMEOUT).build())
+        this(
+                request -> {
+                    request.setConfig(RequestConfig.custom()
+                            .setRedirectsEnabled(false)
+                            .setConnectionRequestTimeout(TIMEOUT)
+                            .setConnectTimeout(TIMEOUT)
+                            .setSocketTimeout(TIMEOUT).build());
+                    request.setHeader("User-Agent", "Gospy-HttpFetcher/3.10");
+                }
+                , response -> {
+                    Page page = new Page();
+                    ByteArrayOutputStream responseBody = new ByteArrayOutputStream();
+                    page.setStatusCode(response.getStatusLine().getStatusCode());
+                    HttpEntity entity = response.getEntity();
+                    page.setMimeType(entity.getContentType().getValue());
+                    entity.writeTo(responseBody);
+                    page.setContent(responseBody);
+                    Map<String, Object> responseHeader = new HashMap<>();
+                    for (Header header : response.getAllHeaders()) {
+                        responseHeader.put(header.getName(), header.getValue());
+                    }
+                    page.setExtra(responseHeader);
+                    return page;
+                }
         );
     }
 
-    private HttpFetcher(BeforeRequest configurator) {
+    private HttpFetcher(BeforeExecute configurator, AfterExecute loader) {
         this.configurator = configurator;
+        this.loader = loader;
     }
 
     private CloseableHttpClient getHttpClientInstance() {
@@ -305,37 +341,32 @@ public class HttpFetcher implements Fetcher {
     }
 
     @Override
-    public Page fetch(Task task) throws Throwable {
-        Page page = new Page();
-        ByteArrayOutputStream responseBody = new ByteArrayOutputStream();
-
-        long start = System.currentTimeMillis();
+    public Page execute(Task task) throws Throwable {
         if (!autoKeepAlive) {
             this.init();
             client = getHttpClientInstance();
         }
         CloseableHttpResponse response;
         Map<String, Object> extra = task.getExtra();
-        response = extra != null ? doPost(task.getUrl(), extra) : doGet(task.getUrl());
-        page.setResponseTime(System.currentTimeMillis() - start);
-        page.setStatusCode(response.getStatusLine().getStatusCode());
-        HttpEntity entity = response.getEntity();
-        page.setMimeType(entity.getContentType().getValue());
-        entity.writeTo(responseBody);
-        page.setContent(responseBody);
-        extra = new HashMap<>();
-        for (Header header : response.getAllHeaders()) {
-            extra.put(header.getName(), header.getValue());
-        }
-        page.setExtra(extra);
 
+        // send request
+        long timer = System.currentTimeMillis();
+        response = extra != null ? doPost(task.getUrl(), extra) : doGet(task.getUrl());
+        timer = System.currentTimeMillis() - timer;
+
+        // load page
+        Page page = loader.loadPage(response);
+        if (page != null) {
+            page.setResponseTime(timer);
+            task.addVisitCount();
+            task.setLastVisitTime(System.currentTimeMillis());
+            page.setTask(task);
+        }
         response.close();
+
         if (!autoKeepAlive) {
             client.close();
         }
-
-        task.addVisitCount();
-        task.setLastVisitTime(System.currentTimeMillis());
         return page;
     }
 }

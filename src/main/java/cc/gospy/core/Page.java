@@ -20,11 +20,20 @@ import java.io.ByteArrayOutputStream;
 import java.util.Map;
 
 public class Page {
+    private Task task;
     private ByteArrayOutputStream content;
     private int statusCode;
     private long responseTime;
     private String mimeType;
     private Map<String, Object> extra;
+
+    public Task getTask() {
+        return task;
+    }
+
+    public void setTask(Task task) {
+        this.task = task;
+    }
 
     public ByteArrayOutputStream getContent() {
         return content;
@@ -69,7 +78,8 @@ public class Page {
     @Override
     public String toString() {
         return "Page{" +
-                "content=" + content.size() +
+                "task=" + task +
+                ", content=" + content +
                 ", statusCode=" + statusCode +
                 ", responseTime=" + responseTime +
                 ", mimeType='" + mimeType + '\'' +
