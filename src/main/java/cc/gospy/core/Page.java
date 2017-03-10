@@ -79,7 +79,7 @@ public class Page {
     public String toString() {
         return "Page{" +
                 "task=" + task +
-                ", content=" + content +
+                ", content-length=" + content.size() +
                 ", statusCode=" + statusCode +
                 ", responseTime=" + responseTime +
                 ", contentType='" + contentType + '\'' +

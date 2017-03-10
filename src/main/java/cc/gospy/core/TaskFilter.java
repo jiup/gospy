@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.scheduler.filter;
+package cc.gospy.core;
 
-import cc.gospy.core.Task;
+import java.util.function.Predicate;
 
 @FunctionalInterface
-public interface TaskFilter {
-    boolean validate(Task task);
+public interface TaskFilter extends Predicate<Task> {
+    TaskFilter DEFAULT = task -> task.getUrl().matches("^https?://.*")
+            && !task.getUrl().contains("javascript:");
 }

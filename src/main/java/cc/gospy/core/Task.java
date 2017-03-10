@@ -17,6 +17,7 @@
 package cc.gospy.core;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Map;
 
 public class Task implements Serializable, Comparable<Task> {
@@ -25,6 +26,7 @@ public class Task implements Serializable, Comparable<Task> {
 
     private Priority priority;
     private String url;
+    private String host;
     private String protocol;
     private Map<String, Object> extra;
     private long createTime;
@@ -48,10 +50,15 @@ public class Task implements Serializable, Comparable<Task> {
     }
 
     private void init() {
-        int prefixIndex = url.indexOf(":/");
-        if (prefixIndex > 0)
+        int prefixIndex = url.indexOf("://");
+        if (prefixIndex > 0) {
             protocol = url.substring(0, prefixIndex);
-        else protocol = "undefined";
+            host = url.substring(prefixIndex + 3);
+            host = !host.contains("/") ? host : host.substring(0, host.indexOf('/'));
+        } else {
+            protocol = "undefined";
+        }
+        extra = new HashMap<>();
     }
 
     @Override
@@ -109,6 +116,10 @@ public class Task implements Serializable, Comparable<Task> {
 
     public String getUrl() {
         return url;
+    }
+
+    public String getHost() {
+        return host;
     }
 
     public String getProtocol() {

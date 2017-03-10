@@ -20,5 +20,5 @@ import cc.gospy.core.Task;
 
 @FunctionalInterface
 public interface LazyTaskHandler {
-    void invoke(Task task);
+    void invoke(Task wakedTask);
 }

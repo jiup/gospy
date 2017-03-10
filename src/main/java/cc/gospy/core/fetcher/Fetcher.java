@@ -20,6 +20,5 @@ import cc.gospy.core.Page;
 import cc.gospy.core.Task;
 
 public interface Fetcher {
-    Page execute(Task task) throws Throwable;
-//    void onError(Task task, Throwable cause);
+    Page fetch(Task task) throws Throwable;
 }

@@ -19,18 +19,23 @@ package cc.gospy.core.scheduler.filter.impl;
 import cc.gospy.core.Task;
 import cc.gospy.core.scheduler.filter.DuplicateRemover;
 
+import java.util.HashMap;
 import java.util.HashSet;
 
 public class HashDuplicateRemover implements DuplicateRemover {
-    private HashSet<Task> tasks = new HashSet<>();
+    private HashMap<Task, Integer> tasks = new HashMap<>();
 
     @Override
     public void sign(Task task) {
-        tasks.add(task);
+        if (tasks.containsKey(task)) {
+            tasks.put(task, tasks.get(task) + 1);
+        } else {
+            tasks.put(task, 1);
+        }
     }
 
     @Override
     public boolean exists(Task task) {
-        return tasks.contains(task);
+        return tasks.containsKey(task);
     }
 }

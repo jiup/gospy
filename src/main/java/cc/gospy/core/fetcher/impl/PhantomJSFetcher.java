@@ -23,7 +23,7 @@ import cc.gospy.core.fetcher.Fetcher;
 // TODO
 public class PhantomJSFetcher implements Fetcher {
     @Override
-    public Page execute(Task task) throws Throwable {
+    public Page fetch(Task task) throws Throwable {
         return null;
     }
 }

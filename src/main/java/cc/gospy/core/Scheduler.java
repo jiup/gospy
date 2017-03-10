@@ -14,15 +14,10 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.fetcher.impl;
+package cc.gospy.core;
 
-import cc.gospy.core.Page;
-import cc.gospy.core.Task;
-import cc.gospy.core.fetcher.Fetcher;
+public interface Scheduler {
+    Task[] getTask();
 
-public class FileFetcher implements Fetcher {
-    @Override
-    public Page fetch(Task task) throws Throwable {
-        return null;
-    }
+    void addTask(Task[] task);
 }

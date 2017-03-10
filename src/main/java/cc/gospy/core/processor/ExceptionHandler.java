@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.fetcher.impl;
+package cc.gospy.core.processor;
 
 import cc.gospy.core.Page;
 import cc.gospy.core.Task;
-import cc.gospy.core.fetcher.Fetcher;
 
-public class FileFetcher implements Fetcher {
-    @Override
-    public Page fetch(Task task) throws Throwable {
-        return null;
-    }
+import java.util.List;
+
+@FunctionalInterface
+public interface ExceptionHandler {
+    List<Task> exceptionCaught(Throwable throwable, Task task, Page page);
 }

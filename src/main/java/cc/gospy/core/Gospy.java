@@ -16,8 +16,50 @@
 
 package cc.gospy.core;
 
+import cc.gospy.core.fetcher.Fetcher;
+import cc.gospy.core.processor.Processor;
+
+import java.util.HashMap;
+import java.util.Map;
+
 public class Gospy {
-    public void go() {
+    private Scheduler scheduler;
+    private Map<String, Fetcher> fetcherFactory;
+    private Map<String, Processor> processorFactory;
+
+    private Gospy(Scheduler scheduler
+            , Map<String, Fetcher> fetcherFactory
+            , Map<String, Processor> processorFactory) {
+        this.scheduler = scheduler;
+        this.fetcherFactory = fetcherFactory;
+        this.processorFactory = processorFactory;
+    }
+
+    public static Builder custom() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private Scheduler sc;
+        private Map<String, Fetcher> ff = new HashMap<>();
+        private Map<String, Processor> pf = new HashMap<>();
+
+        public void setScheduler(Scheduler scheduler) {
+            sc = scheduler;
+        }
+
+        public void addFetcher(String protocol, Fetcher fetcher) {
+            ff.put(protocol, fetcher);
+        }
+
+        public void addProcessor(String contentType, Processor processor) {
+            pf.put(contentType, processor);
+        }
+
+        public Gospy build() {
+            return new Gospy(sc, ff, pf);
+        }
 
     }
+
 }

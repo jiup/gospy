@@ -18,30 +18,106 @@ package cc.gospy.core.processor.impl;
 
 import cc.gospy.core.Page;
 import cc.gospy.core.Task;
+import cc.gospy.core.TaskFilter;
+import cc.gospy.core.processor.DocumentExtractor;
+import cc.gospy.core.processor.ExceptionHandler;
 import cc.gospy.core.processor.Processor;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
-public class JSoupProcessor implements Processor {
-    private String defaultCharacterEncoding = "UTF-8";
+public class JSoupProcessor implements Processor, ExceptionHandler {
+    private DocumentExtractor handler;
+    private TaskFilter filter;
 
-    public JSoupProcessor() {
-        init();
+    private JSoupProcessor(DocumentExtractor handler, TaskFilter filter) {
+        this.handler = handler;
+        this.filter = filter;
     }
 
-    private void init() {
-
+    public static Builder custom() {
+        return new Builder();
     }
 
-    private String getCharacterEncoding(Page page) {
-        for (String kv : page.getContentType().split(";")) {
+    public static JSoupProcessor getDefault() {
+        return new Builder().build();
+    }
+
+    public static class Builder {
+        private DocumentExtractor ha = (task, document) -> {
+            List<Task> tasks = new ArrayList<>();
+            for (Element element : document.select("a[href]")) {
+                String link = element.attr("href");
+                if (link != null && !link.equals("")) {
+                    tasks.add(new Task(toAbsoluteUrl(task.getProtocol(), task.getHost(), link)));
+                }
+            }
+            return tasks;
+        };
+
+        private TaskFilter fi = TaskFilter.DEFAULT;
+
+        public Builder setDocumentExtractor(DocumentExtractor handler) {
+            ha = handler;
+            return this;
+        }
+
+        public Builder setFullLinkDocumentExtractor() {
+            ha = (task, document) -> {
+                List<Task> tasks = new ArrayList<>();
+                for (Element element : document.select("[href]")) {
+                    String link = element.attr("href");
+                    if (link != null && !link.equals("")) {
+                        tasks.add(new Task(toAbsoluteUrl(task.getProtocol(), task.getHost(), link)));
+                    }
+                }
+                for (Element element : document.select("[src]")) {
+                    String link = element.attr("src");
+                    if (link != null && !link.equals("")) {
+                        tasks.add(new Task(toAbsoluteUrl(task.getProtocol(), task.getHost(), link)));
+                    }
+                }
+                return tasks;
+            };
+            return this;
+        }
+
+        private String toAbsoluteUrl(String protocol, String host, String anyUrl) {
+            String res;
+            if (anyUrl.matches("^https?://.*")) {
+                res = anyUrl;
+            } else if (anyUrl.startsWith("//")) {
+                res = "http:".concat(anyUrl);
+            } else if (anyUrl.startsWith("/")) {
+                res = protocol.concat("://").concat(host).concat(anyUrl);
+            } else {
+                res = protocol.concat("://").concat(host).concat("/").concat(anyUrl);
+            }
+            res = res.indexOf('#') != -1 ? res.substring(0, res.indexOf('#')) : res; // remove local jump
+            res = res.endsWith("/") ? res.substring(0, res.length() - 1) : res; // avoid duplicate links
+            return res;
+        }
+
+        public Builder setTaskFilter(TaskFilter filter) {
+            fi = filter;
+            return this;
+        }
+
+        public JSoupProcessor build() {
+            return new JSoupProcessor(ha, fi);
+        }
+    }
+
+    protected String getCharacterEncoding(Page page) {
+        if (page.getExtra() == null || page.getExtra().get("Content-Type") == null) {
+            return null;
+        }
+        for (String kv : page.getExtra().get("Content-Type").toString().split(";")) {
             if (kv.trim().startsWith("charset=")) {
                 return kv.trim().substring(8);
             }
@@ -53,45 +129,35 @@ public class JSoupProcessor implements Processor {
         String charsetName = getCharacterEncoding(page);
         String html;
         try {
-            html = page.getContent().toString(charsetName != null ? charsetName : defaultCharacterEncoding);
+            html = page.getContent().toString(charsetName != null ? charsetName : "UTF-8");
         } catch (UnsupportedEncodingException e) {
-            System.out.println("Unknown charset " + charsetName + ", using default (" + defaultCharacterEncoding + ")");
             html = page.getContent().toString("UTF-8");
         }
         return Jsoup.parse(html);
     }
 
-    @Override
-    public void exceptionCaught(Throwable throwable, Task task, Page page) {
-        throwable.printStackTrace();
+    private List<Task> process0(Task task, Page page) {
+        Document document;
+        try {
+            document = parse(page);
+        } catch (UnsupportedEncodingException e) {
+            return exceptionCaught(e, task, page);
+        }
+        return handler.handle(task, document).stream().filter(filter).collect(Collectors.toList());
     }
 
     @Override
     public List<Task> process(Task task, Page page) {
-        //        page.getExtra().forEach((k, v) -> System.out.println(k + " -> " + v));
-        List<Task> newTasks = new ArrayList<>();
-        Document document = null;
         try {
-            document = parse(page);
-        } catch (UnsupportedEncodingException e) {
-            exceptionCaught(e, task, page);
+            return process0(task, page);
+        } catch (Throwable throwable) {
+            return exceptionCaught(throwable, task, page);
         }
+    }
 
-//        System.out.println(document);
-        Elements elements = document.select("useragent");
-        System.out.println(elements.size());
-        Iterator<Element> iterator = elements.iterator();
-        while (iterator.hasNext()) {
-            Element element = iterator.next();
-            if (element.hasAttr("useragent") && !element.attr("useragent").equals("")) {
-//                System.out.println(element.attr("description"));
-                System.out.println("public static final String "
-                        + element.attr("description").trim().replaceAll("-", "_").trim().replaceAll("( +)|\\(", "_").replaceAll("_+", "_").replaceAll("\\)","")
-                        .replaceAll("ID:_", "").replaceAll("/", "_").replaceAll("\\.", "_")
-                        + " = \"" + element.attr("useragent").trim() + "\";");
-            }
-        }
-
-        return newTasks;
+    @Override
+    public List<Task> exceptionCaught(Throwable throwable, Task task, Page page) {
+        throwable.printStackTrace();
+        return null;
     }
 }

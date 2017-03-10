@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.scheduler;
+package cc.gospy.core.processor;
 
-import cc.gospy.core.scheduler.filter.DuplicateRemover;
-import cc.gospy.core.scheduler.filter.TaskFilter;
-import cc.gospy.core.scheduler.queue.LazyTaskQueue;
-import cc.gospy.core.scheduler.queue.TaskQueue;
+import cc.gospy.core.Task;
+import org.jsoup.nodes.Document;
 
-public abstract class Scheduler {
-    private TaskQueue taskQueue;
-    private LazyTaskQueue lazyTaskQueue;
-    private DuplicateRemover duplicateRemover;
-    private TaskFilter taskFilter;
+import java.util.List;
+
+@FunctionalInterface
+public interface DocumentExtractor {
+    List<Task> handle(Task task, Document document);
 }

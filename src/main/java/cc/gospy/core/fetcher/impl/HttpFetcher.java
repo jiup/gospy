@@ -60,17 +60,74 @@ import java.util.concurrent.TimeUnit;
 
 public class HttpFetcher implements Fetcher {
 
-    public static final HttpFetcher getDefault() {
-        HttpFetcher fetcher = new HttpFetcher();
-        try {
-            fetcher.init();
-        } catch (KeyManagementException | NoSuchAlgorithmException e) {
-            e.printStackTrace();
+    private static final int TIMEOUT = 3000;
+
+    private int maxConnCount = 200;
+    private int maxConnPerRoute = 10;
+    private int cleanPeriodSeconds = 300;
+    private int connExpireSeconds = 30;
+    private boolean autoKeepAlive = true;
+    private boolean useProxy = false;
+    private InetSocketAddress proxyAddress = new InetSocketAddress("localhost", 1080);
+
+    private void init() throws KeyManagementException, NoSuchAlgorithmException {
+        if (useProxy) {
+            connectionManager = new PoolingHttpClientConnectionManager(RegistryBuilder
+                    .<ConnectionSocketFactory>create()
+                    .register("http", new ProxyPlainConnectionSocketFactory())
+                    .register("https", new ProxySSLConnectionSocketFactory(getWeakenedSSLContextInstance()))
+                    .build()
+            );
+        } else {
+            connectionManager = new PoolingHttpClientConnectionManager(RegistryBuilder
+                    .<ConnectionSocketFactory>create()
+                    .register("http", PlainConnectionSocketFactory.INSTANCE)
+                    .register("https", new SSLConnectionSocketFactory(getWeakenedSSLContextInstance()))
+                    .build()
+            );
         }
-        return fetcher;
+        if (autoKeepAlive) {
+            connectionManager.setMaxTotal(maxConnCount);
+            connectionManager.setDefaultMaxPerRoute(maxConnPerRoute);
+            client = getHttpClientInstance();
+            cleanerThread = new PoolingHttpClientConnectionCleaner(connectionManager, connExpireSeconds);
+            cleanerThread.start();
+        }
     }
 
-    private static final int TIMEOUT = 3000;
+    private HttpFetcher() {
+        this(
+                request -> {
+                    request.setConfig(RequestConfig.custom()
+                            .setRedirectsEnabled(false)
+                            .setConnectionRequestTimeout(TIMEOUT)
+                            .setConnectTimeout(TIMEOUT)
+                            .setSocketTimeout(TIMEOUT).build());
+                    request.setHeader("User-Agent", UserAgent.Default);
+                }
+                , response -> {
+                    Page page = new Page();
+                    ByteArrayOutputStream responseBody = new ByteArrayOutputStream();
+                    page.setStatusCode(response.getStatusLine().getStatusCode());
+                    HttpEntity entity = response.getEntity();
+                    page.setContentType(entity.getContentType() != null
+                            ? entity.getContentType().getValue() : null);
+                    entity.writeTo(responseBody);
+                    page.setContent(responseBody);
+                    Map<String, Object> responseHeader = new HashMap<>();
+                    for (Header header : response.getAllHeaders()) {
+                        responseHeader.put(header.getName(), header.getValue());
+                    }
+                    page.setExtra(responseHeader);
+                    return page;
+                }
+        );
+    }
+
+    private HttpFetcher(BeforeExecute configurator, AfterExecute loader) {
+        this.configurator = configurator;
+        this.loader = loader;
+    }
 
     public static class Builder {
         private HttpFetcher fetcher;
@@ -134,75 +191,14 @@ public class HttpFetcher implements Fetcher {
         return new Builder();
     }
 
-    private int maxConnCount = 200;
-    private int maxConnPerRoute = 10;
-    private int cleanPeriodSeconds = 300;
-    private int connExpireSeconds = 30;
-    private boolean autoKeepAlive = true;
-    private boolean useProxy = false;
-    private InetSocketAddress proxyAddress = new InetSocketAddress("localhost", 1080);
-
-    private PoolingHttpClientConnectionManager connectionManager;
-    private PoolingHttpClientConnectionCleaner cleanerThread;
-
-    protected class PoolingHttpClientConnectionCleaner extends Thread {
-        private final HttpClientConnectionManager connectionManager;
-        private volatile boolean running;
-        private int expireSeconds;
-
-        private PoolingHttpClientConnectionCleaner(HttpClientConnectionManager manager, int expireSeconds) {
-            this.connectionManager = manager;
-            this.expireSeconds = expireSeconds;
-            this.running = true;
+    public static final HttpFetcher getDefault() {
+        HttpFetcher fetcher = new HttpFetcher();
+        try {
+            fetcher.init();
+        } catch (KeyManagementException | NoSuchAlgorithmException e) {
+            e.printStackTrace();
         }
-
-        @Override
-        public void run() {
-            while (running) {
-                synchronized (this) {
-                    try {
-                        wait(cleanPeriodSeconds * 1000);
-                        connectionManager.closeExpiredConnections();
-                        connectionManager.closeIdleConnections(expireSeconds, TimeUnit.SECONDS);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
-
-        public void shutdown() {
-            running = false;
-            synchronized (this) {
-                notifyAll();
-            }
-        }
-
-    }
-
-    protected void init() throws KeyManagementException, NoSuchAlgorithmException {
-        if (useProxy) {
-            connectionManager = new PoolingHttpClientConnectionManager(RegistryBuilder
-                    .<ConnectionSocketFactory>create()
-                    .register("http", new ProxyPlainConnectionSocketFactory())
-                    .register("https", new ProxySSLConnectionSocketFactory(getWeakenedSSLContextInstance()))
-                    .build()
-            );
-        } else {
-            connectionManager = new PoolingHttpClientConnectionManager(RegistryBuilder
-                    .<ConnectionSocketFactory>create()
-                    .register("http", PlainConnectionSocketFactory.INSTANCE)
-                    .register("https", new SSLConnectionSocketFactory(getWeakenedSSLContextInstance()))
-                    .build()
-            );
-        }
-        if (autoKeepAlive) {
-            connectionManager.setMaxTotal(maxConnCount);
-            connectionManager.setDefaultMaxPerRoute(maxConnPerRoute);
-            client = getHttpClientInstance();
-            cleanerThread = new PoolingHttpClientConnectionCleaner(connectionManager, connExpireSeconds);
-            cleanerThread.start();
-        }
+        return fetcher;
     }
 
     protected class ProxyPlainConnectionSocketFactory implements ConnectionSocketFactory {
@@ -235,7 +231,7 @@ public class HttpFetcher implements Fetcher {
 
     protected class ProxySSLConnectionSocketFactory extends SSLConnectionSocketFactory {
 
-        public ProxySSLConnectionSocketFactory(SSLContext sslContext) {
+        private ProxySSLConnectionSocketFactory(SSLContext sslContext) {
             super(sslContext);
         }
 
@@ -244,53 +240,6 @@ public class HttpFetcher implements Fetcher {
             Proxy proxy = new Proxy(Proxy.Type.SOCKS, proxyAddress);
             return new Socket(proxy);
         }
-    }
-
-    @FunctionalInterface
-    public interface BeforeExecute {
-        void setRequestConfig(HttpRequestBase request);
-    }
-
-    @FunctionalInterface
-    public interface AfterExecute {
-        Page loadPage(CloseableHttpResponse response) throws Throwable;
-    }
-
-    private BeforeExecute configurator;
-    private AfterExecute loader;
-    private CloseableHttpClient client;
-
-    private HttpFetcher() {
-        this(
-                request -> {
-                    request.setConfig(RequestConfig.custom()
-                            .setRedirectsEnabled(false)
-                            .setConnectionRequestTimeout(TIMEOUT)
-                            .setConnectTimeout(TIMEOUT)
-                            .setSocketTimeout(TIMEOUT).build());
-                    request.setHeader("User-Agent", UserAgent.Default);
-                }
-                , response -> {
-                    Page page = new Page();
-                    ByteArrayOutputStream responseBody = new ByteArrayOutputStream();
-                    page.setStatusCode(response.getStatusLine().getStatusCode());
-                    HttpEntity entity = response.getEntity();
-                    page.setContentType(entity.getContentType().getValue());
-                    entity.writeTo(responseBody);
-                    page.setContent(responseBody);
-                    Map<String, Object> responseHeader = new HashMap<>();
-                    for (Header header : response.getAllHeaders()) {
-                        responseHeader.put(header.getName(), header.getValue());
-                    }
-                    page.setExtra(responseHeader);
-                    return page;
-                }
-        );
-    }
-
-    private HttpFetcher(BeforeExecute configurator, AfterExecute loader) {
-        this.configurator = configurator;
-        this.loader = loader;
     }
 
     private CloseableHttpClient getHttpClientInstance() {
@@ -318,31 +267,38 @@ public class HttpFetcher implements Fetcher {
         return context;
     }
 
-    protected CloseableHttpResponse doGet(String url) throws IOException {
+    private BeforeExecute configurator;
+    private AfterExecute loader;
+
+    @FunctionalInterface
+    public interface BeforeExecute {
+        void setRequestConfig(HttpRequestBase request);
+    }
+
+    @FunctionalInterface
+    public interface AfterExecute {
+        Page loadPage(CloseableHttpResponse response) throws Throwable;
+    }
+
+    private CloseableHttpClient client;
+
+    private CloseableHttpResponse doGet(String url) throws IOException {
         HttpGet request = new HttpGet(url);
         configurator.setRequestConfig(request);
         return client.execute(request);
     }
 
-    protected CloseableHttpResponse doPost(String url, Map<String, Object> attributes) throws IOException {
+    private CloseableHttpResponse doPost(String url, Map<String, Object> attributes) throws IOException {
         HttpPost request = new HttpPost(url);
         configurator.setRequestConfig(request);
         List<NameValuePair> pairs = new ArrayList<>();
-        attributes.keySet().forEach(key -> {
-            pairs.add(new BasicNameValuePair(key, attributes.get(key).toString()));
-        });
+        attributes.keySet().forEach(key -> pairs.add(new BasicNameValuePair(key, attributes.get(key).toString())));
         request.setEntity(new UrlEncodedFormEntity(pairs));
         return client.execute(request);
     }
 
-    private void exit() {
-        if (autoKeepAlive) {
-            cleanerThread.shutdown();
-        }
-    }
-
     @Override
-    public Page execute(Task task) throws Throwable {
+    public Page fetch(Task task) throws Throwable {
         if (!autoKeepAlive) {
             this.init();
             client = getHttpClientInstance();
@@ -369,5 +325,49 @@ public class HttpFetcher implements Fetcher {
             client.close();
         }
         return page;
+    }
+
+    private PoolingHttpClientConnectionManager connectionManager;
+    private PoolingHttpClientConnectionCleaner cleanerThread;
+
+    protected class PoolingHttpClientConnectionCleaner extends Thread {
+        private final HttpClientConnectionManager connectionManager;
+        private volatile boolean running;
+        private int expireSeconds;
+
+        private PoolingHttpClientConnectionCleaner(HttpClientConnectionManager manager, int expireSeconds) {
+            this.connectionManager = manager;
+            this.expireSeconds = expireSeconds;
+            this.running = true;
+        }
+
+        @Override
+        public void run() {
+            while (running) {
+                synchronized (this) {
+                    try {
+                        wait(cleanPeriodSeconds * 1000);
+                        connectionManager.closeExpiredConnections();
+                        connectionManager.closeIdleConnections(expireSeconds, TimeUnit.SECONDS);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+
+        private void shutdown() {
+            running = false;
+            synchronized (this) {
+                notifyAll();
+            }
+        }
+
+    }
+
+    private void exit() {
+        if (autoKeepAlive) {
+            cleanerThread.shutdown();
+        }
     }
 }
