@@ -21,6 +21,7 @@ import cc.gospy.core.fetcher.FetcherFactory;
 import cc.gospy.core.processor.Processor;
 import cc.gospy.core.processor.ProcessorFactory;
 import cc.gospy.core.scheduler.Scheduler;
+import cc.gospy.core.scheduler.SchedulerFactory;
 
 import java.util.Collection;
 import java.util.concurrent.ExecutorService;
@@ -60,7 +61,6 @@ public class Gospy {
                     page = fetcher.fetch(task);
                     Processor processor = processorFactory.get(page.getContentType());
                     Collection<Task> tasks = processor.process(task, page);
-                    System.out.println(tasks);
                     if (tasks != null) {
                         tasks.forEach(e -> scheduler.addTask(e));
                     }
@@ -96,13 +96,10 @@ public class Gospy {
     }
 
     public static class Builder {
-        private Scheduler sc;
+        private Scheduler sc = SchedulerFactory.GeneralScheduler.getDefault();
         private FetcherFactory ff = new FetcherFactory();
         private ProcessorFactory pf = new ProcessorFactory();
-        private ExceptionHandler eh = (throwable, task, page) -> {
-            throwable.printStackTrace();
-            return null;
-        };
+        private ExceptionHandler eh = ExceptionHandler.DEFAULT;
 
         public Builder setScheduler(Scheduler scheduler) {
             sc = scheduler;

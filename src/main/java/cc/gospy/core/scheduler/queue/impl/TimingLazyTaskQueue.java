@@ -25,7 +25,7 @@ import java.util.concurrent.PriorityBlockingQueue;
 
 public class TimingLazyTaskQueue extends LazyTaskQueue {
     private Thread checkThread = null;
-    private volatile int checkPeriod = 5; // in seconds TODO
+    private volatile int checkPeriod = 60; // in seconds
 
     public TimingLazyTaskQueue(LazyTaskHandler handler) {
         this(5, handler);

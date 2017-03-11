@@ -32,6 +32,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static cc.gospy.util.StringHelper.toAbsoluteUrl;
+
 public class JSoupProcessor implements Processor, ExceptionHandler {
     private DocumentExtractor handler;
     private TaskFilter filter;
@@ -86,22 +88,6 @@ public class JSoupProcessor implements Processor, ExceptionHandler {
                 return tasks;
             };
             return this;
-        }
-
-        private String toAbsoluteUrl(String protocol, String host, String anyUrl) {
-            String res;
-            if (anyUrl.matches("^https?://.*")) {
-                res = anyUrl;
-            } else if (anyUrl.startsWith("//")) {
-                res = "http:".concat(anyUrl);
-            } else if (anyUrl.startsWith("/")) {
-                res = protocol.concat("://").concat(host).concat(anyUrl);
-            } else {
-                res = protocol.concat("://").concat(host).concat("/").concat(anyUrl);
-            }
-            res = res.indexOf('#') != -1 ? res.substring(0, res.indexOf('#')) : res; // remove local jump
-            res = res.endsWith("/") ? res.substring(0, res.length() - 1) : res; // avoid duplicate links
-            return res;
         }
 
         public Builder setTaskFilter(TaskFilter filter) {

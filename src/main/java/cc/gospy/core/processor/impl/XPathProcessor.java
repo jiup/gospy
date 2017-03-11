@@ -14,16 +14,22 @@
  * limitations under the License.
  */
 
-package cc.gospy.core;
+package cc.gospy.core.processor.impl;
+
+import cc.gospy.core.Page;
+import cc.gospy.core.Task;
+import cc.gospy.core.processor.Processor;
 
 import java.util.Collection;
 
-@FunctionalInterface
-public interface ExceptionHandler {
-    Collection<Task> exceptionCaught(Throwable throwable, Task task, Page page);
-
-    ExceptionHandler DEFAULT = (throwable, task, page) -> {
-        throwable.printStackTrace();
+public class XPathProcessor implements Processor {
+    @Override
+    public Collection<Task> process(Task task, Page page) {
         return null;
-    };
+    }
+
+    @Override
+    public String[] getAcceptedContentType() {
+        return new String[0];
+    }
 }
