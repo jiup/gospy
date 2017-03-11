@@ -24,8 +24,12 @@ import cc.gospy.core.scheduler.queue.LazyTaskQueue;
 import cc.gospy.core.scheduler.queue.TaskQueue;
 import cc.gospy.core.scheduler.queue.impl.FIFOTaskQueue;
 import cc.gospy.core.scheduler.queue.impl.TimingLazyTaskQueue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GeneralScheduler implements Scheduler {
+    private Logger logger = LoggerFactory.getLogger(getClass());
+
     private TaskQueue taskQueue;
     private LazyTaskQueue lazyTaskQueue;
     private DuplicateRemover duplicateRemover;
@@ -73,8 +77,8 @@ public class GeneralScheduler implements Scheduler {
     @Override
     public void stop() {
         lazyTaskQueue.stop();
+        logger.info("Lazy task queue stopped.");
     }
-
 
     public static GeneralScheduler getDefault() {
         return new Builder().Build();

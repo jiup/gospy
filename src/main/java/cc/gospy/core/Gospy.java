@@ -22,12 +22,15 @@ import cc.gospy.core.processor.Processor;
 import cc.gospy.core.processor.ProcessorFactory;
 import cc.gospy.core.scheduler.Scheduler;
 import cc.gospy.core.scheduler.SchedulerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Gospy {
+    private Logger logger = LoggerFactory.getLogger(getClass());
 
     private Scheduler scheduler;
     private FetcherFactory fetcherFactory;
@@ -35,6 +38,7 @@ public class Gospy {
     private ExecutorService threadPool;
     private ExceptionHandler handler;
     private int visitGapMillis;
+    private volatile boolean run;
 
     private Gospy(Scheduler scheduler
             , FetcherFactory fetcherFactory
@@ -45,6 +49,7 @@ public class Gospy {
         this.processorFactory = processorFactory;
         this.handler = handler;
         this.visitGapMillis = 0;
+        this.run = true;
     }
 
     public void start() {
@@ -53,8 +58,9 @@ public class Gospy {
 
     public void start(int nThreads) {
         this.threadPool = Executors.newFixedThreadPool(nThreads);
+        logger.info("Thread pool initialized. [size={}]", nThreads);
         Task t0;
-        while (true) {
+        while (run) {
             while ((t0 = scheduler.getTask()) != null) {
                 Task task = t0;
                 threadPool.execute(() -> {
@@ -74,9 +80,11 @@ public class Gospy {
                 });
             }
         }
+        logger.info("Scheduler stopped.");
     }
 
     public void stop() {
+        this.run = false;
         this.scheduler.stop();
         this.threadPool.shutdown();
     }
@@ -110,7 +118,7 @@ public class Gospy {
             return this;
         }
 
-        public Builder setExeceptionHandler(ExceptionHandler handler) {
+        public Builder setExceptionHandler(ExceptionHandler handler) {
             eh = handler;
             return this;
         }

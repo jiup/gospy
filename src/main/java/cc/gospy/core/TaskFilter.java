@@ -16,7 +16,7 @@
 
 package cc.gospy.core;
 
-import java.util.function.Predicate;
+        import java.util.function.Predicate;
 
 @FunctionalInterface
 public interface TaskFilter extends Predicate<Task> {
