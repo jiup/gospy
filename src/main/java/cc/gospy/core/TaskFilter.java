@@ -20,6 +20,6 @@ import java.util.function.Predicate;
 
 @FunctionalInterface
 public interface TaskFilter extends Predicate<Task> {
-    TaskFilter DEFAULT = task -> task.getUrl().matches("^https?://.*")
-            && !task.getUrl().contains("javascript:");
+    TaskFilter DEFAULT = task -> task.getUrl().matches("^https?://((?!javascript:|mailto:).)*")
+            && task.getUrl().indexOf("javascript:") == -1;
 }

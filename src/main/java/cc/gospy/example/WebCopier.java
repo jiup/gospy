@@ -14,14 +14,7 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.processor;
+package cc.gospy.example;
 
-import cc.gospy.core.Task;
-import org.jsoup.nodes.Document;
-
-import java.util.Collection;
-
-@FunctionalInterface
-public interface DocumentExtractor {
-    Collection<Task> handle(Task task, Document document) throws Throwable;
+public class WebCopier {
 }

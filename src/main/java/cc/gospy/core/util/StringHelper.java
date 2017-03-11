@@ -14,22 +14,26 @@
  * limitations under the License.
  */
 
-package cc.gospy.util;
+package cc.gospy.core.util;
 
 public class StringHelper {
-    public static String toAbsoluteUrl(String protocol, String host, String anyUrl) {
-        String res;
-        if (anyUrl.matches("^https?://.*")) {
-            res = anyUrl;
-        } else if (anyUrl.startsWith("//")) {
-            res = "http:".concat(anyUrl);
-        } else if (anyUrl.startsWith("/")) {
-            res = protocol.concat("://").concat(host).concat(anyUrl);
+    public static String toAbsoluteUrl(final String protocol, final String host, final String anyUrl) {
+        String res, path = anyUrl.trim();
+        if (path.matches("^https?://.*")) {
+            res = path;
+        } else if (path.startsWith("//")) {
+            res = "http:".concat(path);
+        } else if (path.startsWith("/")) {
+            res = protocol.concat("://").concat(host).concat(path);
         } else {
-            res = protocol.concat("://").concat(host).concat("/").concat(anyUrl);
+            res = protocol.concat("://").concat(host).concat("/").concat(path);
         }
         res = res.indexOf('#') != -1 ? res.substring(0, res.indexOf('#')) : res; // remove local jump
         res = res.endsWith("/") ? res.substring(0, res.length() - 1) : res; // avoid duplicate links
         return res;
+    }
+
+    public static String toEscapedFileName(String unescapedFileName) {
+        return unescapedFileName.trim().replaceAll(" +|://+|/+|\\\\+|\\*+|:+|\"+|\\?+|<+|>+|\\|+", "_");
     }
 }

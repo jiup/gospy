@@ -32,7 +32,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static cc.gospy.util.StringHelper.toAbsoluteUrl;
+import static cc.gospy.core.util.StringHelper.toAbsoluteUrl;
 
 public class JSoupProcessor implements Processor, ExceptionHandler {
     private DocumentExtractor handler;
@@ -123,7 +123,7 @@ public class JSoupProcessor implements Processor, ExceptionHandler {
         return Jsoup.parse(html);
     }
 
-    private Collection<Task> process0(Task task, Page page) {
+    private Collection<Task> process0(Task task, Page page) throws Throwable {
         Document document;
         try {
             document = parse(page);
@@ -145,7 +145,7 @@ public class JSoupProcessor implements Processor, ExceptionHandler {
 
     @Override
     public String[] getAcceptedContentType() {
-        return new String[]{null, "text/plain", "text/html"};
+        return new String[]{null, "text/plain", "text/html", "text/xml"};
     }
 
     @Override

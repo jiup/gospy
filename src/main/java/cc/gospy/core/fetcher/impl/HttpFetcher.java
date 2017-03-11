@@ -310,7 +310,7 @@ public class HttpFetcher implements Fetcher {
 
         // send request
         long timer = System.currentTimeMillis();
-        response = extra != null ? doPost(task.getUrl(), extra) : doGet(task.getUrl());
+        response = (extra != null && extra.size() > 0) ? doPost(task.getUrl(), extra) : doGet(task.getUrl());
         timer = System.currentTimeMillis() - timer;
 
         // load page

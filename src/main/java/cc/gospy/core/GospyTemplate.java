@@ -16,8 +16,11 @@
 
 package cc.gospy.core;
 
+import cc.gospy.core.util.Experimental;
+
 import java.util.Collection;
 
+@Experimental
 public abstract class GospyTemplate {
     public GospyTemplate() {
     }

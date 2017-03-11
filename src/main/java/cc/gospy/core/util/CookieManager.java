@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package cc.gospy.util;
+package cc.gospy.core.util;
 
 public class CookieManager {
 }
