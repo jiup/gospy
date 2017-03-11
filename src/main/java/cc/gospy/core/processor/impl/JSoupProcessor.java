@@ -16,19 +16,20 @@
 
 package cc.gospy.core.processor.impl;
 
+import cc.gospy.core.ExceptionHandler;
 import cc.gospy.core.Page;
 import cc.gospy.core.Task;
 import cc.gospy.core.TaskFilter;
 import cc.gospy.core.processor.DocumentExtractor;
-import cc.gospy.core.processor.ExceptionHandler;
 import cc.gospy.core.processor.Processor;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class JSoupProcessor implements Processor, ExceptionHandler {
@@ -50,7 +51,7 @@ public class JSoupProcessor implements Processor, ExceptionHandler {
 
     public static class Builder {
         private DocumentExtractor ha = (task, document) -> {
-            List<Task> tasks = new ArrayList<>();
+            Set<Task> tasks = new HashSet<>();
             for (Element element : document.select("a[href]")) {
                 String link = element.attr("href");
                 if (link != null && !link.equals("")) {
@@ -69,7 +70,7 @@ public class JSoupProcessor implements Processor, ExceptionHandler {
 
         public Builder setFullLinkDocumentExtractor() {
             ha = (task, document) -> {
-                List<Task> tasks = new ArrayList<>();
+                Set<Task> tasks = new HashSet<>();
                 for (Element element : document.select("[href]")) {
                     String link = element.attr("href");
                     if (link != null && !link.equals("")) {
@@ -136,18 +137,19 @@ public class JSoupProcessor implements Processor, ExceptionHandler {
         return Jsoup.parse(html);
     }
 
-    private List<Task> process0(Task task, Page page) {
+    private Collection<Task> process0(Task task, Page page) {
         Document document;
         try {
             document = parse(page);
         } catch (UnsupportedEncodingException e) {
             return exceptionCaught(e, task, page);
         }
-        return handler.handle(task, document).stream().filter(filter).collect(Collectors.toList());
+        return handler.handle(task, document).stream().filter(filter).collect(Collectors.toSet());
     }
 
+
     @Override
-    public List<Task> process(Task task, Page page) {
+    public Collection<Task> process(Task task, Page page) {
         try {
             return process0(task, page);
         } catch (Throwable throwable) {
@@ -156,7 +158,12 @@ public class JSoupProcessor implements Processor, ExceptionHandler {
     }
 
     @Override
-    public List<Task> exceptionCaught(Throwable throwable, Task task, Page page) {
+    public String[] getAcceptedContentType() {
+        return new String[]{null, "text/plain", "text/html"};
+    }
+
+    @Override
+    public Collection<Task> exceptionCaught(Throwable throwable, Task task, Page page) {
         throwable.printStackTrace();
         return null;
     }

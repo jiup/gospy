@@ -14,14 +14,20 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.processor;
-
-import cc.gospy.core.Task;
-import org.jsoup.nodes.Document;
+package cc.gospy.core;
 
 import java.util.Collection;
 
-@FunctionalInterface
-public interface DocumentExtractor {
-    Collection<Task> handle(Task task, Document document);
+public abstract class GospyTemplate {
+    public GospyTemplate() {
+    }
+
+    public GospyTemplate(String configFilePath) {
+
+    }
+
+    public abstract Collection<Task> initialTasks();
+//    public abstract Page
+
+
 }

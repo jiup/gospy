@@ -14,14 +14,20 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.processor;
+package cc.gospy.core.fetcher.impl;
 
 import cc.gospy.core.Page;
 import cc.gospy.core.Task;
+import cc.gospy.core.fetcher.Fetcher;
 
-import java.util.List;
+public class CasperJSFetcher implements Fetcher {
+    @Override
+    public Page fetch(Task task) throws Throwable {
+        return null;
+    }
 
-@FunctionalInterface
-public interface ExceptionHandler {
-    List<Task> exceptionCaught(Throwable throwable, Task task, Page page);
+    @Override
+    public String[] getAcceptedProtocols() {
+        return new String[0];
+    }
 }

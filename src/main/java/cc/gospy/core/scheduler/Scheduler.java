@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.processor;
+package cc.gospy.core.scheduler;
 
 import cc.gospy.core.Task;
-import org.jsoup.nodes.Document;
 
-import java.util.Collection;
+public interface Scheduler {
+    Task getTask();
 
-@FunctionalInterface
-public interface DocumentExtractor {
-    Collection<Task> handle(Task task, Document document);
+    Scheduler addTask(Task task);
+
+    Scheduler addLazyTask(Task task);
+
+    void stop();
 }

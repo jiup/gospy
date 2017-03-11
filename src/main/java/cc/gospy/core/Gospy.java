@@ -17,22 +17,78 @@
 package cc.gospy.core;
 
 import cc.gospy.core.fetcher.Fetcher;
+import cc.gospy.core.fetcher.FetcherFactory;
 import cc.gospy.core.processor.Processor;
+import cc.gospy.core.processor.ProcessorFactory;
+import cc.gospy.core.scheduler.Scheduler;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Collection;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Gospy {
     private Scheduler scheduler;
-    private Map<String, Fetcher> fetcherFactory;
-    private Map<String, Processor> processorFactory;
+    private FetcherFactory fetcherFactory;
+    private ProcessorFactory processorFactory;
+    private ExecutorService threadPool;
+    private ExceptionHandler handler;
+    private int visitGapMillis;
 
     private Gospy(Scheduler scheduler
-            , Map<String, Fetcher> fetcherFactory
-            , Map<String, Processor> processorFactory) {
+            , FetcherFactory fetcherFactory
+            , ProcessorFactory processorFactory
+            , ExceptionHandler handler) {
         this.scheduler = scheduler;
         this.fetcherFactory = fetcherFactory;
         this.processorFactory = processorFactory;
+        this.handler = handler;
+        this.visitGapMillis = 0;
+    }
+
+    public void start() {
+        this.start(1);
+    }
+
+    public void start(int nThreads) {
+        this.threadPool = Executors.newFixedThreadPool(nThreads);
+        threadPool.execute(() -> {
+            Task task;
+            Page page = null;
+            while ((task = scheduler.getTask()) != null) {
+                try {
+                    Fetcher fetcher = fetcherFactory.get(task.getProtocol());
+                    page = fetcher.fetch(task);
+                    Processor processor = processorFactory.get(page.getContentType());
+                    Collection<Task> tasks = processor.process(task, page);
+                    System.out.println(tasks);
+                    if (tasks != null) {
+                        tasks.forEach(e -> scheduler.addTask(e));
+                    }
+                    Thread.sleep(visitGapMillis);
+                } catch (Throwable e) {
+                    handler.exceptionCaught(e, task, page);
+                }
+            }
+        });
+    }
+
+    public void stop() {
+        this.scheduler.stop();
+        this.threadPool.shutdown();
+    }
+
+    public Gospy addTask(Task task) {
+        scheduler.addTask(task);
+        return this;
+    }
+
+    public Gospy addTask(String url) {
+        return addTask(new Task(url));
+    }
+
+    public Gospy visitGap(int timeMillis) {
+        this.visitGapMillis = timeMillis;
+        return this;
     }
 
     public static Builder custom() {
@@ -41,23 +97,35 @@ public class Gospy {
 
     public static class Builder {
         private Scheduler sc;
-        private Map<String, Fetcher> ff = new HashMap<>();
-        private Map<String, Processor> pf = new HashMap<>();
+        private FetcherFactory ff = new FetcherFactory();
+        private ProcessorFactory pf = new ProcessorFactory();
+        private ExceptionHandler eh = (throwable, task, page) -> {
+            throwable.printStackTrace();
+            return null;
+        };
 
-        public void setScheduler(Scheduler scheduler) {
+        public Builder setScheduler(Scheduler scheduler) {
             sc = scheduler;
+            return this;
         }
 
-        public void addFetcher(String protocol, Fetcher fetcher) {
-            ff.put(protocol, fetcher);
+        public Builder setExeceptionHandler(ExceptionHandler handler) {
+            eh = handler;
+            return this;
         }
 
-        public void addProcessor(String contentType, Processor processor) {
-            pf.put(contentType, processor);
+        public Builder addFetcher(Fetcher fetcher) {
+            ff.register(fetcher);
+            return this;
+        }
+
+        public Builder addProcessor(Processor processor) {
+            pf.register(processor);
+            return this;
         }
 
         public Gospy build() {
-            return new Gospy(sc, ff, pf);
+            return new Gospy(sc, ff, pf, eh);
         }
 
     }

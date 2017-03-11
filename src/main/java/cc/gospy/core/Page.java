@@ -17,6 +17,7 @@
 package cc.gospy.core;
 
 import java.io.ByteArrayOutputStream;
+import java.util.HashMap;
 import java.util.Map;
 
 public class Page {
@@ -25,7 +26,7 @@ public class Page {
     private int statusCode;
     private long responseTime;
     private String contentType;
-    private Map<String, Object> extra;
+    private Map<String, Object> extra = new HashMap<>();
 
     public Task getTask() {
         return task;

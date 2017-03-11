@@ -21,8 +21,13 @@ import cc.gospy.core.scheduler.filter.DuplicateRemover;
 
 public class BloomDuplicateRemover implements DuplicateRemover {
     @Override
-    public void sign(Task task) {
+    public void record(Task task) {
         // TODO
+    }
+
+    @Override
+    public void delete(Task task) {
+
     }
 
     @Override

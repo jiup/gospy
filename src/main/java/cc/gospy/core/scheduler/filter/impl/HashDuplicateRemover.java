@@ -26,16 +26,18 @@ public class HashDuplicateRemover implements DuplicateRemover {
     private HashMap<Task, Integer> tasks = new HashMap<>();
 
     @Override
-    public void sign(Task task) {
-        if (tasks.containsKey(task)) {
-            tasks.put(task, tasks.get(task) + 1);
-        } else {
-            tasks.put(task, 1);
-        }
+    public void record(Task task) {
+        tasks.put(task, tasks.get(task) != null ? tasks.get(task) + 1 : 1);
+    }
+
+    @Override
+    public void delete(Task task) {
+        tasks.remove(task);
     }
 
     @Override
     public boolean exists(Task task) {
         return tasks.containsKey(task);
     }
+
 }

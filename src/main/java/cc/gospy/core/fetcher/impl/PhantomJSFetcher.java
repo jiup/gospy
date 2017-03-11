@@ -26,4 +26,9 @@ public class PhantomJSFetcher implements Fetcher {
     public Page fetch(Task task) throws Throwable {
         return null;
     }
+
+    @Override
+    public String[] getAcceptedProtocols() {
+        return new String[0];
+    }
 }

@@ -14,14 +14,10 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.processor;
+package cc.gospy.core;
 
-import cc.gospy.core.Task;
-import org.jsoup.nodes.Document;
+public interface Pausable {
+    void pause();
 
-import java.util.Collection;
-
-@FunctionalInterface
-public interface DocumentExtractor {
-    Collection<Task> handle(Task task, Document document);
+    void resume();
 }

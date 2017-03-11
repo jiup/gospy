@@ -14,10 +14,13 @@
  * limitations under the License.
  */
 
-package cc.gospy.core;
+package cc.gospy.core.processor;
 
-public interface Scheduler {
-    Task[] getTask();
+public class ProcessorNotFoundException extends Exception {
+    public ProcessorNotFoundException() {
+    }
 
-    void addTask(Task[] task);
+    public ProcessorNotFoundException(String message) {
+        super(message);
+    }
 }

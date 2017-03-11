@@ -25,4 +25,9 @@ public class FileFetcher implements Fetcher {
     public Page fetch(Task task) throws Throwable {
         return null;
     }
+
+    @Override
+    public String[] getAcceptedProtocols() {
+        return new String[0];
+    }
 }

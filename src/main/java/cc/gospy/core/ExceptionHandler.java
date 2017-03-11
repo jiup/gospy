@@ -14,14 +14,11 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.processor;
-
-import cc.gospy.core.Task;
-import org.jsoup.nodes.Document;
+package cc.gospy.core;
 
 import java.util.Collection;
 
 @FunctionalInterface
-public interface DocumentExtractor {
-    Collection<Task> handle(Task task, Document document);
+public interface ExceptionHandler {
+    Collection<Task> exceptionCaught(Throwable throwable, Task task, Page page);
 }

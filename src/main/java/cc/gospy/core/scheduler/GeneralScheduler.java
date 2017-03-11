@@ -16,7 +16,6 @@
 
 package cc.gospy.core.scheduler;
 
-import cc.gospy.core.Scheduler;
 import cc.gospy.core.Task;
 import cc.gospy.core.TaskFilter;
 import cc.gospy.core.scheduler.filter.DuplicateRemover;
@@ -43,23 +42,39 @@ public class GeneralScheduler implements Scheduler {
     }
 
     @Override
-    public Task[] getTask() {
+    public Task getTask() {
         if (taskQueue.size() > 0) {
             Task task = taskQueue.poll();
-            duplicateRemover.sign(task);
-            return new Task[]{task};
+            duplicateRemover.record(task);
+            return task;
         }
         return null;
     }
 
     @Override
-    public void addTask(Task[] tasks) {
-        for (Task task : tasks) {
-            if (!duplicateRemover.exists(task)) {
-                taskQueue.add(task);
-            }
+    public Scheduler addTask(Task task) {
+        if (!taskFilter.test(task)) {
+            return this;
         }
+        if (duplicateRemover.exists(task)) {
+            duplicateRemover.record(task);
+        } else {
+            taskQueue.add(task);
+        }
+        return this;
     }
+
+    @Override
+    public Scheduler addLazyTask(Task task) {
+        lazyTaskQueue.add(task);
+        return this;
+    }
+
+    @Override
+    public void stop() {
+        lazyTaskQueue.stop();
+    }
+
 
     public static GeneralScheduler getDefault() {
         return new Builder().Build();
@@ -70,8 +85,9 @@ public class GeneralScheduler implements Scheduler {
     }
 
     public static class Builder {
+        private GeneralScheduler scheduler;
         private TaskQueue tq = new FIFOTaskQueue();
-        private LazyTaskQueue ltq = new TimingLazyTaskQueue(wakedTask -> tq.add(wakedTask));
+        private LazyTaskQueue ltq = new TimingLazyTaskQueue(wakedTask -> scheduler.addTask(wakedTask));
         private DuplicateRemover dr = new HashDuplicateRemover();
         private TaskFilter tf = TaskFilter.DEFAULT;
 
@@ -96,7 +112,7 @@ public class GeneralScheduler implements Scheduler {
         }
 
         public GeneralScheduler Build() {
-            return new GeneralScheduler(tq, ltq, dr, tf);
+            return scheduler = new GeneralScheduler(tq, ltq, dr, tf);
         }
     }
 

@@ -110,8 +110,10 @@ public class HttpFetcher implements Fetcher {
                     ByteArrayOutputStream responseBody = new ByteArrayOutputStream();
                     page.setStatusCode(response.getStatusLine().getStatusCode());
                     HttpEntity entity = response.getEntity();
-                    page.setContentType(entity.getContentType() != null
-                            ? entity.getContentType().getValue() : null);
+                    String contentType;
+                    if (entity.getContentType() != null && !(contentType = entity.getContentType().getValue()).equals("")) {
+                        page.setContentType(contentType.indexOf(';') != -1 ? contentType.substring(0, contentType.indexOf(';')) : contentType);
+                    }
                     entity.writeTo(responseBody);
                     page.setContent(responseBody);
                     Map<String, Object> responseHeader = new HashMap<>();
@@ -325,6 +327,11 @@ public class HttpFetcher implements Fetcher {
             client.close();
         }
         return page;
+    }
+
+    @Override
+    public String[] getAcceptedProtocols() {
+        return new String[]{null, "http", "https"};
     }
 
     private PoolingHttpClientConnectionManager connectionManager;

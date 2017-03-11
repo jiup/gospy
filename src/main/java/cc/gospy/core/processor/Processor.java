@@ -19,8 +19,10 @@ package cc.gospy.core.processor;
 import cc.gospy.core.Page;
 import cc.gospy.core.Task;
 
-import java.util.List;
+import java.util.Collection;
 
 public interface Processor {
-    List<Task> process(Task task, Page page);
+    Collection<Task> process(Task task, Page page);
+
+    String[] getAcceptedContentType();
 }

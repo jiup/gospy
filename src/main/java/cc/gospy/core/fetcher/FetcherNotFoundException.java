@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.processor;
+package cc.gospy.core.fetcher;
 
-import cc.gospy.core.Task;
-import org.jsoup.nodes.Document;
+public class FetcherNotFoundException extends Exception {
+    public FetcherNotFoundException() {
+    }
 
-import java.util.Collection;
-
-@FunctionalInterface
-public interface DocumentExtractor {
-    Collection<Task> handle(Task task, Document document);
+    public FetcherNotFoundException(String message) {
+        super(message);
+    }
 }

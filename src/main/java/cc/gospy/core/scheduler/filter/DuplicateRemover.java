@@ -19,7 +19,9 @@ package cc.gospy.core.scheduler.filter;
 import cc.gospy.core.Task;
 
 public interface DuplicateRemover {
-    void sign(Task task);
+    void record(Task task);
+
+    void delete(Task task);
 
     boolean exists(Task task);
 }

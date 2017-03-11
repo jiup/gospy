@@ -25,7 +25,7 @@ import java.util.concurrent.PriorityBlockingQueue;
 
 public class TimingLazyTaskQueue extends LazyTaskQueue {
     private Thread checkThread = null;
-    private int checkPeriod = 60; // in seconds
+    private volatile int checkPeriod = 5; // in seconds TODO
 
     public TimingLazyTaskQueue(LazyTaskHandler handler) {
         this(5, handler);
@@ -63,6 +63,12 @@ public class TimingLazyTaskQueue extends LazyTaskQueue {
                 peakTask.getExpectedVisitPeriod() != 0 &&
                 System.currentTimeMillis() - peakTask.getLastVisitTime()
                         > peakTask.getExpectedVisitPeriod() * 1000;
+    }
+
+    @Override
+    public void stop() {
+        checkThread.interrupt();
+        checkPeriod = 0;
     }
 
     @Override

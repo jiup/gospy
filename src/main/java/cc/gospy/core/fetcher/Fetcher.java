@@ -21,4 +21,6 @@ import cc.gospy.core.Task;
 
 public interface Fetcher {
     Page fetch(Task task) throws Throwable;
+
+    String[] getAcceptedProtocols();
 }

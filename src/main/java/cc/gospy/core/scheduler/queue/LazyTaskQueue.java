@@ -39,4 +39,6 @@ public abstract class LazyTaskQueue extends TaskQueue {
         return task;
     }
 
+    public abstract void stop();
+
 }
