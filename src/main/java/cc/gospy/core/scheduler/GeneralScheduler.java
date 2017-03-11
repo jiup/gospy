@@ -89,7 +89,7 @@ public class GeneralScheduler implements Scheduler {
         private TaskQueue tq = new FIFOTaskQueue();
         private LazyTaskQueue ltq = new TimingLazyTaskQueue(wakedTask -> scheduler.addTask(wakedTask));
         private DuplicateRemover dr = new HashDuplicateRemover();
-        private TaskFilter tf = TaskFilter.DEFAULT;
+        private TaskFilter tf = TaskFilter.HTTP_DEFAULT;
 
         public Builder setTaskQueue(TaskQueue taskQueue) {
             tq = taskQueue;

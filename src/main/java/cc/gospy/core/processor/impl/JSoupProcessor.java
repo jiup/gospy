@@ -63,7 +63,7 @@ public class JSoupProcessor implements Processor, ExceptionHandler {
             return tasks;
         };
 
-        private TaskFilter fi = TaskFilter.DEFAULT;
+        private TaskFilter fi = TaskFilter.HTTP_DEFAULT;
 
         public Builder setDocumentExtractor(DocumentExtractor handler) {
             ha = handler;
