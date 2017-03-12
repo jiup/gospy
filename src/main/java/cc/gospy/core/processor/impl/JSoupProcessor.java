@@ -16,29 +16,28 @@
 
 package cc.gospy.core.processor.impl;
 
-import cc.gospy.core.ExceptionHandler;
 import cc.gospy.core.Page;
 import cc.gospy.core.Task;
 import cc.gospy.core.TaskFilter;
 import cc.gospy.core.processor.DocumentExtractor;
 import cc.gospy.core.processor.Processor;
+import cc.gospy.core.util.StringHelper;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static cc.gospy.core.util.StringHelper.toAbsoluteUrl;
-
-public class JSoupProcessor implements Processor, ExceptionHandler {
-    private DocumentExtractor handler;
+public class JSoupProcessor implements Processor {
+    private DocumentExtractor<Document> handler;
     private TaskFilter filter;
 
-    private JSoupProcessor(DocumentExtractor handler, TaskFilter filter) {
+    private JSoupProcessor(DocumentExtractor<Document> handler, TaskFilter filter) {
         this.handler = handler;
         this.filter = filter;
     }
@@ -52,42 +51,44 @@ public class JSoupProcessor implements Processor, ExceptionHandler {
     }
 
     public static class Builder {
-        private DocumentExtractor ha = (task, document) -> {
-            Set<Task> tasks = new HashSet<>();
-            for (Element element : document.select("a[href]")) {
-                String link = element.attr("href");
-                if (link != null && !link.equals("")) {
-                    tasks.add(new Task(toAbsoluteUrl(task.getProtocol(), task.getHost(), task.getUrl(), link)));
-                }
-            }
-            return tasks;
-        };
-
+        private DocumentExtractor<Document> ha;
         private TaskFilter fi = TaskFilter.HTTP_DEFAULT;
 
-        public Builder setDocumentExtractor(DocumentExtractor handler) {
+        public Builder setDocumentExtractor(DocumentExtractor<Document> handler) {
             ha = handler;
             return this;
         }
 
+        public Builder setPageLinkDocumentExtractor() {
+            return setDocumentExtractor((task, document) -> {
+                Set<Task> tasks = new HashSet<>();
+                for (Element element : document.select("a[href]")) {
+                    String link = element.attr("href");
+                    if (link != null && !link.equals("")) {
+                        tasks.add(new Task(StringHelper.toAbsoluteUrl(task.getProtocol(), task.getHost(), task.getUrl(), link)));
+                    }
+                }
+                return tasks;
+            });
+        }
+
         public Builder setFullLinkDocumentExtractor() {
-            ha = (task, document) -> {
+            return setDocumentExtractor((task, document) -> {
                 Set<Task> tasks = new HashSet<>();
                 for (Element element : document.select("[href]")) {
                     String link = element.attr("href");
                     if (link != null && !link.equals("")) {
-                        tasks.add(new Task(toAbsoluteUrl(task.getProtocol(), task.getHost(), task.getUrl(), link)));
+                        tasks.add(new Task(StringHelper.toAbsoluteUrl(task.getProtocol(), task.getHost(), task.getUrl(), link)));
                     }
                 }
                 for (Element element : document.select("[src]")) {
                     String link = element.attr("src");
                     if (link != null && !link.equals("")) {
-                        tasks.add(new Task(toAbsoluteUrl(task.getProtocol(), task.getHost(), task.getUrl(), link)));
+                        tasks.add(new Task(StringHelper.toAbsoluteUrl(task.getProtocol(), task.getHost(), task.getUrl(), link)));
                     }
                 }
                 return tasks;
-            };
-            return this;
+            });
         }
 
         public Builder setTaskFilter(TaskFilter filter) {
@@ -96,7 +97,7 @@ public class JSoupProcessor implements Processor, ExceptionHandler {
         }
 
         public JSoupProcessor build() {
-            return new JSoupProcessor(ha, fi);
+            return ha == null ? this.setPageLinkDocumentExtractor().build() : new JSoupProcessor(ha, fi);
         }
     }
 
@@ -115,32 +116,13 @@ public class JSoupProcessor implements Processor, ExceptionHandler {
     private Document parse(Page page) throws UnsupportedEncodingException {
         String charsetName = getCharacterEncoding(page);
         String html;
-        try {
-            html = page.getContent().toString(charsetName != null ? charsetName : "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            html = page.getContent().toString("UTF-8");
-        }
+        html = page.getContent().toString(charsetName != null ? charsetName : Charset.defaultCharset().name());
         return Jsoup.parse(html);
     }
 
-    private Collection<Task> process0(Task task, Page page) throws Throwable {
-        Document document;
-        try {
-            document = parse(page);
-        } catch (UnsupportedEncodingException e) {
-            return exceptionCaught(e, task, page);
-        }
-        return handler.handle(task, document).stream().filter(filter).collect(Collectors.toSet());
-    }
-
-
     @Override
-    public Collection<Task> process(Task task, Page page) {
-        try {
-            return process0(task, page);
-        } catch (Throwable throwable) {
-            return exceptionCaught(throwable, task, page);
-        }
+    public Collection<Task> process(Task task, Page page) throws Throwable {
+        return handler.handle(task, parse(page)).stream().filter(filter).collect(Collectors.toSet());
     }
 
     @Override
@@ -148,9 +130,4 @@ public class JSoupProcessor implements Processor, ExceptionHandler {
         return new String[]{"text/html", "text/xml"};
     }
 
-    @Override
-    public Collection<Task> exceptionCaught(Throwable throwable, Task task, Page page) {
-        throwable.printStackTrace();
-        return null;
-    }
 }

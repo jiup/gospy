@@ -17,11 +17,10 @@
 package cc.gospy.core.processor;
 
 import cc.gospy.core.Task;
-import org.jsoup.nodes.Document;
 
 import java.util.Collection;
 
 @FunctionalInterface
-public interface DocumentExtractor {
-    Collection<Task> handle(Task task, Document document) throws Throwable;
+public interface DocumentExtractor<T> {
+    Collection<Task> handle(Task task, T document) throws Throwable;
 }

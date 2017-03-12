@@ -22,7 +22,7 @@ import cc.gospy.core.Task;
 import java.util.Collection;
 
 public interface Processor {
-    Collection<Task> process(Task task, Page page);
+    Collection<Task> process(Task task, Page page) throws Throwable;
 
     String[] getAcceptedContentType();
 }

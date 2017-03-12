@@ -66,9 +66,9 @@ public class HttpFetcher implements Fetcher, Closeable {
     private static final int TIMEOUT = 3000;
 
     private int maxConnCount = 200;
-    private int maxConnPerRoute = 10;
-    private int cleanPeriodSeconds = 300;
-    private int connExpireSeconds = 30;
+    private int maxConnPerRoute = 20;
+    private int cleanPeriodSeconds = 30;
+    private int connExpireSeconds = 10;
     private boolean autoKeepAlive = true;
     private boolean useProxy = false;
     private InetSocketAddress proxyAddress = new InetSocketAddress("localhost", 1080);

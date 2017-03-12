@@ -17,6 +17,7 @@
 package cc.gospy.core.processor;
 
 import cc.gospy.core.processor.impl.JSoupProcessor;
+import cc.gospy.core.processor.impl.XPathProcessor;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -24,6 +25,7 @@ import java.util.Map;
 
 public class ProcessorFactory {
     public static JSoupProcessor JSoupProcessor;
+    public static XPathProcessor XPathProcessor;
 
     private Map<String, Processor> processors = new HashMap<>();
 
