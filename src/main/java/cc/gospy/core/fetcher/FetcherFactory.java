@@ -18,6 +18,7 @@ package cc.gospy.core.fetcher;
 
 import cc.gospy.core.fetcher.impl.HttpFetcher;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,5 +39,9 @@ public class FetcherFactory {
             throw new FetcherNotFoundException(protocol);
         }
         return fetcher;
+    }
+
+    public Collection<Fetcher> getAll() {
+        return fetchers.values();
     }
 }

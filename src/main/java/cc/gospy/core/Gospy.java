@@ -25,12 +25,14 @@ import cc.gospy.core.scheduler.SchedulerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class Gospy {
-    private Logger logger = LoggerFactory.getLogger(getClass());
+public class Gospy implements Observable {
+    private static Logger logger = LoggerFactory.getLogger(Gospy.class);
 
     private Scheduler scheduler;
     private FetcherFactory fetcherFactory;
@@ -38,7 +40,8 @@ public class Gospy {
     private ExecutorService threadPool;
     private ExceptionHandler handler;
     private int visitGapMillis;
-    private volatile boolean run;
+    private volatile boolean running;
+    private Thread operationChainThread;
 
     private Gospy(Scheduler scheduler
             , FetcherFactory fetcherFactory
@@ -49,7 +52,35 @@ public class Gospy {
         this.processorFactory = processorFactory;
         this.handler = handler;
         this.visitGapMillis = 0;
-        this.run = true;
+        this.running = true;
+        this.operationChainThread = new Thread(() -> {
+            Task t0;
+            while (running) {
+                while ((t0 = scheduler.getTask()) != null) {
+                    Task task = t0;
+                    threadPool.execute(() -> {
+                        Page page = null;
+                        try {
+                            Fetcher fetcher = fetcherFactory.get(task.getProtocol());
+                            page = fetcher.fetch(task);
+                            Processor processor = processorFactory.get(page.getContentType());
+                            Collection<Task> tasks = processor.process(task, page);
+                            if (tasks != null) {
+                                tasks.forEach(e -> scheduler.addTask(e));
+                            }
+                        } catch (Throwable e) {
+                            handler.exceptionCaught(e, task, page);
+                        }
+                    });
+                }
+                try {
+                    Thread.sleep(visitGapMillis);
+                } catch (InterruptedException e) {
+                    handler.exceptionCaught(e, null, null);
+                }
+            }
+            logger.info("Operation chain stopped.");
+        });
     }
 
     public void start() {
@@ -57,36 +88,54 @@ public class Gospy {
     }
 
     public void start(int nThreads) {
+        if (threadPool != null) {
+            throw new RuntimeException("Gospy has already started.");
+        }
         this.threadPool = Executors.newFixedThreadPool(nThreads);
         logger.info("Thread pool initialized. [size={}]", nThreads);
-        Task t0;
-        while (run) {
-            while ((t0 = scheduler.getTask()) != null) {
-                Task task = t0;
-                threadPool.execute(() -> {
-                    Page page = null;
-                    try {
-                        Fetcher fetcher = fetcherFactory.get(task.getProtocol());
-                        page = fetcher.fetch(task);
-                        Processor processor = processorFactory.get(page.getContentType());
-                        Collection<Task> tasks = processor.process(task, page);
-                        if (tasks != null) {
-                            tasks.forEach(e -> scheduler.addTask(e));
-                        }
-                        Thread.sleep(visitGapMillis);
-                    } catch (Throwable e) {
-                        handler.exceptionCaught(e, task, page);
-                    }
-                });
-            }
-        }
-        logger.info("Scheduler stopped.");
+        operationChainThread.start();
     }
 
     public void stop() {
-        this.run = false;
+        //stop scheduler
+        this.running = false;
+        synchronized (this) {
+            notifyAll();
+        }
         this.scheduler.stop();
-        this.threadPool.shutdown();
+
+        //stop fetchers
+        fetcherFactory.getAll().forEach(fetcher -> {
+            if (fetcher instanceof Closeable) {
+                closeCloseable((Closeable) fetcher);
+            }
+        });
+
+        // stop processors
+        processorFactory.getAll().forEach(processor -> {
+            if (processor instanceof Closeable) {
+                closeCloseable((Closeable) processor);
+            }
+        });
+
+        // stop thread pool
+        threadPool.shutdownNow();
+        while (!threadPool.isTerminated()) {
+        }
+        logger.info("Thread pool stopped.");
+        threadPool = null;
+    }
+
+    private void closeCloseable(Closeable closeable) {
+        try {
+            closeable.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public boolean isRunning() {
+        return running;
     }
 
     public Gospy addTask(Task task) {
@@ -98,13 +147,43 @@ public class Gospy {
         return addTask(new Task(url));
     }
 
-    public Gospy visitGap(int timeMillis) {
+    public Gospy setVisitGap(int timeMillis) {
         this.visitGapMillis = timeMillis;
         return this;
     }
 
     public static Builder custom() {
         return new Builder();
+    }
+
+    @Override
+    public long getTotalTaskInputCount() {
+        return scheduler instanceof Observable ? ((Observable) scheduler).getTotalTaskInputCount() : -1;
+    }
+
+    @Override
+    public long getTotalTaskOutputCount() {
+        return scheduler instanceof Observable ? ((Observable) scheduler).getTotalTaskOutputCount() : -1;
+    }
+
+    @Override
+    public long getRecodedTaskSize() {
+        return scheduler instanceof Observable ? ((Observable) scheduler).getRecodedTaskSize() : -1;
+    }
+
+    @Override
+    public long getCurrentTaskQueueSize() {
+        return scheduler instanceof Observable ? ((Observable) scheduler).getCurrentTaskQueueSize() : -1;
+    }
+
+    @Override
+    public long getCurrentLazyTaskQueueSize() {
+        return scheduler instanceof Observable ? ((Observable) scheduler).getCurrentLazyTaskQueueSize() : -1;
+    }
+
+    @Override
+    public long getRunningTimeMillis() {
+        return scheduler instanceof Observable ? ((Observable) scheduler).getRunningTimeMillis() : -1;
     }
 
     public static class Builder {

@@ -145,7 +145,7 @@ public class JSoupProcessor implements Processor, ExceptionHandler {
 
     @Override
     public String[] getAcceptedContentType() {
-        return new String[]{null, "text/plain", "text/html", "text/xml"};
+        return new String[]{"text/html", "text/xml"};
     }
 
     @Override

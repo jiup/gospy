@@ -39,11 +39,14 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HttpContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
@@ -58,8 +61,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class HttpFetcher implements Fetcher {
-
+public class HttpFetcher implements Fetcher, Closeable {
+    private static Logger logger = LoggerFactory.getLogger(HttpFetcher.class);
     private static final int TIMEOUT = 3000;
 
     private int maxConnCount = 200;
@@ -69,6 +72,7 @@ public class HttpFetcher implements Fetcher {
     private boolean autoKeepAlive = true;
     private boolean useProxy = false;
     private InetSocketAddress proxyAddress = new InetSocketAddress("localhost", 1080);
+    private String userAgent = UserAgent.Default;
 
     private void init() throws KeyManagementException, NoSuchAlgorithmException {
         if (useProxy) {
@@ -97,14 +101,11 @@ public class HttpFetcher implements Fetcher {
 
     private HttpFetcher() {
         this(
-                request -> {
-                    request.setConfig(RequestConfig.custom()
-                            .setRedirectsEnabled(false)
-                            .setConnectionRequestTimeout(TIMEOUT)
-                            .setConnectTimeout(TIMEOUT)
-                            .setSocketTimeout(TIMEOUT).build());
-                    request.setHeader("User-Agent", UserAgent.Default);
-                }
+                request -> request.setConfig(RequestConfig.custom()
+                        .setRedirectsEnabled(false)
+                        .setConnectionRequestTimeout(TIMEOUT)
+                        .setConnectTimeout(TIMEOUT)
+                        .setSocketTimeout(TIMEOUT).build())
                 , response -> {
                     Page page = new Page();
                     ByteArrayOutputStream responseBody = new ByteArrayOutputStream();
@@ -127,7 +128,7 @@ public class HttpFetcher implements Fetcher {
     }
 
     private HttpFetcher(BeforeExecute configurator, AfterExecute loader) {
-        this.configurator = configurator;
+        this.beforeExecute = configurator;
         this.loader = loader;
     }
 
@@ -139,7 +140,7 @@ public class HttpFetcher implements Fetcher {
         }
 
         public Builder before(BeforeExecute configurator) {
-            fetcher.configurator = configurator;
+            fetcher.beforeExecute = configurator;
             return this;
         }
 
@@ -179,6 +180,11 @@ public class HttpFetcher implements Fetcher {
             return this;
         }
 
+        public Builder setUserAgent(String userAgent) {
+            fetcher.userAgent = userAgent;
+            return this;
+        }
+
         public HttpFetcher build() {
             try {
                 fetcher.init();
@@ -193,7 +199,7 @@ public class HttpFetcher implements Fetcher {
         return new Builder();
     }
 
-    public static final HttpFetcher getDefault() {
+    public static HttpFetcher getDefault() {
         HttpFetcher fetcher = new HttpFetcher();
         try {
             fetcher.init();
@@ -245,7 +251,7 @@ public class HttpFetcher implements Fetcher {
     }
 
     private CloseableHttpClient getHttpClientInstance() {
-        HttpRequestRetryHandler requestRetryHandler = (e, i, httpContext) -> i < 3 && e instanceof NoHttpResponseException;
+        HttpRequestRetryHandler requestRetryHandler = (e, i, httpContext) -> i < 2 && e instanceof NoHttpResponseException;
         return HttpClients.custom().setConnectionManager(connectionManager).setRetryHandler(requestRetryHandler).build();
     }
 
@@ -269,12 +275,12 @@ public class HttpFetcher implements Fetcher {
         return context;
     }
 
-    private BeforeExecute configurator;
+    private BeforeExecute beforeExecute;
     private AfterExecute loader;
 
     @FunctionalInterface
     public interface BeforeExecute {
-        void setRequestConfig(HttpRequestBase request);
+        void before(HttpRequestBase request);
     }
 
     @FunctionalInterface
@@ -286,13 +292,15 @@ public class HttpFetcher implements Fetcher {
 
     private CloseableHttpResponse doGet(String url) throws IOException {
         HttpGet request = new HttpGet(url);
-        configurator.setRequestConfig(request);
+        request.setHeader("User-Agent", userAgent);
+        beforeExecute.before(request);
         return client.execute(request);
     }
 
     private CloseableHttpResponse doPost(String url, Map<String, Object> attributes) throws IOException {
         HttpPost request = new HttpPost(url);
-        configurator.setRequestConfig(request);
+        request.setHeader("User-Agent", userAgent);
+        beforeExecute.before(request);
         List<NameValuePair> pairs = new ArrayList<>();
         attributes.keySet().forEach(key -> pairs.add(new BasicNameValuePair(key, attributes.get(key).toString())));
         request.setEntity(new UrlEncodedFormEntity(pairs));
@@ -364,15 +372,20 @@ public class HttpFetcher implements Fetcher {
         }
 
         private void shutdown() {
+            boolean flag = running;
             running = false;
             synchronized (this) {
                 notifyAll();
+            }
+            if (flag && !running) {
+                logger.info("Connection cleaner stopped.");
             }
         }
 
     }
 
-    private void exit() {
+    @Override
+    public void close() {
         if (autoKeepAlive) {
             cleanerThread.shutdown();
         }

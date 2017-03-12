@@ -14,16 +14,20 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.scheduler.filter;
+package cc.gospy.core;
 
-import cc.gospy.core.Task;
+public interface Observable {
 
-public interface DuplicateRemover {
-    void record(Task task);
+    long getTotalTaskInputCount();
 
-    void delete(Task task);
+    long getTotalTaskOutputCount();
 
-    boolean exists(Task task);
+    long getRecodedTaskSize();
 
-    long size();
+    long getCurrentTaskQueueSize();
+
+    long getCurrentLazyTaskQueueSize();
+
+    long getRunningTimeMillis();
+
 }

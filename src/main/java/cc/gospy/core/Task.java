@@ -29,6 +29,7 @@ public class Task implements Serializable, Comparable<Task> {
     private String host;
     private String protocol;
     private Map<String, Object> extra;
+    private boolean skipCheck;
     private long createTime;
     private long lastVisitTime;
     private int depth;
@@ -110,6 +111,10 @@ public class Task implements Serializable, Comparable<Task> {
         this.extra = extra;
     }
 
+    public void setSkipCheck(boolean skipCheck) {
+        this.skipCheck = skipCheck;
+    }
+
     public Priority getPriority() {
         return priority;
     }
@@ -128,6 +133,10 @@ public class Task implements Serializable, Comparable<Task> {
 
     public Map<String, Object> getExtra() {
         return extra;
+    }
+
+    public boolean skipCheck() {
+        return skipCheck;
     }
 
     public long getCreateTime() {

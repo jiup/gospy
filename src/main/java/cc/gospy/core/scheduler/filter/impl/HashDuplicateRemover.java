@@ -20,24 +20,32 @@ import cc.gospy.core.Task;
 import cc.gospy.core.scheduler.filter.DuplicateRemover;
 
 import java.util.HashMap;
-import java.util.HashSet;
 
 public class HashDuplicateRemover implements DuplicateRemover {
     private HashMap<Task, Integer> tasks = new HashMap<>();
 
     @Override
     public void record(Task task) {
-        tasks.put(task, tasks.get(task) != null ? tasks.get(task) + 1 : 1);
+        synchronized (this) {
+            tasks.put(task, tasks.get(task) != null ? tasks.get(task) + 1 : 1);
+        }
     }
 
     @Override
-    public void delete(Task task) {
-        tasks.remove(task);
+    public void delete(final Task task) {
+        synchronized (tasks) {
+            tasks.remove(task);
+        }
     }
 
     @Override
     public boolean exists(Task task) {
         return tasks.containsKey(task);
+    }
+
+    @Override
+    public long size() {
+        return tasks.size();
     }
 
 }

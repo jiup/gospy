@@ -35,4 +35,9 @@ public class BloomDuplicateRemover implements DuplicateRemover {
         // TODO
         return false;
     }
+
+    @Override
+    public long size() {
+        return 0;
+    }
 }

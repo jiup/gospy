@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.scheduler;
+package cc.gospy.core.scheduler.impl;
 
+import cc.gospy.core.Observable;
 import cc.gospy.core.Task;
 import cc.gospy.core.TaskFilter;
+import cc.gospy.core.scheduler.Scheduler;
 import cc.gospy.core.scheduler.filter.DuplicateRemover;
 import cc.gospy.core.scheduler.filter.impl.HashDuplicateRemover;
 import cc.gospy.core.scheduler.queue.LazyTaskQueue;
@@ -27,11 +29,14 @@ import cc.gospy.core.scheduler.queue.impl.TimingLazyTaskQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class GeneralScheduler implements Scheduler {
+public class GeneralScheduler implements Scheduler, Observable {
     private Logger logger = LoggerFactory.getLogger(getClass());
 
-    private TaskQueue taskQueue;
-    private LazyTaskQueue lazyTaskQueue;
+    private volatile long totalTaskInputCount;
+    private volatile long totalTaskOutputCount;
+    private volatile long firstVisitTimeMillis;
+    private final TaskQueue taskQueue;
+    private final LazyTaskQueue lazyTaskQueue;
     private DuplicateRemover duplicateRemover;
     private TaskFilter taskFilter;
 
@@ -47,16 +52,27 @@ public class GeneralScheduler implements Scheduler {
 
     @Override
     public Task getTask() {
-        if (taskQueue.size() > 0) {
-            Task task = taskQueue.poll();
-            duplicateRemover.record(task);
-            return task;
+        if (firstVisitTimeMillis == 0) {
+            firstVisitTimeMillis = System.currentTimeMillis();
         }
-        return null;
+        synchronized (taskQueue) {
+            if (taskQueue.size() > 0) {
+                Task task = taskQueue.poll();
+                duplicateRemover.record(task);
+                totalTaskOutputCount++;
+                return task;
+            }
+            return null;
+        }
     }
 
     @Override
     public Scheduler addTask(Task task) {
+        totalTaskInputCount++;
+        if (task.skipCheck()) {
+            taskQueue.add(task);
+            return this;
+        }
         if (!taskFilter.test(task)) {
             return this;
         }
@@ -77,7 +93,36 @@ public class GeneralScheduler implements Scheduler {
     @Override
     public void stop() {
         lazyTaskQueue.stop();
-        logger.info("Lazy task queue stopped.");
+    }
+
+    @Override
+    public long getTotalTaskInputCount() {
+        return totalTaskInputCount;
+    }
+
+    @Override
+    public long getTotalTaskOutputCount() {
+        return totalTaskOutputCount;
+    }
+
+    @Override
+    public long getRecodedTaskSize() {
+        return duplicateRemover.size();
+    }
+
+    @Override
+    public long getCurrentTaskQueueSize() {
+        return taskQueue.size();
+    }
+
+    @Override
+    public long getCurrentLazyTaskQueueSize() {
+        return lazyTaskQueue.size();
+    }
+
+    @Override
+    public long getRunningTimeMillis() {
+        return System.currentTimeMillis() - firstVisitTimeMillis;
     }
 
     public static GeneralScheduler getDefault() {

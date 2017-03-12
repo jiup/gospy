@@ -33,6 +33,22 @@ public class StringHelper {
         return res;
     }
 
+    public static String toRelativeUrl(final String anyUrl) {
+        String res, path = anyUrl.trim();
+        if (path.matches("^https?://.*")) {
+            res = path.substring(path.indexOf("://") + 3, path.length());
+        } else if (path.startsWith("//")) {
+            res = path.substring(1, path.length());
+        } else if (!path.startsWith("/")) {
+            res = "/".concat(path);
+        } else {
+            res = path;
+        }
+        res = res.indexOf('#') != -1 ? res.substring(0, res.indexOf('#')) : res; // remove local jump
+        res = res.endsWith("/") ? res.substring(0, res.length() - 1) : res; // avoid duplicate links
+        return res;
+    }
+
     public static String toEscapedFileName(String unescapedFileName) {
         return unescapedFileName.trim().replaceAll(" +|://+|/+|\\\\+|\\*+|:+|\"+|\\?+|<+|>+|\\|+", "_");
     }

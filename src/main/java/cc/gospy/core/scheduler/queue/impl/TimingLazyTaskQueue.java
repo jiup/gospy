@@ -19,11 +19,14 @@ package cc.gospy.core.scheduler.queue.impl;
 import cc.gospy.core.Task;
 import cc.gospy.core.scheduler.queue.LazyTaskHandler;
 import cc.gospy.core.scheduler.queue.LazyTaskQueue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
 import java.util.concurrent.PriorityBlockingQueue;
 
 public class TimingLazyTaskQueue extends LazyTaskQueue {
+    private static Logger logger = LoggerFactory.getLogger(TimingLazyTaskQueue.class);
     private Thread checkThread = null;
     private volatile int checkPeriod = 60; // in seconds
 
@@ -67,7 +70,10 @@ public class TimingLazyTaskQueue extends LazyTaskQueue {
 
     @Override
     public void stop() {
-        checkThread.interrupt();
+        if (checkThread != null) {
+            checkThread.interrupt();
+            logger.info("Lazy task queue stopped.");
+        }
         checkPeriod = 0;
     }
 
