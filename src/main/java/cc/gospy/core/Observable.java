@@ -16,6 +16,9 @@
 
 package cc.gospy.core;
 
+import cc.gospy.core.util.Experimental;
+
+@Experimental
 public interface Observable {
 
     long getTotalTaskInputCount();

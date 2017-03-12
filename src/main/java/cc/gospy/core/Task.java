@@ -16,7 +16,11 @@
 
 package cc.gospy.core;
 
+import com.google.common.hash.Funnel;
+import com.google.common.hash.Hashing;
+
 import java.io.Serializable;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,7 +29,7 @@ public class Task implements Serializable, Comparable<Task> {
     public enum Priority {EMERGENCY, HIGH, MEDIUM, LOW}
 
     private Priority priority;
-    private String url;
+    private final String url;
     private String host;
     private String protocol;
     private Map<String, Object> extra;
@@ -33,8 +37,14 @@ public class Task implements Serializable, Comparable<Task> {
     private long createTime;
     private long lastVisitTime;
     private int depth;
-    private int expectedVisitPeriod; // in seconds, period should less than 24 days
+    private int expectedVisitPeriod; // in seconds, must less than 24 days, 0 to off
     private int visitCount;
+
+    // identify a unique task for duplicate remover
+    private static final Funnel<Task> DIGEST_RULE = (task, primitiveSink) -> {
+        primitiveSink.putString(task.url, Charset.defaultCharset());
+        task.extra.forEach((k, v) -> primitiveSink.putString(k.concat("=").concat(v.toString().concat("\1")), Charset.defaultCharset()));
+    };
 
     public Task(String url) {
         this(Priority.MEDIUM, url, 0, 0);
@@ -71,15 +81,12 @@ public class Task implements Serializable, Comparable<Task> {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-
-        Task task = (Task) o;
-
-        return url.concat(extra.toString()).equals(task.url.concat(task.extra.toString()));
+        return this.hashCode() == o.hashCode();
     }
 
     @Override
     public int hashCode() {
-        return url.concat(extra.toString()).hashCode();
+        return Hashing.murmur3_128().newHasher().putObject(this, DIGEST_RULE).hash().hashCode();
     }
 
     @Override
@@ -158,4 +165,5 @@ public class Task implements Serializable, Comparable<Task> {
     public int getVisitCount() {
         return visitCount;
     }
+
 }

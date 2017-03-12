@@ -57,7 +57,7 @@ public class JSoupProcessor implements Processor, ExceptionHandler {
             for (Element element : document.select("a[href]")) {
                 String link = element.attr("href");
                 if (link != null && !link.equals("")) {
-                    tasks.add(new Task(toAbsoluteUrl(task.getProtocol(), task.getHost(), link)));
+                    tasks.add(new Task(toAbsoluteUrl(task.getProtocol(), task.getHost(), task.getUrl(), link)));
                 }
             }
             return tasks;
@@ -76,13 +76,13 @@ public class JSoupProcessor implements Processor, ExceptionHandler {
                 for (Element element : document.select("[href]")) {
                     String link = element.attr("href");
                     if (link != null && !link.equals("")) {
-                        tasks.add(new Task(toAbsoluteUrl(task.getProtocol(), task.getHost(), link)));
+                        tasks.add(new Task(toAbsoluteUrl(task.getProtocol(), task.getHost(), task.getUrl(), link)));
                     }
                 }
                 for (Element element : document.select("[src]")) {
                     String link = element.attr("src");
                     if (link != null && !link.equals("")) {
-                        tasks.add(new Task(toAbsoluteUrl(task.getProtocol(), task.getHost(), link)));
+                        tasks.add(new Task(toAbsoluteUrl(task.getProtocol(), task.getHost(), task.getUrl(), link)));
                     }
                 }
                 return tasks;

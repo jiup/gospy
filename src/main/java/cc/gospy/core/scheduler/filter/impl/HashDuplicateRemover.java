@@ -19,27 +19,32 @@ package cc.gospy.core.scheduler.filter.impl;
 import cc.gospy.core.Task;
 import cc.gospy.core.scheduler.filter.DuplicateRemover;
 
-import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class HashDuplicateRemover implements DuplicateRemover {
-    private HashMap<Task, Integer> tasks = new HashMap<>();
+    private Map<Task, AtomicInteger> tasks = new ConcurrentHashMap<>();
 
     @Override
-    public void record(Task task) {
+    public void record(final Task task) {
         synchronized (this) {
-            tasks.put(task, tasks.get(task) != null ? tasks.get(task) + 1 : 1);
+            AtomicInteger counter = tasks.get(task);
+            if (counter != null) {
+                counter.getAndIncrement();
+            } else {
+                tasks.put(task, new AtomicInteger(1));
+            }
         }
     }
 
     @Override
     public void delete(final Task task) {
-        synchronized (tasks) {
-            tasks.remove(task);
-        }
+        tasks.remove(task);
     }
 
     @Override
-    public boolean exists(Task task) {
+    public boolean exists(final Task task) {
         return tasks.containsKey(task);
     }
 

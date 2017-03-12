@@ -30,7 +30,7 @@ public abstract class GospyTemplate {
     }
 
     public abstract Collection<Task> initialTasks();
-//    public abstract Page
 
+    public abstract Collection<Task> exceptionCaught(Throwable throwable, Task task, Page page);
 
 }

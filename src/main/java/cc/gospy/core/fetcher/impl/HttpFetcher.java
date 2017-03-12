@@ -103,6 +103,8 @@ public class HttpFetcher implements Fetcher, Closeable {
         this(
                 request -> request.setConfig(RequestConfig.custom()
                         .setRedirectsEnabled(false)
+                        .setRelativeRedirectsAllowed(false)
+                        .setCircularRedirectsAllowed(false)
                         .setConnectionRequestTimeout(TIMEOUT)
                         .setConnectTimeout(TIMEOUT)
                         .setSocketTimeout(TIMEOUT).build())
@@ -127,9 +129,9 @@ public class HttpFetcher implements Fetcher, Closeable {
         );
     }
 
-    private HttpFetcher(BeforeExecute configurator, AfterExecute loader) {
-        this.beforeExecute = configurator;
-        this.loader = loader;
+    private HttpFetcher(BeforeFetch configurator, AfterFetch responseHandler) {
+        this.requestHandler = configurator;
+        this.responseHandler = responseHandler;
     }
 
     public static class Builder {
@@ -139,13 +141,13 @@ public class HttpFetcher implements Fetcher, Closeable {
             fetcher = new HttpFetcher();
         }
 
-        public Builder before(BeforeExecute configurator) {
-            fetcher.beforeExecute = configurator;
+        public Builder before(BeforeFetch requestHandler) {
+            fetcher.requestHandler = requestHandler;
             return this;
         }
 
-        public Builder after(AfterExecute loader) {
-            fetcher.loader = loader;
+        public Builder after(AfterFetch responseHandler) {
+            fetcher.responseHandler = responseHandler;
             return this;
         }
 
@@ -275,36 +277,36 @@ public class HttpFetcher implements Fetcher, Closeable {
         return context;
     }
 
-    private BeforeExecute beforeExecute;
-    private AfterExecute loader;
-
-    @FunctionalInterface
-    public interface BeforeExecute {
-        void before(HttpRequestBase request);
-    }
-
-    @FunctionalInterface
-    public interface AfterExecute {
-        Page loadPage(CloseableHttpResponse response) throws Throwable;
-    }
+    private BeforeFetch requestHandler;
+    private AfterFetch responseHandler;
 
     private CloseableHttpClient client;
 
     private CloseableHttpResponse doGet(String url) throws IOException {
         HttpGet request = new HttpGet(url);
         request.setHeader("User-Agent", userAgent);
-        beforeExecute.before(request);
+        requestHandler.handle(request);
         return client.execute(request);
     }
 
     private CloseableHttpResponse doPost(String url, Map<String, Object> attributes) throws IOException {
         HttpPost request = new HttpPost(url);
         request.setHeader("User-Agent", userAgent);
-        beforeExecute.before(request);
+        requestHandler.handle(request);
         List<NameValuePair> pairs = new ArrayList<>();
         attributes.keySet().forEach(key -> pairs.add(new BasicNameValuePair(key, attributes.get(key).toString())));
         request.setEntity(new UrlEncodedFormEntity(pairs));
         return client.execute(request);
+    }
+
+    @FunctionalInterface
+    public interface BeforeFetch {
+        void handle(HttpRequestBase request);
+    }
+
+    @FunctionalInterface
+    public interface AfterFetch {
+        Page handle(CloseableHttpResponse response) throws Throwable;
     }
 
     @Override
@@ -322,7 +324,7 @@ public class HttpFetcher implements Fetcher, Closeable {
         timer = System.currentTimeMillis() - timer;
 
         // load page
-        Page page = loader.loadPage(response);
+        Page page = responseHandler.handle(response);
         if (page != null) {
             page.setResponseTime(timer);
             task.addVisitCount();

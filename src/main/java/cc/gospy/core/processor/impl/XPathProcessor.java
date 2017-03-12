@@ -30,6 +30,6 @@ public class XPathProcessor implements Processor {
 
     @Override
     public String[] getAcceptedContentType() {
-        return new String[0];
+        return new String[]{"text/html", "text/xml"};
     }
 }

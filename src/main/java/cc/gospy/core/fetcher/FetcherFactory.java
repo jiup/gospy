@@ -36,7 +36,13 @@ public class FetcherFactory {
     public Fetcher get(String protocol) throws FetcherNotFoundException {
         Fetcher fetcher = fetchers.get(protocol);
         if (fetcher == null) {
-            throw new FetcherNotFoundException(protocol);
+            if (protocol.indexOf('/') != -1) {
+                if ((fetcher = fetchers.get(protocol.substring(0, protocol.indexOf('/')).concat("/*"))) == null) {
+                    throw new FetcherNotFoundException(protocol);
+                }
+            } else {
+                throw new FetcherNotFoundException(protocol);
+            }
         }
         return fetcher;
     }

@@ -29,11 +29,13 @@ import cc.gospy.core.scheduler.queue.impl.TimingLazyTaskQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class GeneralScheduler implements Scheduler, Observable {
-    private Logger logger = LoggerFactory.getLogger(getClass());
+import java.util.concurrent.atomic.AtomicLong;
 
-    private volatile long totalTaskInputCount;
-    private volatile long totalTaskOutputCount;
+public class GeneralScheduler implements Scheduler, Observable {
+    private static Logger logger = LoggerFactory.getLogger(GeneralScheduler.class);
+
+    private volatile AtomicLong totalTaskInputCount;
+    private volatile AtomicLong totalTaskOutputCount;
     private volatile long firstVisitTimeMillis;
     private final TaskQueue taskQueue;
     private final LazyTaskQueue lazyTaskQueue;
@@ -48,6 +50,8 @@ public class GeneralScheduler implements Scheduler, Observable {
         this.lazyTaskQueue = lazyTaskQueue;
         this.duplicateRemover = duplicateRemover;
         this.taskFilter = filter;
+        this.totalTaskInputCount = new AtomicLong();
+        this.totalTaskOutputCount = new AtomicLong();
     }
 
     @Override
@@ -55,22 +59,28 @@ public class GeneralScheduler implements Scheduler, Observable {
         if (firstVisitTimeMillis == 0) {
             firstVisitTimeMillis = System.currentTimeMillis();
         }
-        synchronized (taskQueue) {
-            if (taskQueue.size() > 0) {
-                Task task = taskQueue.poll();
-                duplicateRemover.record(task);
-                totalTaskOutputCount++;
-                return task;
-            }
-            return null;
+        if (taskQueue.size() > 0) {
+            Task task = taskQueue.poll();
+            duplicateRemover.record(task);
+            totalTaskOutputCount.getAndIncrement();
+            return task;
+        }
+        return null;
+    }
+
+    private void addTask0(Task task) {
+        if (task.getExpectedVisitPeriod() == 0) {
+            taskQueue.add(task);
+        } else {
+            lazyTaskQueue.add(task);
         }
     }
 
     @Override
     public Scheduler addTask(Task task) {
-        totalTaskInputCount++;
+        totalTaskInputCount.getAndIncrement();
         if (task.skipCheck()) {
-            taskQueue.add(task);
+            addTask0(task);
             return this;
         }
         if (!taskFilter.test(task)) {
@@ -79,7 +89,7 @@ public class GeneralScheduler implements Scheduler, Observable {
         if (duplicateRemover.exists(task)) {
             duplicateRemover.record(task);
         } else {
-            taskQueue.add(task);
+            addTask0(task);
         }
         return this;
     }
@@ -97,12 +107,12 @@ public class GeneralScheduler implements Scheduler, Observable {
 
     @Override
     public long getTotalTaskInputCount() {
-        return totalTaskInputCount;
+        return totalTaskInputCount.get();
     }
 
     @Override
     public long getTotalTaskOutputCount() {
-        return totalTaskOutputCount;
+        return totalTaskOutputCount.get();
     }
 
     @Override
