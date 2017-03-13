@@ -16,11 +16,10 @@
 
 package cc.gospy.core.processor;
 
+import cc.gospy.core.Result;
 import cc.gospy.core.Task;
 
-import java.util.Collection;
-
 @FunctionalInterface
-public interface DocumentExtractor<T> {
-    Collection<Task> handle(Task task, T document) throws Throwable;
+public interface DocumentExtractor<T, D> {
+    Result<D> handle(Task task, T document) throws Throwable;
 }

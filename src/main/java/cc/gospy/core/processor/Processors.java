@@ -23,7 +23,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ProcessorFactory {
+public class Processors {
     public static JSoupProcessor JSoupProcessor;
     public static XPathProcessor XPathProcessor;
 
@@ -38,7 +38,21 @@ public class ProcessorFactory {
     public Processor get(String contentType) throws ProcessorNotFoundException {
         Processor processor = processors.get(contentType);
         if (processor == null) {
-            throw new ProcessorNotFoundException(contentType);
+            if (contentType != null && contentType.indexOf('/') != -1) {
+                String key = contentType;
+                while (processor == null) {
+                    if (key.equals("*/*")) {
+                        throw new ProcessorNotFoundException(contentType);
+                    } else if (key.endsWith("/*")) {
+                        key = "*/*";
+                    } else {
+                        key = contentType.substring(0, contentType.indexOf('/')).concat("/*");
+                    }
+                    processor = processors.get(key);
+                }
+            } else {
+                throw new ProcessorNotFoundException(contentType);
+            }
         }
         return processor;
     }

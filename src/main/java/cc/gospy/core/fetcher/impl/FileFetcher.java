@@ -18,16 +18,64 @@ package cc.gospy.core.fetcher.impl;
 
 import cc.gospy.core.Page;
 import cc.gospy.core.Task;
+import cc.gospy.core.fetcher.FetchException;
 import cc.gospy.core.fetcher.Fetcher;
 
+import javax.activation.MimetypesFileTypeMap;
+import java.io.RandomAccessFile;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
+
 public class FileFetcher implements Fetcher {
+    private MimetypesFileTypeMap mimetypesFileTypeMap;
+
+    private FileFetcher() {
+        this.mimetypesFileTypeMap = new MimetypesFileTypeMap();
+    }
+
+    public static class Builder {
+        public FileFetcher build() {
+            return new FileFetcher();
+        }
+    }
+
+    public static FileFetcher getDefault() {
+        return new Builder().build();
+    }
+
     @Override
-    public Page fetch(Task task) throws Throwable {
-        return null;
+    public Page fetch(Task task) throws FetchException {
+        try {
+            String url = task.getUrl().replaceAll("\\\\", "/");
+            url = url.startsWith("file://") ? url.substring(7) : url;
+            long timer = System.currentTimeMillis();
+            byte[] bytes = getBytesFromFile(url);
+            timer = System.currentTimeMillis() - timer;
+            Page page = new Page();
+            page.setTask(task);
+            page.setStatusCode(200);
+            page.setContent(bytes);
+            page.setResponseTime(timer);
+            page.setContentType(mimetypesFileTypeMap.getContentType(url));
+            return page;
+        } catch (Throwable throwable) {
+            throw new FetchException(throwable.getMessage(), throwable);
+        }
+    }
+
+    private byte[] getBytesFromFile(String path) throws Throwable {
+        FileChannel channel = new RandomAccessFile(path, "r").getChannel();
+        MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size()).load();
+        byte[] bytes = new byte[(int) channel.size()];
+        if (buffer.hasRemaining()) {
+            buffer.get(bytes, 0, buffer.remaining());
+        }
+        channel.close();
+        return bytes;
     }
 
     @Override
     public String[] getAcceptedProtocols() {
-        return new String[0];
+        return new String[]{"file"};
     }
 }

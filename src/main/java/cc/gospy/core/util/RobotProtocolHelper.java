@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.processor;
+package cc.gospy.core.util;
 
-public class ProcessorNotFoundException extends ProcessException {
+public class RobotProtocolHelper {
+    private static RobotProtocolHelper ourInstance = new RobotProtocolHelper();
 
-    public ProcessorNotFoundException(String message) {
-        super(message);
+    public static RobotProtocolHelper getInstance() {
+        return ourInstance;
     }
 
-    public ProcessorNotFoundException(String message, Throwable cause) {
-        super(message, cause);
+    private RobotProtocolHelper() {
     }
 }

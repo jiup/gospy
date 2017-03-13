@@ -16,13 +16,12 @@
 
 package cc.gospy.core.processor;
 
-public class ProcessorNotFoundException extends ProcessException {
-
-    public ProcessorNotFoundException(String message) {
+public class ProcessException extends Throwable {
+    public ProcessException(String message) {
         super(message);
     }
 
-    public ProcessorNotFoundException(String message, Throwable cause) {
+    public ProcessException(String message, Throwable cause) {
         super(message, cause);
     }
 }

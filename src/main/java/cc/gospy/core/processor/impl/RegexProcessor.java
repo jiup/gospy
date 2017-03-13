@@ -14,15 +14,22 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.processor;
+package cc.gospy.core.processor.impl;
 
-public class ProcessorNotFoundException extends ProcessException {
+import cc.gospy.core.Page;
+import cc.gospy.core.Result;
+import cc.gospy.core.Task;
+import cc.gospy.core.processor.ProcessException;
+import cc.gospy.core.processor.Processor;
 
-    public ProcessorNotFoundException(String message) {
-        super(message);
+public class RegexProcessor implements Processor {
+    @Override
+    public <T> Result<T> process(Task task, Page page) throws ProcessException {
+        return null;
     }
 
-    public ProcessorNotFoundException(String message, Throwable cause) {
-        super(message, cause);
+    @Override
+    public String[] getAcceptedContentType() {
+        return new String[0];
     }
 }

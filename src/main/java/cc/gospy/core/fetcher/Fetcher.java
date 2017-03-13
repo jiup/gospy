@@ -20,7 +20,7 @@ import cc.gospy.core.Page;
 import cc.gospy.core.Task;
 
 public interface Fetcher {
-    Page fetch(Task task) throws Throwable;
+    Page fetch(Task task) throws FetchException;
 
     String[] getAcceptedProtocols();
 }

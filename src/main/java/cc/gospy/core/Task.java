@@ -67,7 +67,7 @@ public class Task implements Serializable, Comparable<Task> {
             host = url.substring(prefixIndex + 3);
             host = !host.contains("/") ? host : host.substring(0, host.indexOf('/'));
         } else {
-            protocol = "undefined";
+            protocol = null;
         }
         extra = new HashMap<>();
     }
@@ -142,7 +142,7 @@ public class Task implements Serializable, Comparable<Task> {
         return extra;
     }
 
-    public boolean skipCheck() {
+    public boolean isCheckSkipping() {
         return skipCheck;
     }
 

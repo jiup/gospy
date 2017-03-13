@@ -17,17 +17,19 @@
 package cc.gospy.core;
 
 import cc.gospy.core.fetcher.Fetcher;
-import cc.gospy.core.fetcher.FetcherFactory;
+import cc.gospy.core.fetcher.Fetchers;
+import cc.gospy.core.pipeline.Pipeline;
+import cc.gospy.core.pipeline.Pipelines;
 import cc.gospy.core.processor.Processor;
-import cc.gospy.core.processor.ProcessorFactory;
+import cc.gospy.core.processor.Processors;
 import cc.gospy.core.scheduler.Scheduler;
-import cc.gospy.core.scheduler.SchedulerFactory;
+import cc.gospy.core.scheduler.Schedulers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.Collection;
+import java.util.Iterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -35,8 +37,9 @@ public class Gospy implements Observable {
     private static Logger logger = LoggerFactory.getLogger(Gospy.class);
 
     private Scheduler scheduler;
-    private FetcherFactory fetcherFactory;
-    private ProcessorFactory processorFactory;
+    private Fetchers fetcherFactory;
+    private Processors processorFactory;
+    private Pipelines pipelineFactory;
     private ExecutorService threadPool;
     private ExceptionHandler handler;
     private int visitGapMillis;
@@ -44,16 +47,22 @@ public class Gospy implements Observable {
     private Thread operationChainThread;
 
     private Gospy(Scheduler scheduler
-            , FetcherFactory fetcherFactory
-            , ProcessorFactory processorFactory
+            , Fetchers fetcherFactory
+            , Processors processorFactory
+            , Pipelines pipelineFactory
             , ExceptionHandler handler) {
         this.scheduler = scheduler;
         this.fetcherFactory = fetcherFactory;
         this.processorFactory = processorFactory;
+        this.pipelineFactory = pipelineFactory;
         this.handler = handler;
         this.visitGapMillis = 0;
         this.running = true;
-        this.operationChainThread = new Thread(() -> {
+        this.operationChainThread = newOperationChainThread();
+    }
+
+    public Thread newOperationChainThread() {
+        return new Thread(() -> {
             Task t0;
             while (running) {
                 while ((t0 = scheduler.getTask()) != null) {
@@ -64,9 +73,20 @@ public class Gospy implements Observable {
                             Fetcher fetcher = fetcherFactory.get(task.getProtocol());
                             page = fetcher.fetch(task);
                             Processor processor = processorFactory.get(page.getContentType());
-                            Collection<Task> tasks = processor.process(task, page);
-                            if (tasks != null) {
-                                tasks.forEach(e -> scheduler.addTask(e));
+                            Result<?> result = processor.process(task, page);
+                            if (result != null) {
+                                if (result.getNewTasks() != null) {
+                                    Iterator<Task> taskIterator = result.getNewTasks().iterator();
+                                    while (taskIterator.hasNext()) {
+                                        scheduler.addTask(taskIterator.next());
+                                    }
+                                }
+                                if (result.getData() != null) {
+                                    Iterator<Pipeline> pipelineIterator = pipelineFactory.get(result.getType()).iterator();
+                                    while (pipelineIterator.hasNext()) {
+                                        pipelineIterator.next().pipe(task, result);
+                                    }
+                                }
                             }
                         } catch (Throwable e) {
                             handler.exceptionCaught(e, task, page);
@@ -118,11 +138,18 @@ public class Gospy implements Observable {
             }
         });
 
+        // stop pipelines
+        pipelineFactory.getAll().forEach(pipeline -> {
+            if (pipeline instanceof Closeable) {
+                closeCloseable((Closeable) pipeline);
+            }
+        });
+
         // stop thread pool
         threadPool.shutdownNow();
         while (!threadPool.isTerminated()) {
         }
-        logger.info("Thread pool stopped.");
+        logger.info("Thread pool terminated.");
         threadPool = null;
     }
 
@@ -144,7 +171,9 @@ public class Gospy implements Observable {
     }
 
     public Gospy addTask(String url) {
-        return addTask(new Task(url));
+        Task task = new Task(url.indexOf("://") != -1 ? url : "http://".concat(url));
+        task.setSkipCheck(true);
+        return addTask(task);
     }
 
     public Gospy setVisitGap(int timeMillis) {
@@ -187,9 +216,10 @@ public class Gospy implements Observable {
     }
 
     public static class Builder {
-        private Scheduler sc = SchedulerFactory.GeneralScheduler.getDefault();
-        private FetcherFactory ff = new FetcherFactory();
-        private ProcessorFactory pf = new ProcessorFactory();
+        private Scheduler sc = Schedulers.GeneralScheduler.getDefault();
+        private Fetchers ff = new Fetchers();
+        private Processors pf = new Processors();
+        private Pipelines plf = new Pipelines();
         private ExceptionHandler eh = ExceptionHandler.DEFAULT;
 
         public Builder setScheduler(Scheduler scheduler) {
@@ -212,8 +242,13 @@ public class Gospy implements Observable {
             return this;
         }
 
+        public Builder addPipeline(Pipeline pipeline) {
+            plf.register(pipeline);
+            return this;
+        }
+
         public Gospy build() {
-            return new Gospy(sc, ff, pf, eh);
+            return new Gospy(sc, ff, pf, plf, eh);
         }
 
     }

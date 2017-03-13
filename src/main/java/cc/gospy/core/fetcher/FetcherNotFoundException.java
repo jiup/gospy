@@ -16,11 +16,12 @@
 
 package cc.gospy.core.fetcher;
 
-public class FetcherNotFoundException extends Exception {
-    public FetcherNotFoundException() {
-    }
-
+public class FetcherNotFoundException extends FetchException {
     public FetcherNotFoundException(String message) {
         super(message);
+    }
+
+    public FetcherNotFoundException(String message, Throwable cause) {
+        super(message, cause);
     }
 }

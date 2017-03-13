@@ -18,6 +18,7 @@ package cc.gospy.core.fetcher.impl;
 
 import cc.gospy.core.Page;
 import cc.gospy.core.Task;
+import cc.gospy.core.fetcher.FetchException;
 import cc.gospy.core.fetcher.Fetcher;
 import cc.gospy.core.fetcher.UserAgent;
 import org.apache.http.*;
@@ -91,8 +92,8 @@ public class HttpFetcher implements Fetcher, Closeable {
             );
         }
         if (autoKeepAlive) {
-            connectionManager.setMaxTotal(maxConnCount);
-            connectionManager.setDefaultMaxPerRoute(maxConnPerRoute);
+            ((PoolingHttpClientConnectionManager) connectionManager).setMaxTotal(maxConnCount);
+            ((PoolingHttpClientConnectionManager) connectionManager).setDefaultMaxPerRoute(maxConnPerRoute);
             client = getHttpClientInstance();
             cleanerThread = new PoolingHttpClientConnectionCleaner(connectionManager, connExpireSeconds);
             cleanerThread.start();
@@ -118,7 +119,7 @@ public class HttpFetcher implements Fetcher, Closeable {
                         page.setContentType(contentType.indexOf(';') != -1 ? contentType.substring(0, contentType.indexOf(';')) : contentType);
                     }
                     entity.writeTo(responseBody);
-                    page.setContent(responseBody);
+                    page.setContent(responseBody.toByteArray());
                     Map<String, Object> responseHeader = new HashMap<>();
                     for (Header header : response.getAllHeaders()) {
                         responseHeader.put(header.getName(), header.getValue());
@@ -253,8 +254,8 @@ public class HttpFetcher implements Fetcher, Closeable {
     }
 
     private CloseableHttpClient getHttpClientInstance() {
-        HttpRequestRetryHandler requestRetryHandler = (e, i, httpContext) -> i < 2 && e instanceof NoHttpResponseException;
-        return HttpClients.custom().setConnectionManager(connectionManager).setRetryHandler(requestRetryHandler).build();
+        HttpRequestRetryHandler handler = (e, i, httpContext) -> i < 2 && e instanceof NoHttpResponseException;
+        return HttpClients.custom().setConnectionManager(connectionManager).setRetryHandler(handler).build();
     }
 
     private SSLContext getWeakenedSSLContextInstance() throws NoSuchAlgorithmException, KeyManagementException {
@@ -310,33 +311,38 @@ public class HttpFetcher implements Fetcher, Closeable {
     }
 
     @Override
-    public Page fetch(Task task) throws Throwable {
-        if (!autoKeepAlive) {
-            this.init();
-            client = getHttpClientInstance();
-        }
-        CloseableHttpResponse response;
-        Map<String, Object> extra = task.getExtra();
+    public Page fetch(Task task) throws FetchException {
+        try {
+            if (!autoKeepAlive) {
+                this.init();
+                client = getHttpClientInstance();
+            }
+            CloseableHttpResponse response;
+            Map<String, Object> extra = task.getExtra();
 
-        // send request
-        long timer = System.currentTimeMillis();
-        response = (extra != null && extra.size() > 0) ? doPost(task.getUrl(), extra) : doGet(task.getUrl());
-        timer = System.currentTimeMillis() - timer;
+            // send request
+            long timer = System.currentTimeMillis();
+            String url = task.getUrl();
+            response = (extra != null && extra.size() > 0) ? doPost(url, extra) : doGet(url);
+            timer = System.currentTimeMillis() - timer;
 
-        // load page
-        Page page = responseHandler.handle(response);
-        if (page != null) {
-            page.setResponseTime(timer);
-            task.addVisitCount();
-            task.setLastVisitTime(System.currentTimeMillis());
-            page.setTask(task);
-        }
-        response.close();
+            // load page
+            Page page = responseHandler.handle(response);
+            if (page != null) {
+                page.setResponseTime(timer);
+                task.addVisitCount();
+                task.setLastVisitTime(System.currentTimeMillis());
+                page.setTask(task);
+            }
+            response.close();
 
-        if (!autoKeepAlive) {
-            client.close();
+            if (!autoKeepAlive) {
+                client.close();
+            }
+            return page;
+        } catch (Throwable throwable) {
+            throw new FetchException(throwable.getMessage(), throwable);
         }
-        return page;
     }
 
     @Override
@@ -344,7 +350,7 @@ public class HttpFetcher implements Fetcher, Closeable {
         return new String[]{null, "http", "https"};
     }
 
-    private PoolingHttpClientConnectionManager connectionManager;
+    private HttpClientConnectionManager connectionManager;
     private PoolingHttpClientConnectionCleaner cleanerThread;
 
     protected class PoolingHttpClientConnectionCleaner extends Thread {

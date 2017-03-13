@@ -14,7 +14,14 @@
  * limitations under the License.
  */
 
-package cc.gospy.example;
+package cc.gospy.core.fetcher;
 
-public class WebCopier {
+public class FetchException extends Throwable {
+    public FetchException(String message) {
+        super(message);
+    }
+
+    public FetchException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

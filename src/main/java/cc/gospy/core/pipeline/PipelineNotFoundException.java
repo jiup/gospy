@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.processor;
+package cc.gospy.core.pipeline;
 
-public class ProcessorNotFoundException extends ProcessException {
-
-    public ProcessorNotFoundException(String message) {
+public class PipelineNotFoundException extends PipeException {
+    public PipelineNotFoundException(String message) {
         super(message);
     }
 
-    public ProcessorNotFoundException(String message, Throwable cause) {
+    public PipelineNotFoundException(String message, Throwable cause) {
         super(message, cause);
     }
 }

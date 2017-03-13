@@ -16,6 +16,7 @@
 
 package cc.gospy.core.util;
 
+// here are suck codes, need to be improved.
 public class StringHelper {
     public static String toAbsoluteUrl(final String protocol, final String host, final String parentUrl, final String anyUrl) {
         String res, path = anyUrl.trim();
@@ -84,7 +85,27 @@ public class StringHelper {
         return toEscapedFileName(unescapedFileName, "_");
     }
 
+    public static String cutOffProtocolAndHost(final String absoluteUrl) {
+        String absUrl = absoluteUrl;
+        int tmp;
+        if ((tmp = absUrl.indexOf("://")) != -1) {
+            absUrl = absUrl.substring(tmp + 3);
+        }
+        if ((tmp = absUrl.indexOf('/')) != -1) {
+            absUrl = absUrl.substring(tmp + 1);
+        }
+        return absUrl;
+    }
+
+    @Experimental
     public static String toEscapedFileName(String unescapedFileName, String escapeStr) {
+        if (unescapedFileName == null || unescapedFileName.equals("")) {
+            return "null";
+        }
         return unescapedFileName.trim().replaceAll(" +|://+|/+|\\\\+|\\*+|:+|\"+|\\?+|<+|>+|\\|+", escapeStr);
+    }
+
+    public static void main(String[] args) {
+        System.out.println(toEscapedFileName("https://passport.baidu.com/v2/?login&tpl=mn&u=http%3A%2F%2Fwww.baidu.com%2F"));
     }
 }

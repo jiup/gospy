@@ -17,8 +17,10 @@
 package cc.gospy.core.processor.impl;
 
 import cc.gospy.core.Page;
+import cc.gospy.core.Result;
 import cc.gospy.core.Task;
 import cc.gospy.core.TaskFilter;
+import cc.gospy.core.processor.ProcessException;
 import cc.gospy.core.processor.Processor;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -85,24 +87,32 @@ public class XPathProcessor implements Processor {
 
     private Document parse(Page page) throws UnsupportedEncodingException {
         String charsetName = getCharacterEncoding(page);
-        String html;
-        html = page.getContent().toString(charsetName != null ? charsetName : Charset.defaultCharset().name());
+        String html = new String(page.getContent(), charsetName != null ? charsetName : Charset.defaultCharset().name());
         return Jsoup.parse(html);
     }
 
     @FunctionalInterface
     public interface ResultHandler {
-        Collection<Task> handle(Task task, List<String> resultList);
+        Collection<Task> handle(Task task, Collection<String> resultList);
     }
 
     @Override
-    public Collection<Task> process(Task task, Page page) throws Throwable {
-        List<Task> tasks = new ArrayList<>();
-        Document document = parse(page);
-        handlerChain.forEach((xpath, handler) -> {
-            tasks.addAll(handler.handle(task, Xsoup.compile(xpath).evaluate(document).list()));
-        });
-        return tasks;
+    public Result<Collection<String>> process(Task task, Page page) throws ProcessException {
+        try {
+            Collection<String> list = new LinkedHashSet<>();
+            Collection<Task> tasks = new LinkedHashSet<>();
+            Document document = parse(page);
+            handlerChain.forEach((xpath, handler) -> {
+                List<String> links = Xsoup.compile(xpath).evaluate(document).list();
+                list.addAll(links);
+                tasks.addAll(handler.handle(task, links));
+            });
+            Result<Collection<String>> result = new Result<>(tasks, list);
+            result.setPage(page);
+            return result;
+        } catch (Throwable throwable) {
+            throw new ProcessException(throwable.getMessage(), throwable);
+        }
     }
 
     @Override

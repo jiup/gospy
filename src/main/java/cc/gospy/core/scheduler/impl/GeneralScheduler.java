@@ -79,7 +79,7 @@ public class GeneralScheduler implements Scheduler, Observable {
     @Override
     public Scheduler addTask(Task task) {
         totalTaskInputCount.getAndIncrement();
-        if (task.skipCheck()) {
+        if (task.isCheckSkipping()) {
             addTask0(task);
             return this;
         }

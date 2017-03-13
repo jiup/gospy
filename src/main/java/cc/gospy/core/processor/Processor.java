@@ -17,12 +17,11 @@
 package cc.gospy.core.processor;
 
 import cc.gospy.core.Page;
+import cc.gospy.core.Result;
 import cc.gospy.core.Task;
 
-import java.util.Collection;
-
 public interface Processor {
-    Collection<Task> process(Task task, Page page) throws Throwable;
+    <T> Result<T> process(Task task, Page page) throws ProcessException;
 
     String[] getAcceptedContentType();
 }

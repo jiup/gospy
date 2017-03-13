@@ -17,9 +17,11 @@
 package cc.gospy.core.processor.impl;
 
 import cc.gospy.core.Page;
+import cc.gospy.core.Result;
 import cc.gospy.core.Task;
 import cc.gospy.core.TaskFilter;
 import cc.gospy.core.processor.DocumentExtractor;
+import cc.gospy.core.processor.ProcessException;
 import cc.gospy.core.processor.Processor;
 import cc.gospy.core.util.StringHelper;
 import org.jsoup.Jsoup;
@@ -30,14 +32,13 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.LinkedHashSet;
 
 public class JSoupProcessor implements Processor {
-    private DocumentExtractor<Document> handler;
+    private DocumentExtractor<Document, ?> handler;
     private TaskFilter filter;
 
-    private JSoupProcessor(DocumentExtractor<Document> handler, TaskFilter filter) {
+    private JSoupProcessor(DocumentExtractor<Document, ?> handler, TaskFilter filter) {
         this.handler = handler;
         this.filter = filter;
     }
@@ -51,30 +52,30 @@ public class JSoupProcessor implements Processor {
     }
 
     public static class Builder {
-        private DocumentExtractor<Document> ha;
+        private DocumentExtractor<Document, ?> ha;
         private TaskFilter fi = TaskFilter.HTTP_DEFAULT;
 
-        public Builder setDocumentExtractor(DocumentExtractor<Document> handler) {
+        public <T> Builder setDocumentExtractor(DocumentExtractor<Document, T> handler) {
             ha = handler;
             return this;
         }
 
         public Builder setPageLinkDocumentExtractor() {
             return setDocumentExtractor((task, document) -> {
-                Set<Task> tasks = new HashSet<>();
+                Collection<Task> tasks = new HashSet<>();
                 for (Element element : document.select("a[href]")) {
                     String link = element.attr("href");
                     if (link != null && !link.equals("")) {
                         tasks.add(new Task(StringHelper.toAbsoluteUrl(task.getProtocol(), task.getHost(), task.getUrl(), link)));
                     }
                 }
-                return tasks;
+                return new Result<>(tasks, task.toString());
             });
         }
 
         public Builder setFullLinkDocumentExtractor() {
             return setDocumentExtractor((task, document) -> {
-                Set<Task> tasks = new HashSet<>();
+                Collection<Task> tasks = new LinkedHashSet<>();
                 for (Element element : document.select("[href]")) {
                     String link = element.attr("href");
                     if (link != null && !link.equals("")) {
@@ -87,7 +88,7 @@ public class JSoupProcessor implements Processor {
                         tasks.add(new Task(StringHelper.toAbsoluteUrl(task.getProtocol(), task.getHost(), task.getUrl(), link)));
                     }
                 }
-                return tasks;
+                return new Result<>(tasks, task.toString());
             });
         }
 
@@ -115,14 +116,24 @@ public class JSoupProcessor implements Processor {
 
     private Document parse(Page page) throws UnsupportedEncodingException {
         String charsetName = getCharacterEncoding(page);
-        String html;
-        html = page.getContent().toString(charsetName != null ? charsetName : Charset.defaultCharset().name());
+        String html = new String(page.getContent(), charsetName != null ? charsetName : Charset.defaultCharset().name());
         return Jsoup.parse(html);
     }
 
     @Override
-    public Collection<Task> process(Task task, Page page) throws Throwable {
-        return handler.handle(task, parse(page)).stream().filter(filter).collect(Collectors.toSet());
+    public <T> Result<T> process(Task task, Page page) throws ProcessException {
+        try {
+            Result result = handler.handle(task, parse(page));
+            if (result != null) {
+                if (result.getNewTasks() != null) {
+                    result.getNewTasks().removeIf(filter.negate());
+                }
+                result.setPage(page);
+            }
+            return result;
+        } catch (Throwable throwable) {
+            throw new ProcessException(throwable.getMessage(), throwable);
+        }
     }
 
     @Override

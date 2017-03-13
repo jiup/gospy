@@ -18,11 +18,12 @@ package cc.gospy.core.fetcher.impl;
 
 import cc.gospy.core.Page;
 import cc.gospy.core.Task;
+import cc.gospy.core.fetcher.FetchException;
 import cc.gospy.core.fetcher.Fetcher;
 
 public class CasperJSFetcher implements Fetcher {
     @Override
-    public Page fetch(Task task) throws Throwable {
+    public Page fetch(Task task) throws FetchException {
         return null;
     }
 

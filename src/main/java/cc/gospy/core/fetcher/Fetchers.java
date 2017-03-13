@@ -16,14 +16,16 @@
 
 package cc.gospy.core.fetcher;
 
+import cc.gospy.core.fetcher.impl.FileFetcher;
 import cc.gospy.core.fetcher.impl.HttpFetcher;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public class FetcherFactory {
+public class Fetchers {
     public static HttpFetcher HttpFetcher;
+    public static FileFetcher FileFetcher;
 
     private Map<String, Fetcher> fetchers = new HashMap<>();
 
@@ -36,11 +38,8 @@ public class FetcherFactory {
     public Fetcher get(String protocol) throws FetcherNotFoundException {
         Fetcher fetcher = fetchers.get(protocol);
         if (fetcher == null) {
-            if (protocol.indexOf('/') != -1) {
-                if ((fetcher = fetchers.get(protocol.substring(0, protocol.indexOf('/')).concat("/*"))) == null) {
-                    throw new FetcherNotFoundException(protocol);
-                }
-            } else {
+            fetcher = fetchers.get("*");
+            if (fetcher == null) {
                 throw new FetcherNotFoundException(protocol);
             }
         }

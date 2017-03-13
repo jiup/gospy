@@ -16,13 +16,13 @@
 
 package cc.gospy.core;
 
-import java.io.ByteArrayOutputStream;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Page {
+public class Page implements Serializable {
     private Task task;
-    private ByteArrayOutputStream content;
+    private byte[] content;
     private int statusCode;
     private long responseTime;
     private String contentType;
@@ -36,11 +36,11 @@ public class Page {
         this.task = task;
     }
 
-    public ByteArrayOutputStream getContent() {
+    public byte[] getContent() {
         return content;
     }
 
-    public void setContent(ByteArrayOutputStream content) {
+    public void setContent(byte[] content) {
         this.content = content;
     }
 
@@ -80,7 +80,7 @@ public class Page {
     public String toString() {
         return "Page{" +
                 "task=" + task +
-                ", content-length=" + content.size() +
+                ", content-length=" + content.length +
                 ", statusCode=" + statusCode +
                 ", responseTime=" + responseTime +
                 ", contentType='" + contentType + '\'' +

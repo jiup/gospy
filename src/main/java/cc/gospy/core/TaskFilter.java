@@ -16,9 +16,9 @@
 
 package cc.gospy.core;
 
-        import java.util.function.Predicate;
+import java.util.function.Predicate;
 
 @FunctionalInterface
 public interface TaskFilter extends Predicate<Task> {
-    TaskFilter HTTP_DEFAULT = task -> task.getUrl().matches("^https?://((?!javascript:|mailto:).)*");
+    TaskFilter HTTP_DEFAULT = task -> task.getUrl().matches("^https?://((?!javascript:|mailto:| ).)*");
 }
