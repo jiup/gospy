@@ -36,15 +36,14 @@ public class WebCapturer {
                                 if (element.attr("href").matches("^https?://((?!javascript:|mailto:| ).)*")) {
                                     String rUrl = StringHelper.toRelativeUrl(task.getProtocol(), task.getHost(), task.getUrl(), element.attr("href"));
                                     rUrl = rUrl == null ? element.attr("href") : rUrl;
-                                    String fName = StringHelper.toEscapedFileName(rUrl).concat(".html");
-                                    System.out.println(element.attr("href") + " -> " + rUrl);
+                                    String name = rUrl.substring(rUrl.lastIndexOf('/') + 1);
+                                    rUrl = rUrl.substring(0, rUrl.length() - name.length() + 1);
+                                    element.attr("href", rUrl.concat("/").concat(StringHelper.toEscapedFileName(name)).concat(".html"));
                                 }
                             }
                             String fileName = StringHelper.toEscapedFileName(StringHelper.cutOffProtocolAndHost(task.getUrl())).concat(".html");
-                            System.out.println(fileName);
                             Result<String[]> result = new Result<>(null, new String[]{
-                                    StringHelper.toEscapedFileName(StringHelper.toAbsoluteUrl(task.getProtocol(), task.getHost(), null, task.getUrl())),
-                                    document.toString()
+                                    fileName, document.toString()
                             });
                             return result;
                         }).build())

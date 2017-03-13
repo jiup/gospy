@@ -21,7 +21,10 @@ import cc.gospy.core.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Arrays;
 
 public class HierarchicalFilePipeline implements Pipeline {
@@ -66,7 +69,19 @@ public class HierarchicalFilePipeline implements Pipeline {
             return;
         }
         String[] strings = (String[]) result.getData();
-//        System.out.println(Arrays.toString(strings));
+        System.out.println(Arrays.toString(strings));
+        if (strings[0].indexOf('/') != -1) {
+            new File(basePath + strings[0].substring(0, strings[0].indexOf('/'))).mkdirs();
+        }
+        File file = new File(basePath + strings[0]);
+        try {
+            file.createNewFile();
+            BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+            writer.write(strings[1]);
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
