@@ -16,14 +16,14 @@
 
 package cc.gospy.core.processor.impl;
 
-import cc.gospy.core.Page;
-import cc.gospy.core.Result;
-import cc.gospy.core.Task;
 import cc.gospy.core.TaskFilter;
 import cc.gospy.core.processor.DocumentExtractor;
 import cc.gospy.core.processor.ProcessException;
 import cc.gospy.core.processor.Processor;
 import cc.gospy.core.util.StringHelper;
+import cc.gospy.entity.Page;
+import cc.gospy.entity.Result;
+import cc.gospy.entity.Task;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -61,7 +61,11 @@ public class JSoupProcessor implements Processor {
         }
 
         public Builder setPageLinkDocumentExtractor() {
-            return setDocumentExtractor((task, document) -> {
+            return setDocumentExtractor((page, document) -> {
+                if (page.getStatusCode() != 200) {
+                    return null;
+                }
+                Task task = page.getTask();
                 Collection<Task> tasks = new HashSet<>();
                 for (Element element : document.select("a[href]")) {
                     String link = element.attr("href");
@@ -74,7 +78,11 @@ public class JSoupProcessor implements Processor {
         }
 
         public Builder setFullLinkDocumentExtractor() {
-            return setDocumentExtractor((task, document) -> {
+            return setDocumentExtractor((page, document) -> {
+                if (page.getStatusCode() != 200) {
+                    return null;
+                }
+                Task task = page.getTask();
                 Collection<Task> tasks = new LinkedHashSet<>();
                 for (Element element : document.select("[href]")) {
                     String link = element.attr("href");
@@ -102,6 +110,10 @@ public class JSoupProcessor implements Processor {
         }
     }
 
+    public DocumentExtractor<Document, ?> getDocumentExtractor() {
+        return handler;
+    }
+
     protected String getCharacterEncoding(Page page) {
         if (page.getExtra() == null || page.getExtra().get("Content-Type") == null) {
             return null;
@@ -123,12 +135,14 @@ public class JSoupProcessor implements Processor {
     @Override
     public <T> Result<T> process(Task task, Page page) throws ProcessException {
         try {
-            Result result = handler.handle(task, parse(page));
+            Result result = handler.handle(page, parse(page));
             if (result != null) {
                 if (result.getNewTasks() != null) {
                     result.getNewTasks().removeIf(filter.negate());
                 }
-                result.setPage(page);
+                if (result.getPage() == null) {
+                    result.setPage(page);
+                }
             }
             return result;
         } catch (Throwable throwable) {

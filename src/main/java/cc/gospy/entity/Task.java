@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package cc.gospy.core;
+package cc.gospy.entity;
 
 import com.google.common.hash.Funnel;
 import com.google.common.hash.Hashing;

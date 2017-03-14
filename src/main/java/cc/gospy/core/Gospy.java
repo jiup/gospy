@@ -24,6 +24,9 @@ import cc.gospy.core.processor.Processor;
 import cc.gospy.core.processor.Processors;
 import cc.gospy.core.scheduler.Scheduler;
 import cc.gospy.core.scheduler.Schedulers;
+import cc.gospy.entity.Page;
+import cc.gospy.entity.Result;
+import cc.gospy.entity.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,7 +87,7 @@ public class Gospy implements Observable {
                                 if (result.getData() != null) {
                                     Iterator<Pipeline> pipelineIterator = pipelineFactory.get(result.getType()).iterator();
                                     while (pipelineIterator.hasNext()) {
-                                        pipelineIterator.next().pipe(task, result);
+                                        pipelineIterator.next().pipe(page, result);
                                     }
                                 }
                             }
@@ -185,34 +188,45 @@ public class Gospy implements Observable {
         return new Builder();
     }
 
+    private Observable getObservableScheduler() {
+        if (!(scheduler instanceof Observable)) {
+            throw new RuntimeException("Scheduler [" + scheduler.getClass() + "] is not observable");
+        }
+        return (Observable) scheduler;
+    }
+
+    public boolean isObservable() {
+        return scheduler instanceof Observable;
+    }
+
     @Override
     public long getTotalTaskInputCount() {
-        return scheduler instanceof Observable ? ((Observable) scheduler).getTotalTaskInputCount() : -1;
+        return getObservableScheduler().getTotalTaskInputCount();
     }
 
     @Override
     public long getTotalTaskOutputCount() {
-        return scheduler instanceof Observable ? ((Observable) scheduler).getTotalTaskOutputCount() : -1;
+        return getObservableScheduler().getTotalTaskOutputCount();
     }
 
     @Override
     public long getRecodedTaskSize() {
-        return scheduler instanceof Observable ? ((Observable) scheduler).getRecodedTaskSize() : -1;
+        return getObservableScheduler().getRecodedTaskSize();
     }
 
     @Override
     public long getCurrentTaskQueueSize() {
-        return scheduler instanceof Observable ? ((Observable) scheduler).getCurrentTaskQueueSize() : -1;
+        return getObservableScheduler().getCurrentTaskQueueSize();
     }
 
     @Override
     public long getCurrentLazyTaskQueueSize() {
-        return scheduler instanceof Observable ? ((Observable) scheduler).getCurrentLazyTaskQueueSize() : -1;
+        return getObservableScheduler().getCurrentLazyTaskQueueSize();
     }
 
     @Override
     public long getRunningTimeMillis() {
-        return scheduler instanceof Observable ? ((Observable) scheduler).getRunningTimeMillis() : -1;
+        return getObservableScheduler().getRunningTimeMillis();
     }
 
     public static class Builder {

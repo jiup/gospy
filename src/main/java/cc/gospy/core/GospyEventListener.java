@@ -17,20 +17,24 @@
 package cc.gospy.core;
 
 import cc.gospy.core.util.Experimental;
+import cc.gospy.entity.Page;
+import cc.gospy.entity.Task;
 
 import java.util.Collection;
 
 @Experimental
-public abstract class GospyTemplate {
-    public GospyTemplate() {
+public abstract class GospyEventListener {
+    public GospyEventListener() {
     }
 
-    public GospyTemplate(String configFilePath) {
+    public GospyEventListener(String configFilePath) {
 
     }
 
-    public abstract Collection<Task> initialTasks();
+    public abstract Collection<Task> onInit();
 
-    public abstract Collection<Task> exceptionCaught(Throwable throwable, Task task, Page page);
+    public abstract Collection<Task> onError(Throwable throwable, Task task, Page page);
+
+    // RxJava
 
 }

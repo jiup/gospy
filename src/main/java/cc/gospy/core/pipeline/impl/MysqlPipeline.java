@@ -14,12 +14,7 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.processor;
+package cc.gospy.core.pipeline.impl;
 
-import cc.gospy.entity.Page;
-import cc.gospy.entity.Result;
-
-@FunctionalInterface
-public interface DocumentExtractor<T, D> {
-    Result<D> handle(Page page, T document) throws Throwable;
+public class MysqlPipeline {
 }

@@ -16,6 +16,9 @@
 
 package cc.gospy.core.pipeline;
 
+import cc.gospy.core.pipeline.impl.ConsolePipeline;
+import cc.gospy.core.pipeline.impl.HierarchicalFilePipeline;
+import cc.gospy.core.pipeline.impl.SimpleFilePipeline;
 import com.google.common.collect.ArrayListMultimap;
 
 import java.util.Collection;
@@ -23,15 +26,28 @@ import java.util.List;
 
 public class Pipelines {
     public static HierarchicalFilePipeline HierarchicalFilePipeline;
+    public static SimpleFilePipeline SimpleFilePipeline;
+    public static ConsolePipeline ConsolePipeline;
 
     private ArrayListMultimap<Class<?>, Pipeline> pipelines = ArrayListMultimap.create();
 
     public void register(Pipeline pipeline) {
+        if (pipeline == null) {
+            throw new RuntimeException("pipeline not initialized, please check your code.");
+        }
         pipelines.put(pipeline.getAcceptedType(), pipeline);
     }
 
-    public List<Pipeline> get(Class<?> resultType) throws PipelineNotFoundException {
-        return pipelines.get(resultType);
+    public <T> List<Pipeline> get(Class<T> resultType) throws PipelineNotFoundException {
+        List<Pipeline> list = pipelines.get(resultType);/*new ArrayList<>();
+        pipelines.get(resultType).forEach(p -> list.add(p));*/
+        if (list.size() == 0) {
+            list = pipelines.get(Object.class);
+            if (list.size() == 0) {
+                throw new PipelineNotFoundException(resultType.getSimpleName());
+            }
+        }
+        return list;
     }
 
     public Collection<Pipeline> getAll() {

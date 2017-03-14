@@ -16,7 +16,7 @@
 
 package cc.gospy.core.scheduler.queue.impl;
 
-import cc.gospy.core.Task;
+import cc.gospy.entity.Task;
 import cc.gospy.core.scheduler.queue.LazyTaskHandler;
 import cc.gospy.core.scheduler.queue.LazyTaskQueue;
 import org.slf4j.Logger;

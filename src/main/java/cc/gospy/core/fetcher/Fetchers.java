@@ -30,6 +30,9 @@ public class Fetchers {
     private Map<String, Fetcher> fetchers = new HashMap<>();
 
     public void register(Fetcher fetcher) {
+        if (fetcher == null) {
+            throw new RuntimeException("fetcher not initialized, please check your code.");
+        }
         for (String protocol : fetcher.getAcceptedProtocols()) {
             fetchers.put(protocol, fetcher);
         }

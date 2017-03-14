@@ -16,11 +16,11 @@
 
 package cc.gospy.core.fetcher.impl;
 
-import cc.gospy.core.Page;
-import cc.gospy.core.Task;
 import cc.gospy.core.fetcher.FetchException;
 import cc.gospy.core.fetcher.Fetcher;
 import cc.gospy.core.fetcher.UserAgent;
+import cc.gospy.entity.Page;
+import cc.gospy.entity.Task;
 import org.apache.http.*;
 import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.client.config.RequestConfig;
@@ -96,6 +96,7 @@ public class HttpFetcher implements Fetcher, Closeable {
             ((PoolingHttpClientConnectionManager) connectionManager).setDefaultMaxPerRoute(maxConnPerRoute);
             client = getHttpClientInstance();
             cleanerThread = new PoolingHttpClientConnectionCleaner(connectionManager, connExpireSeconds);
+            cleanerThread.setDaemon(true);
             cleanerThread.start();
         }
     }
@@ -323,7 +324,7 @@ public class HttpFetcher implements Fetcher, Closeable {
             // send request
             long timer = System.currentTimeMillis();
             String url = task.getUrl();
-            response = (extra != null && extra.size() > 0) ? doPost(url, extra) : doGet(url);
+            response = (extra != null && extra.get("form") != null) ? doPost(url, (Map<String, Object>) extra.get("form")) : doGet(url);
             timer = System.currentTimeMillis() - timer;
 
             // load page

@@ -17,37 +17,77 @@
 package cc.gospy.example;
 
 import cc.gospy.core.Gospy;
-import cc.gospy.core.Result;
 import cc.gospy.core.fetcher.Fetchers;
 import cc.gospy.core.pipeline.Pipelines;
 import cc.gospy.core.processor.Processors;
 import cc.gospy.core.scheduler.Schedulers;
 import cc.gospy.core.util.StringHelper;
+import cc.gospy.entity.Result;
+import cc.gospy.entity.Task;
 import org.jsoup.nodes.Element;
+
+import java.net.URLDecoder;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 
 public class WebCapturer {
     public static void main(String[] args) {
         Gospy.custom()
-                .setScheduler(Schedulers.GeneralScheduler.getDefault())
-                .addFetcher(Fetchers.HttpFetcher.custom().setAutoKeepAlive(false).build())
+                .setScheduler(Schedulers.GeneralScheduler.custom().build())
+                .addFetcher(Fetchers.HttpFetcher.custom().build())
                 .addProcessor(Processors.JSoupProcessor.custom()
-                        .setDocumentExtractor((task, document) -> {
-                            for (Element element : document.select("a[href]")) {
-                                if (element.attr("href").matches("^https?://((?!javascript:|mailto:| ).)*")) {
-                                    String rUrl = StringHelper.toRelativeUrl(task.getProtocol(), task.getHost(), task.getUrl(), element.attr("href"));
-                                    rUrl = rUrl == null ? element.attr("href") : rUrl;
+                        .setDocumentExtractor((page, document) -> {
+                            Task task = page.getTask();
+                            if (page.getStatusCode() != 200) {
+                                if (page.getStatusCode() == 302 || page.getStatusCode() == 301) {
+                                    Collection<Task> tasks = new ArrayList<>();
+                                    tasks.add(new Task(page.getExtra().get("Location").toString()));
+                                    return new Result<>(tasks);
+                                }
+                                System.err.println(task + "\t" + page.getStatusCode());
+                            }
+                            Collection<Task> tasks = new HashSet<>();
+                            Collection<Element> elements = document.select("a[href]");
+                            elements.addAll(document.select("link[href]"));
+                            elements.addAll(document.select("[src]"));
+                            for (Element element : elements) {
+                                String link = element.hasAttr("href") ? element.attr("href") : element.attr("src");
+                                link = link.indexOf('#') != -1 ? link.substring(0, link.indexOf('#')) : link;
+                                boolean rootPage = link.endsWith("/");
+                                link = rootPage ? link.concat("null") : link;
+                                link = StringHelper.toAbsoluteUrl(task.getProtocol(), task.getHost(), task.getUrl(), link);
+                                if (link.matches("^https?://((?!javascript:|mailto:| ).)*")) {
+                                    String url = link;
+                                    String rUrl = StringHelper.toRelativeUrl(task.getProtocol(), task.getHost(), task.getUrl(), url);
+                                    if (rUrl == null) {
+                                        // crawl without outside pages
+                                        continue;
+                                    } else {
+                                        tasks.add(new Task(rootPage ? link.substring(0, link.length() - 4) : link));
+                                    }
                                     String name = rUrl.substring(rUrl.lastIndexOf('/') + 1);
-                                    rUrl = rUrl.substring(0, rUrl.length() - name.length() + 1);
-                                    element.attr("href", rUrl.concat("/").concat(StringHelper.toEscapedFileName(name)).concat(".html"));
+                                    name = StringHelper.toEscapedFileName(name);
+                                    if (element.tagName().equals("a")) {
+                                        name = name.endsWith(".html") ? name : name.concat(".html");
+                                    }
+                                    rUrl = rUrl.substring(0, rUrl.lastIndexOf('/') + 1);
+                                    String modifiedLink = rUrl.concat(name);
+//                                    System.out.println(modifiedLink + " = " + rUrl + " + " + name);
+                                    element.attr(element.hasAttr("href") ? "href" : "src", modifiedLink);
                                 }
                             }
-                            String fileName = StringHelper.toEscapedFileName(StringHelper.cutOffProtocolAndHost(task.getUrl())).concat(".html");
-                            Result<String[]> result = new Result<>(null, new String[]{
-                                    fileName, document.toString()
-                            });
+                            String name = StringHelper.toEscapedFileName(task.getUrl().substring(task.getUrl().lastIndexOf('/') + 1));
+                            name = name.endsWith(".html") ? name : name.concat(".html");
+                            String dir = StringHelper.cutOffProtocolAndHost(task.getUrl().substring(0, task.getUrl().lastIndexOf('/') + 1));
+                            page.getExtra().put("savePath", URLDecoder.decode(dir.concat(name), Charset.defaultCharset().name()));
+                            Result<byte[]> result = new Result<>(tasks, document.toString().getBytes());
                             return result;
                         }).build())
-                .addPipeline(Pipelines.HierarchicalFilePipeline.custom().setBasePath("D:/123/456/").build())
-                .build().addTask("http://blog.csdn.net/futureer/article/details/19684981").setVisitGap(500).start(1);
+                .addProcessor(Processors.UniversalProcessor.custom().build())
+                .addPipeline(Pipelines.ConsolePipeline.getDefault())
+//                .addPipeline(Pipelines.HierarchicalFilePipeline.custom().setBasePath("D:/Gospy/blog.timeliar.date/").build())
+                .build().addTask("https://blog.timeliar.date/").setVisitGap(1000).start(1);
     }
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package cc.gospy.core;
+package cc.gospy.entity;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -37,7 +37,7 @@ public class Result<T> implements Serializable {
         this.data = data;
     }
 
-    public Class<?> getType() {
+    public Class getType() {
         return data != null ? data.getClass() : null;
     }
 

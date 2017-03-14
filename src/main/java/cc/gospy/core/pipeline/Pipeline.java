@@ -16,11 +16,11 @@
 
 package cc.gospy.core.pipeline;
 
-import cc.gospy.core.Result;
-import cc.gospy.core.Task;
+import cc.gospy.entity.Page;
+import cc.gospy.entity.Result;
 
 public interface Pipeline {
-    void pipe(Task task, Result result);
+    void pipe(Page page, Result<?> result) throws PipeException;
 
     Class getAcceptedType();
 }

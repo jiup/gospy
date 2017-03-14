@@ -17,7 +17,7 @@
 package cc.gospy.core.scheduler.impl;
 
 import cc.gospy.core.Observable;
-import cc.gospy.core.Task;
+import cc.gospy.entity.Task;
 import cc.gospy.core.TaskFilter;
 import cc.gospy.core.scheduler.Scheduler;
 import cc.gospy.core.scheduler.filter.DuplicateRemover;
@@ -136,7 +136,7 @@ public class GeneralScheduler implements Scheduler, Observable {
     }
 
     public static GeneralScheduler getDefault() {
-        return new Builder().Build();
+        return new Builder().build();
     }
 
     public static Builder custom() {
@@ -170,7 +170,7 @@ public class GeneralScheduler implements Scheduler, Observable {
             return this;
         }
 
-        public GeneralScheduler Build() {
+        public GeneralScheduler build() {
             return scheduler = new GeneralScheduler(tq, ltq, dr, tf);
         }
     }

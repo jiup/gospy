@@ -16,7 +16,7 @@
 
 package cc.gospy.core.scheduler.filter.impl;
 
-import cc.gospy.core.Task;
+import cc.gospy.entity.Task;
 import cc.gospy.core.scheduler.filter.DuplicateRemover;
 
 public class BloomDuplicateRemover implements DuplicateRemover {

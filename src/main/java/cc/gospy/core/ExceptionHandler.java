@@ -16,6 +16,9 @@
 
 package cc.gospy.core;
 
+import cc.gospy.entity.Page;
+import cc.gospy.entity.Task;
+
 import java.util.Collection;
 
 @FunctionalInterface

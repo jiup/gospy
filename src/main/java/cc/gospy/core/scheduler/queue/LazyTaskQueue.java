@@ -16,7 +16,7 @@
 
 package cc.gospy.core.scheduler.queue;
 
-import cc.gospy.core.Task;
+import cc.gospy.entity.Task;
 
 import java.util.concurrent.PriorityBlockingQueue;
 

@@ -16,6 +16,8 @@
 
 package cc.gospy.core;
 
+import cc.gospy.entity.Task;
+
 import java.util.function.Predicate;
 
 @FunctionalInterface

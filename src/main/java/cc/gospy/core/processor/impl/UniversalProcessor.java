@@ -16,20 +16,54 @@
 
 package cc.gospy.core.processor.impl;
 
-import cc.gospy.core.Page;
-import cc.gospy.core.Result;
-import cc.gospy.core.Task;
+import cc.gospy.core.processor.DocumentExtractor;
 import cc.gospy.core.processor.ProcessException;
 import cc.gospy.core.processor.Processor;
+import cc.gospy.entity.Page;
+import cc.gospy.entity.Result;
+import cc.gospy.entity.Task;
 
 public class UniversalProcessor implements Processor {
+    private DocumentExtractor<byte[], ?> handler;
+
+    private UniversalProcessor(DocumentExtractor<byte[], ?> handler) {
+        this.handler = handler;
+    }
+
+    public static Builder custom() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private DocumentExtractor<byte[], ?> de;
+
+        public <T> Builder setDocumentExtractor(DocumentExtractor<byte[], T> handler) {
+            de = handler;
+            return this;
+        }
+
+        public UniversalProcessor build() {
+            return new UniversalProcessor(de != null ? de :
+                    (DocumentExtractor<byte[], byte[]>) (page, document) -> new Result<>(null, document));
+        }
+
+    }
+
     @Override
     public <T> Result<T> process(Task task, Page page) throws ProcessException {
-        return null;
+        try {
+            Result result = handler.handle(page, page.getContent());
+            if (result.getPage() == null) {
+                result.setPage(page);
+            }
+            return result;
+        } catch (Throwable throwable) {
+            throw new ProcessException(throwable.getMessage(), throwable);
+        }
     }
 
     @Override
     public String[] getAcceptedContentType() {
-        return new String[0];
+        return new String[]{"*/*"};
     }
 }

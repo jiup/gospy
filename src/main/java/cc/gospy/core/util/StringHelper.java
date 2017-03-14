@@ -16,7 +16,7 @@
 
 package cc.gospy.core.util;
 
-// here are suck codes, need to be improved.
+// these are suck codes, need to be improved.
 public class StringHelper {
     public static String toAbsoluteUrl(final String protocol, final String host, final String parentUrl, final String anyUrl) {
         String res, path = anyUrl.trim();
@@ -44,11 +44,19 @@ public class StringHelper {
         return prefix.concat(suffix.startsWith("/") ? suffix : "/" + suffix);
     }
 
+    public static void main(String[] args) {
+        String s = toRelativeUrl("http", "smallsoho.com", "http://smallsoho.com/", "http://smallsoho.com/catags/adfa/");
+        System.out.println(s);
+    }
+
     @Experimental
     public static String toRelativeUrl(final String protocol, final String host, final String parentUrl, final String targetUrl) {
+        if (parentUrl.equals(targetUrl) || parentUrl.equals(targetUrl.concat("/"))) {
+            return parentUrl;
+        }
         String pattern = protocol.concat("://").concat(host).concat("/"), target = targetUrl;
         String parent = parentUrl.length() == pattern.length() - 1 ? parentUrl.concat("/") : parentUrl;
-        String parentDir = parent.lastIndexOf('/') == -1 ? "/" : parent.substring(pattern.length() - 1, parent.lastIndexOf('/'));
+        String parentDir = parent.substring(pattern.length() - 1, parent.lastIndexOf('/'));
         StringBuffer relativeUrl = new StringBuffer();
         if (target.matches("http://.*|https://.*|//.*|/.*")) {
             target = target.startsWith("//") ? "http:".concat(target) : target;
@@ -56,8 +64,6 @@ public class StringHelper {
             if (!target.startsWith(pattern)) {
                 return null; // target url crosses domain
             }
-        } else {
-            target = target.length() == pattern.length() - 1 ? target.concat("/") : target;
         }
         String res = target.substring(target.lastIndexOf('/') + 1);
         String targetDir = target.substring(pattern.length() - 1, target.lastIndexOf('/'));
@@ -65,16 +71,33 @@ public class StringHelper {
             if (0 == Math.min(parentDir.length(), targetDir.length()) || parentDir.charAt(0) != targetDir.charAt(0)) {
                 break;
             }
-            parentDir = parentDir.substring(1);
-            targetDir = targetDir.substring(1);
+            if (parentDir.charAt(0) == '/' && targetDir.charAt(0) == '/') {
+                parentDir = parentDir.substring(1);
+                targetDir = targetDir.substring(1);
+                continue;
+            }
+            if (parentDir.indexOf('/') != -1 && targetDir.indexOf('/') != -1) {
+                String s = parentDir.substring(0, parentDir.indexOf('/'));
+                if (s.equals(targetDir.substring(0, targetDir.indexOf('/')))) {
+                    parentDir = parentDir.substring(s.length());
+                    targetDir = targetDir.substring(s.length());
+                } else {
+                    break;
+                }
+            } else {
+                break;
+            }
         }
         int depth = parentDir.length() != 0 ? parentDir.split("/").length : 0;
         depth = targetDir.length() != 0 ? depth : depth - 1;
         while (depth-- > 0) {
             relativeUrl.append("../");
         }
-        relativeUrl.append(targetDir);
-        return (parentDir.length() != 0 ? "" : ".").concat(relativeUrl.toString()).concat(targetDir.length() == 0 ? "" : "/").concat(res);
+        relativeUrl.append(targetDir.startsWith("/") ? targetDir.substring(1) : targetDir);
+        return (parentDir.length() == 0 ? "./" : "")
+                .concat(relativeUrl.toString())
+                .concat(targetDir.length() == 0 ? "" : "/")
+                .concat(res);
     }
 
     public static boolean isAbsoluteUrl(String url) {
@@ -105,7 +128,78 @@ public class StringHelper {
         return unescapedFileName.trim().replaceAll(" +|://+|/+|\\\\+|\\*+|:+|\"+|\\?+|<+|>+|\\|+", escapeStr);
     }
 
-    public static void main(String[] args) {
-        System.out.println(toEscapedFileName("https://passport.baidu.com/v2/?login&tpl=mn&u=http%3A%2F%2Fwww.baidu.com%2F"));
+    public static String toString(boolean[] value) {
+        StringBuffer buffer = new StringBuffer();
+        buffer.append("boolean[").append(value.length).append("]");
+        for (int i = 0; i < value.length; i++) {
+            buffer.append(i % 32 == 0 ? "\n" : "").append(value[i] ? "T" : "F").append(" ");
+        }
+        return buffer.append("\n").toString();
     }
+
+    public static String toString(byte[] value) {
+        StringBuffer buffer = new StringBuffer();
+        char[] hex = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+        buffer.append("byte[").append(value.length).append("]");
+        for (int i = 0; i < value.length; i++) {
+            buffer.append(i % 32 == 0 ? String.format("\n%" + Math.pow(value.length, .1) + "d:\t", i) : "")
+                    .append(hex[(value[i] >>> 4) & 0x0F]).append(hex[(value[i]) & 0x0F]).append(" ");
+        }
+        return buffer.append("\n").toString();
+    }
+
+    public static String toString(short[] value) {
+        StringBuffer buffer = new StringBuffer();
+        buffer.append("short[").append(value.length).append("]");
+        for (int i = 0; i < value.length; i++) {
+            buffer.append(i % 16 == 0 ? "\n" : "").append(value[i]).append(" ");
+        }
+        return buffer.append("\n").toString();
+    }
+
+    public static String toString(int[] value) {
+        StringBuffer buffer = new StringBuffer();
+        buffer.append("int[").append(value.length).append("]");
+        for (int i = 0; i < value.length; i++) {
+            buffer.append(i % 16 == 0 ? "\n" : "").append(value[i]).append(" ");
+        }
+        return buffer.append("\n").toString();
+    }
+
+    public static String toString(float[] value) {
+        StringBuffer buffer = new StringBuffer();
+        buffer.append("float[").append(value.length).append("]");
+        for (int i = 0; i < value.length; i++) {
+            buffer.append(i % 16 == 0 ? "\n" : "").append(value[i]).append(" ");
+        }
+        return buffer.append("\n").toString();
+    }
+
+    public static String toString(double[] value) {
+        StringBuffer buffer = new StringBuffer();
+        buffer.append("double[").append(value.length).append("]");
+        for (int i = 0; i < value.length; i++) {
+            buffer.append(i % 8 == 0 ? "\n" : "").append(value[i]).append(" ");
+        }
+        return buffer.append("\n").toString();
+    }
+
+    public static String toString(long[] value) {
+        StringBuffer buffer = new StringBuffer();
+        buffer.append("long[").append(value.length).append("]");
+        for (int i = 0; i < value.length; i++) {
+            buffer.append(i % 8 == 0 ? "\n" : "").append(value[i]).append(" ");
+        }
+        return buffer.append("\n").toString();
+    }
+
+    public static String toString(char[] value) {
+        StringBuffer buffer = new StringBuffer();
+        buffer.append("char[").append(value.length).append("]");
+        for (int i = 0; i < value.length; i++) {
+            buffer.append(i % 64 == 0 ? "\n" : "").append(value[i]);
+        }
+        return buffer.append("\n").toString();
+    }
+
 }

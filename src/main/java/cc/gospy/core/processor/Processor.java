@@ -16,9 +16,9 @@
 
 package cc.gospy.core.processor;
 
-import cc.gospy.core.Page;
-import cc.gospy.core.Result;
-import cc.gospy.core.Task;
+import cc.gospy.entity.Page;
+import cc.gospy.entity.Result;
+import cc.gospy.entity.Task;
 
 public interface Processor {
     <T> Result<T> process(Task task, Page page) throws ProcessException;
