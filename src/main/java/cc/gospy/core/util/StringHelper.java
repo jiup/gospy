@@ -16,7 +16,6 @@
 
 package cc.gospy.core.util;
 
-// these are suck codes, need to be improved.
 public class StringHelper {
     public static String toAbsoluteUrl(final String protocol, final String host, final String parentUrl, final String anyUrl) {
         String res, path = anyUrl.trim();
@@ -35,18 +34,13 @@ public class StringHelper {
     }
 
     public static String getNavigateTargetUrl(final String parentUrl, final String relativeUrl) {
-        String prefix = parentUrl.replaceAll("://", "").indexOf("/") != -1 ? parentUrl.substring(0, parentUrl.lastIndexOf('/')) : parentUrl.concat("/");
+        String prefix = parentUrl.replaceAll("://", "").contains("/") ? parentUrl.substring(0, parentUrl.lastIndexOf('/')) : parentUrl.concat("/");
         String suffix = relativeUrl.startsWith("./") ? relativeUrl.substring(2) : relativeUrl;
         while (suffix.startsWith("../")) {
             suffix = suffix.substring(3);
-            prefix = prefix.replaceAll("://", "").indexOf("/") != -1 ? prefix.substring(0, prefix.lastIndexOf('/')) : prefix;
+            prefix = prefix.replaceAll("://", "").contains("/") ? prefix.substring(0, prefix.lastIndexOf('/')) : prefix;
         }
         return prefix.concat(suffix.startsWith("/") ? suffix : "/" + suffix);
-    }
-
-    public static void main(String[] args) {
-        String s = toRelativeUrl("http", "smallsoho.com", "http://smallsoho.com/", "http://smallsoho.com/catags/adfa/");
-        System.out.println(s);
     }
 
     @Experimental
@@ -57,7 +51,7 @@ public class StringHelper {
         String pattern = protocol.concat("://").concat(host).concat("/"), target = targetUrl;
         String parent = parentUrl.length() == pattern.length() - 1 ? parentUrl.concat("/") : parentUrl;
         String parentDir = parent.substring(pattern.length() - 1, parent.lastIndexOf('/'));
-        StringBuffer relativeUrl = new StringBuffer();
+        StringBuilder relativeUrl = new StringBuilder();
         if (target.matches("http://.*|https://.*|//.*|/.*")) {
             target = target.startsWith("//") ? "http:".concat(target) : target;
             target = target.startsWith("/") ? pattern.concat(target.substring(1)) : target;
@@ -129,7 +123,7 @@ public class StringHelper {
     }
 
     public static String toString(boolean[] value) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         buffer.append("boolean[").append(value.length).append("]");
         for (int i = 0; i < value.length; i++) {
             buffer.append(i % 32 == 0 ? "\n" : "").append(value[i] ? "T" : "F").append(" ");
@@ -138,18 +132,18 @@ public class StringHelper {
     }
 
     public static String toString(byte[] value) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         char[] hex = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
         buffer.append("byte[").append(value.length).append("]");
         for (int i = 0; i < value.length; i++) {
-            buffer.append(i % 32 == 0 ? String.format("\n%" + Math.pow(value.length, .1) + "d:\t", i) : "")
+            buffer.append(i % 32 == 0 ? String.format("\n%-6d:\t", i) : "")
                     .append(hex[(value[i] >>> 4) & 0x0F]).append(hex[(value[i]) & 0x0F]).append(" ");
         }
         return buffer.append("\n").toString();
     }
 
     public static String toString(short[] value) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         buffer.append("short[").append(value.length).append("]");
         for (int i = 0; i < value.length; i++) {
             buffer.append(i % 16 == 0 ? "\n" : "").append(value[i]).append(" ");
@@ -158,7 +152,7 @@ public class StringHelper {
     }
 
     public static String toString(int[] value) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         buffer.append("int[").append(value.length).append("]");
         for (int i = 0; i < value.length; i++) {
             buffer.append(i % 16 == 0 ? "\n" : "").append(value[i]).append(" ");
@@ -167,7 +161,7 @@ public class StringHelper {
     }
 
     public static String toString(float[] value) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         buffer.append("float[").append(value.length).append("]");
         for (int i = 0; i < value.length; i++) {
             buffer.append(i % 16 == 0 ? "\n" : "").append(value[i]).append(" ");
@@ -176,7 +170,7 @@ public class StringHelper {
     }
 
     public static String toString(double[] value) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         buffer.append("double[").append(value.length).append("]");
         for (int i = 0; i < value.length; i++) {
             buffer.append(i % 8 == 0 ? "\n" : "").append(value[i]).append(" ");
@@ -185,7 +179,7 @@ public class StringHelper {
     }
 
     public static String toString(long[] value) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         buffer.append("long[").append(value.length).append("]");
         for (int i = 0; i < value.length; i++) {
             buffer.append(i % 8 == 0 ? "\n" : "").append(value[i]).append(" ");
@@ -194,7 +188,7 @@ public class StringHelper {
     }
 
     public static String toString(char[] value) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         buffer.append("char[").append(value.length).append("]");
         for (int i = 0; i < value.length; i++) {
             buffer.append(i % 64 == 0 ? "\n" : "").append(value[i]);
