@@ -17,9 +17,7 @@
 package cc.gospy.example.standalone;
 
 import cc.gospy.core.Gospy;
-import cc.gospy.core.GospyEventListener;
-import cc.gospy.core.entity.Page;
-import cc.gospy.core.entity.Result;
+import cc.gospy.core.TaskFilter;
 import cc.gospy.core.entity.Task;
 import cc.gospy.core.fetcher.Fetchers;
 import cc.gospy.core.pipeline.Pipelines;
@@ -36,39 +34,27 @@ public class TinyDemo {
                 .setScheduler(Schedulers.GeneralScheduler.getDefault())
                 .addFetcher(Fetchers.HttpFetcher.getDefault())
                 .addFetcher(Fetchers.FileFetcher.getDefault())
-                .addProcessor(Processors.XPathProcessor.custom()
-                        .extract("//a/@href", (task, resultList) -> {
-                            Collection<Task> tasks = new ArrayList<>();
-                            for (String url : resultList) {
-                                tasks.add(new Task(url));
-                            }
-                            return tasks;
-                        }).build())
+//                .addProcessor(Processors.XPathProcessor.custom()
+//                        .extract("//a/@href", (task, resultList) -> {
+//                            Collection<Task> tasks = new ArrayList<>();
+//                            for (String url : resultList) {
+//                                tasks.add(new Task(url));
+//                            }
+//                            return tasks;
+//                        }).build())
+                .addProcessor(Processors.RegexProcessor.custom().extract("href\\s*=\\s*((\"(.*?)\")|('(.*?)'))", (task, matcher) -> {
+                    Collection<Task> tasks = new ArrayList<>();
+                    while (matcher.find()) {
+                        Task newTask = new Task(StringHelper.toAbsoluteUrl(task, matcher.group(3)));
+                        tasks.add(newTask);
+                    }
+                    return tasks;
+                }).setTaskFilter(TaskFilter.HTTP_DEFAULT).build())
                 .addPipeline(Pipelines.ConsolePipeline.getDefault())
                 .addPipeline(Pipelines.SimpleFilePipeline.getDefault())
                 .build()
                 .addTask("https://blog.timeliar.date/links/")
                 .addTask("https://www.zhangjiupeng.com/")
                 .setVisitGap(1000).start(20);
-
-    }
-
-    class Test extends GospyEventListener {
-
-        @Override
-        public Collection<Task> onInit() {
-            return null;
-        }
-
-        @Override
-        public Collection<Task> process(Page page, Result result) {
-            return null;
-        }
-
-        @Override
-        public Collection<Task> onError(Throwable throwable, Task task, Page page) {
-            return null;
-        }
-
     }
 }

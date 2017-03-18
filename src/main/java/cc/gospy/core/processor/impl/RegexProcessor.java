@@ -23,6 +23,7 @@ import cc.gospy.core.entity.Task;
 import cc.gospy.core.processor.ProcessException;
 import cc.gospy.core.processor.Processor;
 
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -40,7 +41,7 @@ public class RegexProcessor implements Processor {
         return new Builder();
     }
 
-    public RegexProcessor getDefault() {
+    public static RegexProcessor getDefault() {
         return new Builder().build();
     }
 
@@ -73,19 +74,6 @@ public class RegexProcessor implements Processor {
         }
     }
 
-    public static void main(String[] args) {
-        Pattern pattern = Pattern.compile("\\s*(?i)href\\s*=\\s*(\"([^\"]*\")|'[^']*'|([^'\">\\s]+))");
-        pattern = Pattern.compile("href\\s*=\\s*((\"(.*?)\")|('(.*?)'))");
-//        pattern = Pattern.compile("href\\s*=\\s*'(.*?)'|href\\s*=\\s*\"(.*?)\"");
-        Matcher matcher = pattern.matcher("<a href=\"http://stats.stackexchange.com/questions/268126/why-are-survival-times-assumed-to-be-exponentially-distributed\" class=\"js-gps-track\" data-gps-track=\"site.switch({ item_type:11, target_site:65 }); posts_hot_network.click({ item_type:2, location:11 })\">\n" +
-                "                    Why are survival times assumed to be exponentially distributed?\n" +
-                "                </a>");
-        while (matcher.find()) {
-            System.out.println("-> " + matcher.group(3));
-        }
-
-    }
-
     @FunctionalInterface
     public interface ResultHandler {
         Collection<Task> handle(Task task, Matcher matcher);
@@ -95,7 +83,7 @@ public class RegexProcessor implements Processor {
     public Result<Collection<Task>> process(Task task, Page page) throws ProcessException {
         try {
             Collection<Task> tasks = new LinkedHashSet<>();
-            String content = page.getContent().toString();
+            String content = new String(page.getContent(), Charset.defaultCharset());
             handlerChain.forEach((regex, resultHandler) -> {
                 Pattern pattern = Pattern.compile(regex);
                 Matcher matcher = pattern.matcher(content);

@@ -16,6 +16,8 @@
 
 package cc.gospy.core.util;
 
+import cc.gospy.core.entity.Task;
+
 public class StringHelper {
     public static String toAbsoluteUrl(final String protocol, final String host, final String parentUrl, final String anyUrl) {
         String res, path = anyUrl.trim();
@@ -31,6 +33,13 @@ public class StringHelper {
         res = res.indexOf('#') != -1 ? res.substring(0, res.indexOf('#')) : res; // remove in-page jump
         res = res.endsWith("/") ? res.substring(0, res.length() - 1) : res; // avoid duplicate links
         return res;
+    }
+
+    public static String toAbsoluteUrl(final Task parentTask, final String targetUrl) {
+        if (targetUrl == null || targetUrl.equals("")) {
+            return parentTask.getUrl();
+        }
+        return toAbsoluteUrl(parentTask.getProtocol(), parentTask.getHost(), parentTask.getUrl(), targetUrl);
     }
 
     public static String getNavigateTargetUrl(final String parentUrl, final String relativeUrl) {
