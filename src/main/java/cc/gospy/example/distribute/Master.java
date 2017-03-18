@@ -14,16 +14,7 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.scheduler.filter;
+package cc.gospy.example.distribute;
 
-import cc.gospy.core.entity.Task;
-
-public interface DuplicateRemover {
-    void record(Task task);
-
-    void delete(Task task);
-
-    boolean exists(Task task);
-
-    long size();
+public class Master {
 }

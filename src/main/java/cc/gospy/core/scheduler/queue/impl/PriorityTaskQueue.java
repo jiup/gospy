@@ -16,7 +16,7 @@
 
 package cc.gospy.core.scheduler.queue.impl;
 
-import cc.gospy.entity.Task;
+import cc.gospy.core.entity.Task;
 import cc.gospy.core.scheduler.queue.TaskQueue;
 
 import java.util.Iterator;

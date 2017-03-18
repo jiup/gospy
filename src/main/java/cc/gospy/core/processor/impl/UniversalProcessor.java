@@ -19,9 +19,9 @@ package cc.gospy.core.processor.impl;
 import cc.gospy.core.processor.DocumentExtractor;
 import cc.gospy.core.processor.ProcessException;
 import cc.gospy.core.processor.Processor;
-import cc.gospy.entity.Page;
-import cc.gospy.entity.Result;
-import cc.gospy.entity.Task;
+import cc.gospy.core.entity.Page;
+import cc.gospy.core.entity.Result;
+import cc.gospy.core.entity.Task;
 
 public class UniversalProcessor implements Processor {
     private DocumentExtractor<byte[], ?> handler;

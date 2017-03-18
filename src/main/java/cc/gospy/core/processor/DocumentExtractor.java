@@ -16,8 +16,8 @@
 
 package cc.gospy.core.processor;
 
-import cc.gospy.entity.Page;
-import cc.gospy.entity.Result;
+import cc.gospy.core.entity.Page;
+import cc.gospy.core.entity.Result;
 
 @FunctionalInterface
 public interface DocumentExtractor<T, D> {

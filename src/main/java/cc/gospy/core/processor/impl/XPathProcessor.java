@@ -17,11 +17,11 @@
 package cc.gospy.core.processor.impl;
 
 import cc.gospy.core.TaskFilter;
+import cc.gospy.core.entity.Page;
+import cc.gospy.core.entity.Result;
+import cc.gospy.core.entity.Task;
 import cc.gospy.core.processor.ProcessException;
 import cc.gospy.core.processor.Processor;
-import cc.gospy.entity.Page;
-import cc.gospy.entity.Result;
-import cc.gospy.entity.Task;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import us.codecraft.xsoup.Xsoup;
@@ -31,11 +31,12 @@ import java.nio.charset.Charset;
 import java.util.*;
 
 public class XPathProcessor implements Processor {
-    private Map<String, ResultHandler> handlerChain = new LinkedHashMap<>();
+    private Map<String, ResultHandler> handlerChain;
     private TaskFilter filter;
 
     private XPathProcessor(Map<String, ResultHandler> handlerChain, TaskFilter filter) {
         this.filter = filter;
+        ;
         this.handlerChain = handlerChain;
     }
 
@@ -97,20 +98,16 @@ public class XPathProcessor implements Processor {
     }
 
     @Override
-    public Result<Collection<String>> process(Task task, Page page) throws ProcessException {
+    public Result<Collection<Task>> process(Task task, Page page) throws ProcessException {
         try {
-            Collection<String> list = new LinkedHashSet<>();
             Collection<Task> tasks = new LinkedHashSet<>();
             Document document = parse(page);
             handlerChain.forEach((xpath, handler) -> {
                 List<String> links = Xsoup.compile(xpath).evaluate(document).list();
-                list.addAll(links);
                 tasks.addAll(handler.handle(task, links));
             });
-            Result<Collection<String>> result = new Result<>(tasks, list);
-            if (result.getPage() == null) {
-                result.setPage(page);
-            }
+            Result<Collection<Task>> result = new Result<>(tasks, tasks);
+            result.setPage(page);
             return result;
         } catch (Throwable throwable) {
             throw new ProcessException(throwable.getMessage(), throwable);

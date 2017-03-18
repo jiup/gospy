@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.pipeline.impl;
+package cc.gospy.example.distribute;
 
-public class MysqlPipeline {
+public class Slaver {
 }

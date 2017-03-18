@@ -18,8 +18,8 @@ package cc.gospy.core.pipeline.impl;
 
 import cc.gospy.core.pipeline.PipeException;
 import cc.gospy.core.pipeline.Pipeline;
-import cc.gospy.entity.Page;
-import cc.gospy.entity.Result;
+import cc.gospy.core.entity.Page;
+import cc.gospy.core.entity.Result;
 
 import java.io.File;
 import java.io.FileOutputStream;

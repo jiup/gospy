@@ -16,7 +16,7 @@
 
 package cc.gospy.core;
 
-import cc.gospy.entity.Task;
+import cc.gospy.core.entity.Task;
 
 import java.util.function.Predicate;
 

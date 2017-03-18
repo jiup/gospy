@@ -16,8 +16,8 @@
 
 package cc.gospy.core.fetcher;
 
-import cc.gospy.entity.Page;
-import cc.gospy.entity.Task;
+import cc.gospy.core.entity.Page;
+import cc.gospy.core.entity.Task;
 
 public interface Fetcher {
     Page fetch(Task task) throws FetchException;

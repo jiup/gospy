@@ -17,7 +17,7 @@
 package cc.gospy.core.scheduler.impl;
 
 import cc.gospy.core.scheduler.Scheduler;
-import cc.gospy.entity.Task;
+import cc.gospy.core.entity.Task;
 
 public class RemoteScheduler implements Scheduler {
     @Override

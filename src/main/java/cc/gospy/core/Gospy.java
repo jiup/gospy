@@ -16,6 +16,9 @@
 
 package cc.gospy.core;
 
+import cc.gospy.core.entity.Page;
+import cc.gospy.core.entity.Result;
+import cc.gospy.core.entity.Task;
 import cc.gospy.core.fetcher.Fetcher;
 import cc.gospy.core.fetcher.Fetchers;
 import cc.gospy.core.pipeline.Pipeline;
@@ -24,9 +27,6 @@ import cc.gospy.core.processor.Processor;
 import cc.gospy.core.processor.Processors;
 import cc.gospy.core.scheduler.Scheduler;
 import cc.gospy.core.scheduler.Schedulers;
-import cc.gospy.entity.Page;
-import cc.gospy.entity.Result;
-import cc.gospy.entity.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package cc.gospy.entity;
+package cc.gospy.core.entity;
 
 import com.google.common.hash.Funnel;
 import com.google.common.hash.Hashing;
@@ -86,7 +86,7 @@ public class Task implements Serializable, Comparable<Task> {
 
     @Override
     public int hashCode() {
-        return Hashing.murmur3_128().newHasher().putObject(this, DIGEST_RULE).hash().hashCode();
+        return Hashing.murmur3_32().newHasher().putObject(this, DIGEST_RULE).hash().hashCode();
     }
 
     @Override

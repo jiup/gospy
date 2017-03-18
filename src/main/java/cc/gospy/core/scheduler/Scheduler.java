@@ -16,7 +16,7 @@
 
 package cc.gospy.core.scheduler;
 
-import cc.gospy.entity.Task;
+import cc.gospy.core.entity.Task;
 
 public interface Scheduler {
     Task getTask();

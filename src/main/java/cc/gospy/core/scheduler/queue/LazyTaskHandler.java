@@ -16,7 +16,7 @@
 
 package cc.gospy.core.scheduler.queue;
 
-import cc.gospy.entity.Task;
+import cc.gospy.core.entity.Task;
 
 @FunctionalInterface
 public interface LazyTaskHandler {

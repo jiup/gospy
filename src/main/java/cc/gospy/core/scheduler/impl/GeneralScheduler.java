@@ -17,7 +17,7 @@
 package cc.gospy.core.scheduler.impl;
 
 import cc.gospy.core.Observable;
-import cc.gospy.entity.Task;
+import cc.gospy.core.entity.Task;
 import cc.gospy.core.TaskFilter;
 import cc.gospy.core.scheduler.Scheduler;
 import cc.gospy.core.scheduler.filter.DuplicateRemover;

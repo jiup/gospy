@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package cc.gospy.example;
+package cc.gospy.example.standalone;
 
 import cc.gospy.core.Gospy;
 import cc.gospy.core.fetcher.Fetchers;
@@ -22,8 +22,8 @@ import cc.gospy.core.pipeline.Pipelines;
 import cc.gospy.core.processor.Processors;
 import cc.gospy.core.scheduler.Schedulers;
 import cc.gospy.core.util.StringHelper;
-import cc.gospy.entity.Result;
-import cc.gospy.entity.Task;
+import cc.gospy.core.entity.Result;
+import cc.gospy.core.entity.Task;
 import org.jsoup.nodes.Element;
 
 import java.net.URLDecoder;
@@ -86,8 +86,8 @@ public class WebCapturer {
                             return result;
                         }).build())
                 .addProcessor(Processors.UniversalProcessor.custom().build())
-                .addPipeline(Pipelines.ConsolePipeline.getDefault())
-//                .addPipeline(Pipelines.HierarchicalFilePipeline.custom().setBasePath("D:/Gospy/blog.timeliar.date/").build())
-                .build().addTask("https://blog.timeliar.date/").setVisitGap(1000).start(1);
+//                .addPipeline(Pipelines.ConsolePipeline.getDefault())
+                .addPipeline(Pipelines.HierarchicalFilePipeline.custom().setBasePath("D:/Gospy/test.blog.timeliar.date/").build())
+                .build().addTask("https://blog.timeliar.date/links/").setVisitGap(1000).start(1);
     }
 }

@@ -16,8 +16,8 @@
 
 package cc.gospy.core.pipeline;
 
-import cc.gospy.entity.Page;
-import cc.gospy.entity.Result;
+import cc.gospy.core.entity.Page;
+import cc.gospy.core.entity.Result;
 
 public interface Pipeline {
     void pipe(Page page, Result<?> result) throws PipeException;

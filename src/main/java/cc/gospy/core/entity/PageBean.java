@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package cc.gospy.entity;
+package cc.gospy.core.entity;
 
 public class PageBean {
 }
