@@ -16,42 +16,36 @@
 
 package cc.gospy.core.processor;
 
+import cc.gospy.core.util.Experimental;
+
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
+@Experimental
 public class PageProcessors {
-    private Map<String, Class<? extends PageProcessor>> pageProcessors = new HashMap<>();
+    private Map<String, Class<? extends PageProcessor>> pageProcessors = new LinkedHashMap<>();
 
-    public void register(PageProcessor processor) {
-        if (processor == null) {
-            throw new RuntimeException("processor not initialized, please check your code.");
+    public void register(Class<? extends PageProcessor> processorClazz) {
+        if (processorClazz == null) {
+            throw new RuntimeException("page processor not declared, please check your code.");
         }
-        for (String contentType : processor.getAcceptedContentType()) {
-            pageProcessors.put(contentType, processor.getClass());
+        UrlPattern urlPattern = processorClazz.getClass().getAnnotation(UrlPattern.class);
+        if (urlPattern == null) {
+            throw new RuntimeException("annotation \"cc.gospy.core.processor.UrlPattern\" not found, please declare url patterns first for your processor.");
+        }
+        for (String pattern : urlPattern.value()) {
+            pageProcessors.put(pattern, processorClazz);
         }
     }
 
-    public Class<? extends PageProcessor> get(String contentType) throws PageProcessorNotFoundException {
-        Class<? extends PageProcessor> pageProcessor = pageProcessors.get(contentType);
-        if (pageProcessor == null) {
-            if (contentType != null && contentType.indexOf('/') != -1) {
-                String key = contentType;
-                while (pageProcessor == null) {
-                    if (key.equals("*/*")) {
-                        throw new PageProcessorNotFoundException(contentType);
-                    } else if (key.endsWith("/*")) {
-                        key = "*/*";
-                    } else {
-                        key = contentType.substring(0, contentType.indexOf('/')).concat("/*");
-                    }
-                    pageProcessor = pageProcessors.get(key);
-                }
-            } else {
-                throw new PageProcessorNotFoundException(contentType);
+    public Class<? extends PageProcessor> get(String url) throws PageProcessorNotFoundException {
+        for (String pattern : pageProcessors.keySet()) {
+            if (pattern.matches(url)) {
+                return pageProcessors.get(pattern);
             }
         }
-        return pageProcessor;
+        throw new PageProcessorNotFoundException(url);
     }
 
     public Collection<Class<? extends PageProcessor>> getAll() {

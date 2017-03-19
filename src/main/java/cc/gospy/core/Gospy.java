@@ -23,10 +23,10 @@ import cc.gospy.core.fetcher.Fetcher;
 import cc.gospy.core.fetcher.Fetchers;
 import cc.gospy.core.pipeline.Pipeline;
 import cc.gospy.core.pipeline.Pipelines;
-import cc.gospy.core.processor.Processor;
-import cc.gospy.core.processor.Processors;
+import cc.gospy.core.processor.*;
 import cc.gospy.core.scheduler.Scheduler;
 import cc.gospy.core.scheduler.Schedulers;
+import cc.gospy.core.scheduler.Verifiable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +41,7 @@ public class Gospy implements Observable {
 
     private Scheduler scheduler;
     private Fetchers fetcherFactory;
+    private PageProcessors pageProcessorFactory;
     private Processors processorFactory;
     private Pipelines pipelineFactory;
     private ExecutorService threadPool;
@@ -51,11 +52,13 @@ public class Gospy implements Observable {
 
     private Gospy(Scheduler scheduler
             , Fetchers fetcherFactory
+            , PageProcessors pageProcessorFactory
             , Processors processorFactory
             , Pipelines pipelineFactory
             , ExceptionHandler handler) {
         this.scheduler = scheduler;
         this.fetcherFactory = fetcherFactory;
+        this.pageProcessorFactory = pageProcessorFactory;
         this.processorFactory = processorFactory;
         this.pipelineFactory = pipelineFactory;
         this.handler = handler;
@@ -75,8 +78,14 @@ public class Gospy implements Observable {
                         try {
                             Fetcher fetcher = fetcherFactory.get(task.getProtocol());
                             page = fetcher.fetch(task);
-                            Processor processor = processorFactory.get(page.getContentType());
-                            Result<?> result = processor.process(task, page);
+                            Result<?> result;
+
+                            try {
+                                result = invokePageProcessor(page, pageProcessorFactory.get(page.getTask().getUrl()));
+                            } catch (PageProcessorNotFoundException e) {
+                                result = processorFactory.get(page.getContentType()).process(task, page);
+                            }
+
                             if (result != null) {
                                 if (result.getNewTasks() != null) {
                                     Iterator<Task> taskIterator = result.getNewTasks().iterator();
@@ -105,6 +114,22 @@ public class Gospy implements Observable {
             logger.info("Operation chain stopped.");
         });
     }
+
+    private Result<?> invokePageProcessor(Page page, Class<? extends PageProcessor> clazz) throws Exception {
+        PageProcessor pageProcessor = clazz.newInstance();
+        pageProcessor.setTask(page.getTask());
+
+        // TODO fill in fields here.
+
+        pageProcessor.process();
+        if (scheduler instanceof Verifiable) {
+            ((Verifiable) scheduler).feedback(page.getTask());
+        }
+        Result<?> result = new Result<>(pageProcessor.getNewTasks(), pageProcessor.getResultData());
+        result.setPage(page);
+        return result;
+    }
+
 
     public void start() {
         this.start(10);
@@ -151,6 +176,7 @@ public class Gospy implements Observable {
         // stop thread pool
         threadPool.shutdownNow();
         while (!threadPool.isTerminated()) {
+            // waiting for terminate.
         }
         logger.info("Thread pool terminated.");
         threadPool = null;
@@ -174,7 +200,7 @@ public class Gospy implements Observable {
     }
 
     public Gospy addTask(String url) {
-        Task task = new Task(url.indexOf("://") != -1 ? url : "http://".concat(url));
+        Task task = new Task(url.contains("://") ? url : "http://".concat(url));
         task.setSkipCheck(true);
         return addTask(task);
     }
@@ -232,6 +258,7 @@ public class Gospy implements Observable {
     public static class Builder {
         private Scheduler sc = Schedulers.GeneralScheduler.getDefault();
         private Fetchers ff = new Fetchers();
+        private PageProcessors ppf = new PageProcessors();
         private Processors pf = new Processors();
         private Pipelines plf = new Pipelines();
         private ExceptionHandler eh = ExceptionHandler.DEFAULT;
@@ -251,6 +278,11 @@ public class Gospy implements Observable {
             return this;
         }
 
+        public Builder addPageProcessor(Class<? extends PageProcessor> pageProcessor) {
+            ppf.register(pageProcessor);
+            return this;
+        }
+
         public Builder addProcessor(Processor processor) {
             pf.register(processor);
             return this;
@@ -262,7 +294,7 @@ public class Gospy implements Observable {
         }
 
         public Gospy build() {
-            return new Gospy(sc, ff, pf, plf, eh);
+            return new Gospy(sc, ff, ppf, pf, plf, eh);
         }
 
     }

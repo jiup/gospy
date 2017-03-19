@@ -16,29 +16,16 @@
 
 package cc.gospy.core.processor;
 
-import cc.gospy.core.entity.Result;
-import cc.gospy.core.entity.Task;
+import cc.gospy.core.util.Experimental;
 
-import java.util.Collection;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-public abstract class PageProcessor {
-    protected Task task;
-
-    public abstract void process();
-
-    public abstract Collection<Task> getNewTasks();
-
-    public Task getFeedback() {
-        return task;
-    }
-
-    public abstract <T> T getResultData();
-
-    private <T> Result<T> getResult() {
-        return new Result<>(getNewTasks(), getResultData());
-    }
-
-    public void setTask(Task task) {
-        this.task = task;
-    }
+@Experimental
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface UrlPattern {
+    String[] value();
 }
