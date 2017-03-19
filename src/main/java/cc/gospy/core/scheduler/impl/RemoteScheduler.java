@@ -26,13 +26,13 @@ public class RemoteScheduler implements Scheduler {
     }
 
     @Override
-    public Scheduler addTask(Task task) {
-        return null;
+    public void addTask(Task task) {
+        return;
     }
 
     @Override
-    public Scheduler addLazyTask(Task task) {
-        return null;
+    public void addLazyTask(Task task) {
+        return;
     }
 
     @Override

@@ -18,12 +18,6 @@ package cc.gospy.core.scheduler;
 
 import cc.gospy.core.entity.Task;
 
-public interface Scheduler {
-    Task getTask();
-
-    void addTask(Task task);
-
-    void addLazyTask(Task task);
-
-    void stop();
+public interface Verifiable {
+    void feedback(Task task);
 }

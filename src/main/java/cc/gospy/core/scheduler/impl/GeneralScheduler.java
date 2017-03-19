@@ -17,8 +17,8 @@
 package cc.gospy.core.scheduler.impl;
 
 import cc.gospy.core.Observable;
-import cc.gospy.core.entity.Task;
 import cc.gospy.core.TaskFilter;
+import cc.gospy.core.entity.Task;
 import cc.gospy.core.scheduler.Scheduler;
 import cc.gospy.core.scheduler.filter.DuplicateRemover;
 import cc.gospy.core.scheduler.filter.impl.HashDuplicateRemover;
@@ -77,27 +77,26 @@ public class GeneralScheduler implements Scheduler, Observable {
     }
 
     @Override
-    public Scheduler addTask(Task task) {
+    public void addTask(Task task) {
         totalTaskInputCount.getAndIncrement();
         if (task.isCheckSkipping()) {
             addTask0(task);
-            return this;
+            return;
         }
         if (!taskFilter.test(task)) {
-            return this;
+            return;
         }
         if (duplicateRemover.exists(task)) {
             duplicateRemover.record(task);
         } else {
             addTask0(task);
         }
-        return this;
+        return;
     }
 
     @Override
-    public Scheduler addLazyTask(Task task) {
+    public void addLazyTask(Task task) {
         lazyTaskQueue.add(task);
-        return this;
     }
 
     @Override

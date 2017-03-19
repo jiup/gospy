@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.scheduler;
+package cc.gospy.core.scheduler.impl;
 
 import cc.gospy.core.entity.Task;
+import cc.gospy.core.scheduler.Verifiable;
 
-public interface Scheduler {
-    Task getTask();
-
-    void addTask(Task task);
-
-    void addLazyTask(Task task);
-
-    void stop();
+public class FeedbackScheduler implements Verifiable {
+    @Override
+    public void feedback(Task task) {
+        
+    }
 }

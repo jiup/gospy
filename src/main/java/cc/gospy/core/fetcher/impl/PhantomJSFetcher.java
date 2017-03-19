@@ -23,6 +23,14 @@ import cc.gospy.core.fetcher.Fetcher;
 
 // TODO
 public class PhantomJSFetcher implements Fetcher {
+    private PhantomJSFetcher() {
+
+    }
+
+    private PhantomJSFetcher(String javascriptPath) {
+
+    }
+
     @Override
     public Page fetch(Task task) throws FetchException {
         return null;

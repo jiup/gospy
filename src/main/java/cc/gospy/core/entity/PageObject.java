@@ -14,16 +14,32 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.scheduler;
+package cc.gospy.core.entity;
 
-import cc.gospy.core.entity.Task;
+import cc.gospy.core.TaskFilter;
 
-public interface Scheduler {
-    Task getTask();
+import java.util.Collection;
 
-    void addTask(Task task);
+public abstract class PageObject {
+    protected Task task;
 
-    void addLazyTask(Task task);
+    public abstract void process();
 
-    void stop();
+    public abstract Collection<Task> getNewTasks();
+
+    public abstract TaskFilter getTaskFilter();
+
+    public Task getFeedback() {
+        return task;
+    }
+
+    public abstract <T> T getPipeLineData();
+
+    private <T> Result<T> getResult() {
+        return new Result<>(getNewTasks(), getPipeLineData());
+    }
+
+    public void setTask(Task task) {
+        this.task = task;
+    }
 }

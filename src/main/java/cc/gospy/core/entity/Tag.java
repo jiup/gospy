@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.scheduler;
+package cc.gospy.core.entity;
 
-import cc.gospy.core.entity.Task;
+public @interface Tag {
+    @interface Text {
 
-public interface Scheduler {
-    Task getTask();
+    }
 
-    void addTask(Task task);
+    @interface innerHtml {
 
-    void addLazyTask(Task task);
+    }
 
-    void stop();
+    @interface outerHtml {
+
+    }
 }
