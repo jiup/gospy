@@ -18,6 +18,8 @@ package cc.gospy.core.fetcher;
 
 import cc.gospy.core.fetcher.impl.FileFetcher;
 import cc.gospy.core.fetcher.impl.HttpFetcher;
+import cc.gospy.core.fetcher.impl.PhantomJSFetcher;
+import cc.gospy.core.fetcher.impl.SeleniumFetcher;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -26,6 +28,8 @@ import java.util.Map;
 public class Fetchers {
     public static HttpFetcher HttpFetcher;
     public static FileFetcher FileFetcher;
+    public static PhantomJSFetcher PhantomJSFetcher;
+    public static SeleniumFetcher SeleniumFetcher;
 
     private Map<String, Fetcher> fetchers = new HashMap<>();
 

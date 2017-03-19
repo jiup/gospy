@@ -20,26 +20,46 @@ import cc.gospy.core.entity.Page;
 import cc.gospy.core.entity.Task;
 import cc.gospy.core.fetcher.FetchException;
 import cc.gospy.core.fetcher.Fetcher;
-import cc.gospy.core.fetcher.UserAgent;
 import cc.gospy.core.util.Experimental;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.phantomjs.PhantomJSDriver;
-import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.htmlunit.HtmlUnitDriver;
+import org.openqa.selenium.ie.InternetExplorerDriver;
 
 import java.io.Closeable;
 import java.io.IOException;
 
 @Experimental
-public class PhantomJSFetcher implements Fetcher, Closeable {
+public class SeleniumFetcher implements Fetcher, Closeable {
+    public enum Kernel {HtmlUnit, Chrome, Firefox, IE}
+
     private WebDriver driver;
 
-    private PhantomJSFetcher(String phantomJsBinaryPath, int timeout, boolean loadImages, String userAgent) {
-        System.setProperty("phantomjs.binary.path", phantomJsBinaryPath);
-        DesiredCapabilities capabilities = DesiredCapabilities.phantomjs();
-        capabilities.setCapability("phantomjs.page.settings.resourceTimeout", timeout);
-        capabilities.setCapability("phantomjs.page.settings.loadImages", loadImages);
-        capabilities.setCapability("phantomjs.page.settings.userAgent", userAgent);
-        this.driver = new PhantomJSDriver(capabilities);
+    private SeleniumFetcher(Kernel browser, String path) {
+        switch (browser) {
+            case HtmlUnit:
+                driver = new HtmlUnitDriver();
+                break;
+            case Chrome:
+                System.setProperty("webdriver.chrome.driver", path);
+                driver = new ChromeDriver();
+                break;
+            case Firefox:
+                System.setProperty("webdriver.firefox.bin", path);
+                driver = new FirefoxDriver();
+                break;
+            case IE:
+                System.setProperty("webdriver.ie.driver", path);
+                driver = new InternetExplorerDriver();
+                break;
+            default:
+                throw new RuntimeException("unsupported browser " + browser);
+        }
+    }
+
+    public static SeleniumFetcher getDefault() {
+        return new SeleniumFetcher(Kernel.HtmlUnit, null);
     }
 
     public static Builder custom() {
@@ -47,34 +67,19 @@ public class PhantomJSFetcher implements Fetcher, Closeable {
     }
 
     public static class Builder {
-        private String path = "/path/to/phantomjs";
-        private int timeout = 3000;
-        private boolean loadImages = false;
-        private String userAgent = UserAgent.Default;
+        private Kernel kernel = Kernel.HtmlUnit;
+        private String path = "/path/to/" + kernel.name();
 
-        public Builder setPhantomJsBinaryPath(String phantomJsBinaryPath) {
-            path = phantomJsBinaryPath;
+        public Builder setKernel(Kernel kernel, String path) {
+            this.kernel = kernel;
+            this.path = path;
             return this;
         }
 
-        public Builder setTimeout(int timeout) {
-            this.timeout = timeout;
-            return this;
+        public SeleniumFetcher build() {
+            return new SeleniumFetcher(kernel, path);
         }
 
-        public Builder setLoadImages(boolean loadImages) {
-            this.loadImages = loadImages;
-            return this;
-        }
-
-        public Builder setUserAgent(String userAgent) {
-            this.userAgent = userAgent;
-            return this;
-        }
-
-        public PhantomJSFetcher build() {
-            return new PhantomJSFetcher(path, timeout, loadImages, userAgent);
-        }
     }
 
     @Override
@@ -84,7 +89,6 @@ public class PhantomJSFetcher implements Fetcher, Closeable {
             page.setTask(task);
             driver.get(task.getUrl());
             page.setContent(driver.getPageSource().getBytes());
-            //            driver.manage().addCookie();
             return page;
         } catch (Throwable throwable) {
             throw new FetchException(throwable.getMessage(), throwable);
