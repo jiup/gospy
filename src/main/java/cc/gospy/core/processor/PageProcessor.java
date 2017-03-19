@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.entity;
+package cc.gospy.core.processor;
 
 import cc.gospy.core.TaskFilter;
+import cc.gospy.core.entity.Result;
+import cc.gospy.core.entity.Task;
 
 import java.util.Collection;
 
-public abstract class PageObject {
+public abstract class PageProcessor {
     protected Task task;
 
     public abstract void process();
@@ -41,5 +43,9 @@ public abstract class PageObject {
 
     public void setTask(Task task) {
         this.task = task;
+    }
+
+    public static String[] getAcceptedContentType() {
+        return new String[]{"text/html", "text/xml"};
     }
 }
