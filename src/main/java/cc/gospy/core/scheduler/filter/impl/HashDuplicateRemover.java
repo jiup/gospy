@@ -16,6 +16,7 @@
 
 package cc.gospy.core.scheduler.filter.impl;
 
+import cc.gospy.core.Recoverable;
 import cc.gospy.core.entity.Task;
 import cc.gospy.core.scheduler.filter.DuplicateRemover;
 
@@ -23,7 +24,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class HashDuplicateRemover implements DuplicateRemover {
+public class HashDuplicateRemover implements DuplicateRemover, Recoverable {
     private Map<Task, AtomicInteger> tasks = new ConcurrentHashMap<>();
 
     @Override
@@ -53,4 +54,13 @@ public class HashDuplicateRemover implements DuplicateRemover {
         return tasks.size();
     }
 
+    @Override
+    public void pause() {
+        // TODO
+    }
+
+    @Override
+    public void resume() {
+        // TODO
+    }
 }

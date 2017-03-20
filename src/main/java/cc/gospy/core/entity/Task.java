@@ -41,7 +41,7 @@ public class Task implements Serializable, Comparable<Task> {
     private int visitCount;
 
     // identify a unique task for duplicate remover
-    private static final Funnel<Task> DIGEST_RULE = (task, primitiveSink) -> {
+    public static final Funnel<Task> DIGEST = (task, primitiveSink) -> {
         primitiveSink.putString(task.url, Charset.defaultCharset());
         task.extra.forEach((k, v) -> primitiveSink.putString(k.concat("=").concat(v.toString().concat("\1")), Charset.defaultCharset()));
     };
@@ -86,7 +86,7 @@ public class Task implements Serializable, Comparable<Task> {
 
     @Override
     public int hashCode() {
-        return Hashing.murmur3_32().newHasher().putObject(this, DIGEST_RULE).hash().hashCode();
+        return Hashing.murmur3_32().newHasher().putObject(this, DIGEST).hash().hashCode();
     }
 
     @Override

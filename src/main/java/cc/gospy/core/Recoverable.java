@@ -14,18 +14,10 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.entity;
+package cc.gospy.core;
 
-public @interface Tag {
-    @interface Text {
+public interface Recoverable {
+    void pause();
 
-    }
-
-    @interface innerHtml {
-
-    }
-
-    @interface outerHtml {
-
-    }
+    void resume();
 }

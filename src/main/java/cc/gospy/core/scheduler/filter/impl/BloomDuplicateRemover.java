@@ -16,28 +16,58 @@
 
 package cc.gospy.core.scheduler.filter.impl;
 
+import cc.gospy.core.Recoverable;
 import cc.gospy.core.entity.Task;
 import cc.gospy.core.scheduler.filter.DuplicateRemover;
+import cc.gospy.core.util.bloom.ScalableBloomFilter;
 
-public class BloomDuplicateRemover implements DuplicateRemover {
+import java.util.Set;
+import java.util.concurrent.ConcurrentSkipListSet;
+
+public class BloomDuplicateRemover implements DuplicateRemover, Recoverable {
+    private ScalableBloomFilter bloomFilter = new ScalableBloomFilter();
+    private Set<Task> taskWhiteList = new ConcurrentSkipListSet<>();
+    private long counter;
+
     @Override
     public void record(Task task) {
-        // TODO
+        if (taskWhiteList.contains(task)) {
+            taskWhiteList.remove(task);
+        } else {
+            bloomFilter.put(task);
+        }
+        counter++;
     }
 
     @Override
     public void delete(Task task) {
-
+        if (taskWhiteList.contains(task)) {
+            return;
+        }
+        taskWhiteList.add(task);
+        counter--;
     }
 
     @Override
     public boolean exists(Task task) {
-        // TODO
-        return false;
+        if (taskWhiteList.contains(task)) {
+            return false;
+        }
+        return bloomFilter.mightContain(task);
     }
 
     @Override
     public long size() {
-        return 0;
+        return counter;
+    }
+
+    @Override
+    public void pause() {
+        // TODO
+    }
+
+    @Override
+    public void resume() {
+        // TODO
     }
 }

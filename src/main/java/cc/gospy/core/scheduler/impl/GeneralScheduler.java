@@ -17,6 +17,7 @@
 package cc.gospy.core.scheduler.impl;
 
 import cc.gospy.core.Observable;
+import cc.gospy.core.Recoverable;
 import cc.gospy.core.TaskFilter;
 import cc.gospy.core.entity.Task;
 import cc.gospy.core.scheduler.Scheduler;
@@ -31,7 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-public class GeneralScheduler implements Scheduler, Observable {
+public class GeneralScheduler implements Scheduler, Observable, Recoverable {
     private static Logger logger = LoggerFactory.getLogger(GeneralScheduler.class);
 
     private volatile AtomicLong totalTaskInputCount;
@@ -140,6 +141,16 @@ public class GeneralScheduler implements Scheduler, Observable {
 
     public static Builder custom() {
         return new Builder();
+    }
+
+    @Override
+    public void pause() {
+        // TODO
+    }
+
+    @Override
+    public void resume() {
+        // TODO
     }
 
     public static class Builder {
