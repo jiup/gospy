@@ -41,4 +41,9 @@ public abstract class PageProcessor {
     public void setTask(Task task) {
         this.task = task;
     }
+
+    public void onError(Throwable throwable) {
+        throwable.printStackTrace();
+    }
+
 }

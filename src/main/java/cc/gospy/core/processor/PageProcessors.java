@@ -30,7 +30,7 @@ public class PageProcessors {
         if (processorClazz == null) {
             throw new RuntimeException("page processor not declared, please check your code.");
         }
-        UrlPattern urlPattern = processorClazz.getClass().getAnnotation(UrlPattern.class);
+        UrlPattern urlPattern = processorClazz.getAnnotation(UrlPattern.class);
         if (urlPattern == null) {
             throw new RuntimeException("annotation \"cc.gospy.core.processor.UrlPattern\" not found, please declare url patterns first for your processor.");
         }

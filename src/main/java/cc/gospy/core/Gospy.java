@@ -27,14 +27,26 @@ import cc.gospy.core.processor.*;
 import cc.gospy.core.scheduler.Scheduler;
 import cc.gospy.core.scheduler.Schedulers;
 import cc.gospy.core.scheduler.Verifiable;
+import cc.gospy.core.util.Experimental;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import us.codecraft.xsoup.Xsoup;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Array;
+import java.lang.reflect.Field;
+import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Gospy implements Observable {
     private static Logger logger = LoggerFactory.getLogger(Gospy.class);
@@ -115,19 +127,81 @@ public class Gospy implements Observable {
         });
     }
 
+    @Experimental
     private Result<?> invokePageProcessor(Page page, Class<? extends PageProcessor> clazz) throws Exception {
         PageProcessor pageProcessor = clazz.newInstance();
         pageProcessor.setTask(page.getTask());
 
-        // TODO fill in fields here.
-
-        pageProcessor.process();
-        if (scheduler instanceof Verifiable) {
-            ((Verifiable) scheduler).feedback(page.getTask());
+        try {
+            byte[] bytes = page.getContent();
+            for (Field field : clazz.getFields()) {
+                Set<String> results = new LinkedHashSet<>();
+                for (Annotation annotation : field.getAnnotations()) {
+                    if (annotation.annotationType() == ExtractBy.XPath.class) {
+                        Document document = Jsoup.parse(new String(bytes));
+                        for (String xpath : ((ExtractBy.XPath) annotation).value()) {
+                            results.addAll(Xsoup.compile(xpath).evaluate(document).list());
+                        }
+                    } else if (annotation.annotationType() == ExtractBy.XPaths.class) {
+                        Document document = Jsoup.parse(new String(bytes));
+                        for (ExtractBy.XPath a : ((ExtractBy.XPaths) annotation).value()) {
+                            for (String xpath : a.value()) {
+                                results.addAll(Xsoup.compile(xpath).evaluate(document).list());
+                            }
+                        }
+                    } else if (annotation.annotationType() == ExtractBy.Regex.class) {
+                        String document = new String(bytes);
+                        String regex = ((ExtractBy.Regex) annotation).value();
+                        Matcher matcher = Pattern.compile(regex).matcher(document);
+                        if (matcher.find()) {
+                            results.add(matcher.group(((ExtractBy.Regex) annotation).group()));
+                        }
+                    } else if (annotation.annotationType() == ExtractBy.Regexs.class) {
+                        String document = new String(bytes);
+                        for (ExtractBy.Regex a : ((ExtractBy.Regexs) annotation).value()) {
+                            Matcher matcher = Pattern.compile(a.value()).matcher(document);
+                            if (matcher.find()) {
+                                results.add(matcher.group(a.group()));
+                            }
+                        }
+                    }
+                }
+                if (results.size() > 0) {
+                    if (field.getType().isArray()) {
+                        if (field.getType().getComponentType().isPrimitive()) {
+                            throw new RuntimeException("We cannot cast a extracted result to a primitive type array, why not trying Object[]?");
+                        }
+                        Object[] src = results.toArray();
+                        Object[] dst = (Object[]) field.getType().cast(Array.newInstance(field.getType().getComponentType(), results.size()));
+                        for (int i = 0; i < dst.length; i++) {
+                            try {
+                                dst[i] = field.getType().getComponentType().cast(src[i]);
+                            } catch (ClassCastException e) {
+                                throw new RuntimeException(e.getMessage() + ", please change your field:" + field.getName() + " to a castable type.");
+                            }
+                        }
+                        field.set(pageProcessor, dst);
+                    } else if (Collection.class.isAssignableFrom(field.getType())) {
+                        field.set(pageProcessor, field.getType().cast(results));
+                    } else {
+                        field.set(pageProcessor, field.getType().cast(results.iterator().next()));
+                    }
+                }
+            }
+            pageProcessor.process();
+            if (scheduler instanceof Verifiable) {
+                ((Verifiable) scheduler).feedback(page.getTask());
+            }
+            Result<?> result = new Result<>(pageProcessor.getNewTasks(), pageProcessor.getResultData());
+            result.setPage(page);
+            if (pageProcessor instanceof Closeable) {
+                ((Closeable) pageProcessor).close();
+            }
+            return result;
+        } catch (Throwable throwable) {
+            pageProcessor.onError(throwable);
+            return null;
         }
-        Result<?> result = new Result<>(pageProcessor.getNewTasks(), pageProcessor.getResultData());
-        result.setPage(page);
-        return result;
     }
 
 

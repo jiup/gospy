@@ -16,16 +16,36 @@
 
 package cc.gospy.core.processor;
 
+import java.lang.annotation.*;
+
+@Target(ElementType.FIELD)
+@Retention(RetentionPolicy.RUNTIME)
 public @interface ExtractBy {
+    @Target(ElementType.FIELD)
+    @Retention(RetentionPolicy.RUNTIME)
+    @Repeatable(XPaths.class)
     @interface XPath {
+        String[] value() default "//a/@href";
     }
 
-    @interface JSoup {
-    }
-
+    @Target(ElementType.FIELD)
+    @Retention(RetentionPolicy.RUNTIME)
+    @Repeatable(Regexs.class)
     @interface Regex {
+        String value() default "href\\s*=\\s*((\"(.*?)\")|('(.*?)'))";
+
+        int group() default 3;
     }
 
-    @interface Binary {
+    @Target(ElementType.FIELD)
+    @Retention(RetentionPolicy.RUNTIME)
+    @interface XPaths {
+        XPath[] value();
+    }
+
+    @Target(ElementType.FIELD)
+    @Retention(RetentionPolicy.RUNTIME)
+    @interface Regexs {
+        Regex[] value();
     }
 }

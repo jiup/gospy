@@ -74,7 +74,7 @@ public class XPathProcessor implements Processor {
         }
     }
 
-    protected String getCharacterEncoding(Page page) {
+    protected static String getCharacterEncoding(Page page) {
         if (page.getExtra() == null || page.getExtra().get("Content-Type") == null) {
             return null;
         }

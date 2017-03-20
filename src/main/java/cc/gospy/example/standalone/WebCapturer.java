@@ -37,7 +37,7 @@ public class WebCapturer {
         Gospy.custom()
                 .setScheduler(Schedulers.GeneralScheduler.custom().build())
                 .addFetcher(Fetchers.HttpFetcher.custom().build())
-                .addProcessor(Processors.JSoupProcessor.custom()
+                .addProcessor(Processors.JsoupProcessor.custom()
                         .setDocumentExtractor((page, document) -> {
                             Task task = page.getTask();
                             if (page.getStatusCode() != 200) {

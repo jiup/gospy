@@ -16,7 +16,7 @@
 
 package cc.gospy.core.processor;
 
-import cc.gospy.core.processor.impl.JSoupProcessor;
+import cc.gospy.core.processor.impl.JsoupProcessor;
 import cc.gospy.core.processor.impl.RegexProcessor;
 import cc.gospy.core.processor.impl.UniversalProcessor;
 import cc.gospy.core.processor.impl.XPathProcessor;
@@ -26,7 +26,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Processors {
-    public static JSoupProcessor JSoupProcessor;
+    public static JsoupProcessor JsoupProcessor;
     public static XPathProcessor XPathProcessor;
     public static RegexProcessor RegexProcessor;
     public static UniversalProcessor UniversalProcessor;

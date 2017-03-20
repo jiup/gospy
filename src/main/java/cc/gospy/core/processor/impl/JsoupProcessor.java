@@ -17,13 +17,13 @@
 package cc.gospy.core.processor.impl;
 
 import cc.gospy.core.TaskFilter;
+import cc.gospy.core.entity.Page;
+import cc.gospy.core.entity.Result;
+import cc.gospy.core.entity.Task;
 import cc.gospy.core.processor.DocumentExtractor;
 import cc.gospy.core.processor.ProcessException;
 import cc.gospy.core.processor.Processor;
 import cc.gospy.core.util.StringHelper;
-import cc.gospy.core.entity.Page;
-import cc.gospy.core.entity.Result;
-import cc.gospy.core.entity.Task;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -34,11 +34,11 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 
-public class JSoupProcessor implements Processor {
+public class JsoupProcessor implements Processor {
     private DocumentExtractor<Document, ?> handler;
     private TaskFilter filter;
 
-    private JSoupProcessor(DocumentExtractor<Document, ?> handler, TaskFilter filter) {
+    private JsoupProcessor(DocumentExtractor<Document, ?> handler, TaskFilter filter) {
         this.handler = handler;
         this.filter = filter;
     }
@@ -47,7 +47,7 @@ public class JSoupProcessor implements Processor {
         return new Builder();
     }
 
-    public static JSoupProcessor getDefault() {
+    public static JsoupProcessor getDefault() {
         return new Builder().build();
     }
 
@@ -105,16 +105,12 @@ public class JSoupProcessor implements Processor {
             return this;
         }
 
-        public JSoupProcessor build() {
-            return ha == null ? this.setPageLinkDocumentExtractor().build() : new JSoupProcessor(ha, fi);
+        public JsoupProcessor build() {
+            return ha == null ? this.setPageLinkDocumentExtractor().build() : new JsoupProcessor(ha, fi);
         }
     }
 
-    public DocumentExtractor<Document, ?> getDocumentExtractor() {
-        return handler;
-    }
-
-    protected String getCharacterEncoding(Page page) {
+    protected static String getCharacterEncoding(Page page) {
         if (page.getExtra() == null || page.getExtra().get("Content-Type") == null) {
             return null;
         }
@@ -124,6 +120,10 @@ public class JSoupProcessor implements Processor {
             }
         }
         return null;
+    }
+
+    public DocumentExtractor<Document, ?> getDocumentExtractor() {
+        return handler;
     }
 
     private Document parse(Page page) throws UnsupportedEncodingException {
