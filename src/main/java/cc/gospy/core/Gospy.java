@@ -29,6 +29,10 @@ import cc.gospy.core.scheduler.Scheduler;
 import cc.gospy.core.scheduler.Schedulers;
 import cc.gospy.core.scheduler.Verifiable;
 import cc.gospy.core.util.Experimental;
+import cc.gospy.core.util.TaskBlockedException;
+import com.brandwatch.robots.RobotsConfig;
+import com.brandwatch.robots.RobotsFactory;
+import com.brandwatch.robots.RobotsService;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
@@ -40,6 +44,7 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.net.URI;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -62,13 +67,15 @@ public class Gospy implements Observable {
     private int visitGapMillis;
     private volatile boolean running;
     private Thread operationChainThread;
+    private RobotsService robotsService;
 
     private Gospy(Scheduler scheduler
             , Fetchers fetcherFactory
             , PageProcessors pageProcessorFactory
             , Processors processorFactory
             , Pipelines pipelineFactory
-            , ExceptionHandler handler) {
+            , ExceptionHandler handler
+            , boolean checkForRobots) {
         this.scheduler = scheduler;
         this.fetcherFactory = fetcherFactory;
         this.pageProcessorFactory = pageProcessorFactory;
@@ -78,6 +85,16 @@ public class Gospy implements Observable {
         this.visitGapMillis = 0;
         this.running = true;
         this.operationChainThread = newOperationChainThread();
+
+        // introduce from <a>https://github.com/BrandwatchLtd/robots</a>
+        if (checkForRobots) {
+            RobotsConfig config = new RobotsConfig();
+            config.setMaxRedirectHops(3);
+            config.setRequestTimeoutMillis(2000);
+            config.setReadTimeoutMillis(3000);
+            RobotsFactory factory = new RobotsFactory(config);
+            this.robotsService = factory.createService();
+        }
     }
 
     public Thread newOperationChainThread() {
@@ -90,6 +107,12 @@ public class Gospy implements Observable {
                         Page page = null;
                         try {
                             Fetcher fetcher = fetcherFactory.get(task.getProtocol());
+
+                            // check robots.txt
+                            if (!(robotsService == null || robotsService.isAllowed(fetcher.getUserAgent(), URI.create(task.getUrl())))) {
+                                handler.exceptionCaught(new TaskBlockedException("task blocked by robots.txt"), task, null);
+                            }
+
                             page = fetcher.fetch(task);
                             Result<?> result;
 
@@ -353,6 +376,7 @@ public class Gospy implements Observable {
         private Processors pf = new Processors();
         private Pipelines plf = new Pipelines();
         private ExceptionHandler eh = ExceptionHandler.DEFAULT;
+        private boolean checkForRobots = false;
 
         public Builder setScheduler(Scheduler scheduler) {
             sc = scheduler;
@@ -384,8 +408,13 @@ public class Gospy implements Observable {
             return this;
         }
 
+        public Builder checkForRobots() {
+            checkForRobots = true;
+            return this;
+        }
+
         public Gospy build() {
-            return new Gospy(sc, ff, ppf, pf, plf, eh);
+            return new Gospy(sc, ff, ppf, pf, plf, eh, checkForRobots);
         }
 
     }

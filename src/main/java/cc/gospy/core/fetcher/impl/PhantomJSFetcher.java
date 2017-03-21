@@ -32,11 +32,10 @@ import java.io.Closeable;
 import java.io.IOException;
 
 @Experimental
-/**
- * for ajax rendered pages
- */
+// for ajax rendered pages
 public class PhantomJSFetcher implements Fetcher, Closeable {
     private WebDriver driver;
+    private String userAgent;
 
     private PhantomJSFetcher(String phantomJsBinaryPath, int timeout, boolean loadImages, String userAgent) {
         System.setProperty("phantomjs.binary.path", phantomJsBinaryPath);
@@ -45,6 +44,7 @@ public class PhantomJSFetcher implements Fetcher, Closeable {
         capabilities.setCapability("phantomjs.page.settings.loadImages", loadImages);
         capabilities.setCapability("phantomjs.page.settings.userAgent", userAgent);
         this.driver = new PhantomJSDriver(capabilities);
+        this.userAgent = userAgent;
     }
 
     public static Builder custom() {
@@ -105,6 +105,11 @@ public class PhantomJSFetcher implements Fetcher, Closeable {
     @Override
     public String[] getAcceptedProtocols() {
         return new String[]{"http", "https"};
+    }
+
+    @Override
+    public String getUserAgent() {
+        return userAgent;
     }
 
     @Override

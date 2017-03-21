@@ -20,6 +20,7 @@ import cc.gospy.core.entity.Page;
 import cc.gospy.core.entity.Task;
 import cc.gospy.core.fetcher.FetchException;
 import cc.gospy.core.fetcher.Fetcher;
+import cc.gospy.core.fetcher.UserAgent;
 import cc.gospy.core.util.Experimental;
 import net.sf.jmimemagic.Magic;
 import net.sf.jmimemagic.MagicMatch;
@@ -33,15 +34,16 @@ import java.io.Closeable;
 import java.io.IOException;
 
 @Experimental
-/**
- * for ajax rendered pages and test flow visualization
- */
+
+// for ajax rendered pages and test flow visualization
 public class SeleniumFetcher implements Fetcher, Closeable {
     public enum Kernel {HtmlUnit, Chrome, Firefox, IE}
 
+    private String userAgent;
+
     private WebDriver driver;
 
-    private SeleniumFetcher(Kernel browser, String path) {
+    private SeleniumFetcher(Kernel browser, String path, String userAgent) {
         switch (browser) {
             case HtmlUnit:
                 driver = new HtmlUnitDriver();
@@ -61,10 +63,11 @@ public class SeleniumFetcher implements Fetcher, Closeable {
             default:
                 throw new RuntimeException("unsupported browser " + browser);
         }
+        this.userAgent = userAgent;
     }
 
     public static SeleniumFetcher getDefault() {
-        return new SeleniumFetcher(Kernel.HtmlUnit, null);
+        return new SeleniumFetcher(Kernel.HtmlUnit, null, UserAgent.Default);
     }
 
     public static Builder custom() {
@@ -74,6 +77,12 @@ public class SeleniumFetcher implements Fetcher, Closeable {
     public static class Builder {
         private Kernel kernel = Kernel.HtmlUnit;
         private String path = "/path/to/" + kernel.name();
+        private String userAgent = UserAgent.Default;
+
+        public Builder setUserAgent(String userAgent) {
+            this.userAgent = userAgent;
+            return this;
+        }
 
         public Builder setKernel(Kernel kernel, String path) {
             this.kernel = kernel;
@@ -82,7 +91,7 @@ public class SeleniumFetcher implements Fetcher, Closeable {
         }
 
         public SeleniumFetcher build() {
-            return new SeleniumFetcher(kernel, path);
+            return new SeleniumFetcher(kernel, path, userAgent);
         }
 
     }
@@ -109,6 +118,11 @@ public class SeleniumFetcher implements Fetcher, Closeable {
     @Override
     public String[] getAcceptedProtocols() {
         return new String[]{"http", "https"};
+    }
+
+    @Override
+    public String getUserAgent() {
+        return userAgent;
     }
 
     @Override

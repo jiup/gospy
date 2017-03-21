@@ -78,4 +78,9 @@ public class FileFetcher implements Fetcher {
     public String[] getAcceptedProtocols() {
         return new String[]{"file"};
     }
+
+    @Override
+    public String getUserAgent() {
+        return null;
+    }
 }

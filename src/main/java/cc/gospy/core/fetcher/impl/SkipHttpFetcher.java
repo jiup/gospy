@@ -39,4 +39,9 @@ public class SkipHttpFetcher implements Fetcher {
     public String[] getAcceptedProtocols() {
         return new String[]{"http", "https"};
     }
+
+    @Override
+    public String getUserAgent() {
+        return null;
+    }
 }

@@ -14,8 +14,14 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.util.cache;
+package cc.gospy.core.util;
 
-public class DnsCache {
-    
+public class TaskBlockedException extends Throwable {
+    public TaskBlockedException() {
+        super();
+    }
+
+    public TaskBlockedException(String message) {
+        super(message);
+    }
 }

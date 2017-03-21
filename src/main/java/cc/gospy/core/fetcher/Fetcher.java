@@ -23,4 +23,6 @@ public interface Fetcher {
     Page fetch(Task task) throws FetchException;
 
     String[] getAcceptedProtocols();
+
+    String getUserAgent();
 }

@@ -20,7 +20,7 @@ import cc.gospy.core.entity.Task;
 import cc.gospy.core.scheduler.Recoverable;
 import cc.gospy.core.scheduler.filter.DuplicateRemover;
 import cc.gospy.core.util.Experimental;
-import cc.gospy.core.util.bloom.ScalableBloomFilter;
+import cc.gospy.core.util.ScalableBloomFilter;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -52,10 +52,7 @@ public class BloomDuplicateRemover implements DuplicateRemover, Recoverable {
 
     @Override
     public boolean exists(Task task) {
-        if (taskWhiteList.contains(task)) {
-            return false;
-        }
-        return bloomFilter.mightContain(task);
+        return !taskWhiteList.contains(task) && bloomFilter.mightContain(task);
     }
 
     @Override

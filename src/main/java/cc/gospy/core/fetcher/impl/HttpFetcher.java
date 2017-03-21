@@ -16,11 +16,11 @@
 
 package cc.gospy.core.fetcher.impl;
 
+import cc.gospy.core.entity.Page;
+import cc.gospy.core.entity.Task;
 import cc.gospy.core.fetcher.FetchException;
 import cc.gospy.core.fetcher.Fetcher;
 import cc.gospy.core.fetcher.UserAgent;
-import cc.gospy.core.entity.Page;
-import cc.gospy.core.entity.Task;
 import org.apache.http.*;
 import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.client.config.RequestConfig;
@@ -349,6 +349,11 @@ public class HttpFetcher implements Fetcher, Closeable {
     @Override
     public String[] getAcceptedProtocols() {
         return new String[]{null, "http", "https"};
+    }
+
+    @Override
+    public String getUserAgent() {
+        return userAgent;
     }
 
     private HttpClientConnectionManager connectionManager;
