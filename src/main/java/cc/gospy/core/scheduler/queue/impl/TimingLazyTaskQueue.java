@@ -74,13 +74,15 @@ public class TimingLazyTaskQueue extends LazyTaskQueue {
             checkThread.interrupt();
             logger.info("Lazy task queue stopped.");
         }
+        lazyTaskQueue.clear();
         checkPeriod = 0;
+        checkThread = null;
     }
 
     @Override
     public boolean add(Task task) {
         int taskExpectedRecallCycle = task.getExpectedVisitPeriod();
-        if (taskExpectedRecallCycle > 0 && taskExpectedRecallCycle < checkPeriod) {
+        if (taskExpectedRecallCycle > 0 && (checkPeriod == 0 || taskExpectedRecallCycle < checkPeriod)) {
             checkPeriod = taskExpectedRecallCycle;
         }
         if (checkThread == null) {

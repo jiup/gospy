@@ -24,6 +24,7 @@ import cc.gospy.core.fetcher.Fetchers;
 import cc.gospy.core.pipeline.Pipeline;
 import cc.gospy.core.pipeline.Pipelines;
 import cc.gospy.core.processor.*;
+import cc.gospy.core.scheduler.Recoverable;
 import cc.gospy.core.scheduler.Scheduler;
 import cc.gospy.core.scheduler.Schedulers;
 import cc.gospy.core.scheduler.Verifiable;
@@ -216,6 +217,22 @@ public class Gospy implements Observable {
         this.threadPool = Executors.newFixedThreadPool(nThreads);
         logger.info("Thread pool initialized. [size={}]", nThreads);
         operationChainThread.start();
+    }
+
+    public void pause(String dir) throws IOException {
+        if (scheduler instanceof Recoverable) {
+            try {
+                ((Recoverable) scheduler).pause(dir);
+            } catch (Throwable throwable) {
+                throwable.printStackTrace();
+            }
+        }
+    }
+
+    public void resume(String dir) throws Throwable {
+        if (scheduler instanceof Recoverable) {
+            ((Recoverable) scheduler).resume(dir);
+        }
     }
 
     public void stop() {

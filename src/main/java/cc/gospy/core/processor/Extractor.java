@@ -20,6 +20,6 @@ import cc.gospy.core.entity.Page;
 import cc.gospy.core.entity.Result;
 
 @FunctionalInterface
-public interface DocumentExtractor<T, D> {
-    Result<D> handle(Page page, T document) throws Throwable;
+public interface Extractor<T, D> {
+    Result<D> handle(Page page, T handler) throws Throwable;
 }

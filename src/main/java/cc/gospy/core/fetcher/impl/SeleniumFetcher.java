@@ -21,6 +21,8 @@ import cc.gospy.core.entity.Task;
 import cc.gospy.core.fetcher.FetchException;
 import cc.gospy.core.fetcher.Fetcher;
 import cc.gospy.core.util.Experimental;
+import net.sf.jmimemagic.Magic;
+import net.sf.jmimemagic.MagicMatch;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
@@ -31,6 +33,9 @@ import java.io.Closeable;
 import java.io.IOException;
 
 @Experimental
+/**
+ * for ajax rendered pages and test flow visualization
+ */
 public class SeleniumFetcher implements Fetcher, Closeable {
     public enum Kernel {HtmlUnit, Chrome, Firefox, IE}
 
@@ -86,9 +91,15 @@ public class SeleniumFetcher implements Fetcher, Closeable {
     public Page fetch(Task task) throws FetchException {
         try {
             Page page = new Page();
-            page.setTask(task);
             driver.get(task.getUrl());
-            page.setContent(driver.getPageSource().getBytes());
+            page.setTask(task);
+            byte[] bytes = driver.getPageSource().getBytes();
+            page.setContent(bytes);
+            // we cannot get content-type form selenium :(
+            // see https://github.com/seleniumhq/selenium-google-code-issue-archive/issues/141#issuecomment-191404952
+            // using magic-match is a compromise.
+            MagicMatch match = Magic.getMagicMatch(bytes);
+            page.setContentType(match.getMimeType());
             return page;
         } catch (Throwable throwable) {
             throw new FetchException(throwable.getMessage(), throwable);
@@ -97,7 +108,7 @@ public class SeleniumFetcher implements Fetcher, Closeable {
 
     @Override
     public String[] getAcceptedProtocols() {
-        return new String[]{"text/html", "text/xml"};
+        return new String[]{"http", "https"};
     }
 
     @Override

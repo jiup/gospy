@@ -16,14 +16,16 @@
 
 package cc.gospy.core.scheduler.filter.impl;
 
-import cc.gospy.core.Recoverable;
 import cc.gospy.core.entity.Task;
+import cc.gospy.core.scheduler.Recoverable;
 import cc.gospy.core.scheduler.filter.DuplicateRemover;
+import cc.gospy.core.util.Experimental;
 import cc.gospy.core.util.bloom.ScalableBloomFilter;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 
+@Experimental
 public class BloomDuplicateRemover implements DuplicateRemover, Recoverable {
     private ScalableBloomFilter bloomFilter = new ScalableBloomFilter();
     private Set<Task> taskWhiteList = new ConcurrentSkipListSet<>();
@@ -62,12 +64,12 @@ public class BloomDuplicateRemover implements DuplicateRemover, Recoverable {
     }
 
     @Override
-    public void pause() {
-        // TODO
+    public void pause(String dir) throws Throwable {
+        bloomFilter.saveToFile(dir);
     }
 
     @Override
-    public void resume() {
-        // TODO
+    public void resume(String dir) throws Throwable {
+        bloomFilter.readFromFile(dir);
     }
 }

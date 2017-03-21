@@ -16,7 +16,7 @@
 
 package cc.gospy.core.processor.impl;
 
-import cc.gospy.core.processor.DocumentExtractor;
+import cc.gospy.core.processor.Extractor;
 import cc.gospy.core.processor.ProcessException;
 import cc.gospy.core.processor.Processor;
 import cc.gospy.core.entity.Page;
@@ -24,9 +24,9 @@ import cc.gospy.core.entity.Result;
 import cc.gospy.core.entity.Task;
 
 public class UniversalProcessor implements Processor {
-    private DocumentExtractor<byte[], ?> handler;
+    private Extractor<byte[], ?> handler;
 
-    private UniversalProcessor(DocumentExtractor<byte[], ?> handler) {
+    private UniversalProcessor(Extractor<byte[], ?> handler) {
         this.handler = handler;
     }
 
@@ -35,16 +35,16 @@ public class UniversalProcessor implements Processor {
     }
 
     public static class Builder {
-        private DocumentExtractor<byte[], ?> de;
+        private Extractor<byte[], ?> de;
 
-        public <T> Builder setDocumentExtractor(DocumentExtractor<byte[], T> handler) {
+        public <T> Builder setDocumentExtractor(Extractor<byte[], T> handler) {
             de = handler;
             return this;
         }
 
         public UniversalProcessor build() {
             return new UniversalProcessor(de != null ? de :
-                    (DocumentExtractor<byte[], byte[]>) (page, document) -> new Result<>(null, document));
+                    (Extractor<byte[], byte[]>) (page, document) -> new Result<>(null, document));
         }
 
     }

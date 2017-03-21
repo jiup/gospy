@@ -18,7 +18,8 @@ package cc.gospy.core.scheduler.queue;
 
 import cc.gospy.core.entity.Task;
 
+import java.io.Serializable;
 import java.util.AbstractQueue;
 
-public abstract class TaskQueue extends AbstractQueue<Task> {
+public abstract class TaskQueue extends AbstractQueue<Task> implements Serializable {
 }

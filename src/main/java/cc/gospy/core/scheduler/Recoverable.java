@@ -14,14 +14,10 @@
  * limitations under the License.
  */
 
-package cc.gospy.core;
+package cc.gospy.core.scheduler;
 
-import cc.gospy.core.entity.Task;
+public interface Recoverable {
+    void pause(String dir) throws Throwable;
 
-import java.io.Serializable;
-import java.util.function.Predicate;
-
-@FunctionalInterface
-public interface TaskFilter extends Predicate<Task>, Serializable {
-    TaskFilter HTTP_DEFAULT = task -> task.getUrl().matches("^https?://((?!javascript:|mailto:| ).)*");
+    void resume(String dir) throws Throwable;
 }

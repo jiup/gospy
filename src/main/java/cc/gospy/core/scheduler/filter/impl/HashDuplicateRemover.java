@@ -16,15 +16,19 @@
 
 package cc.gospy.core.scheduler.filter.impl;
 
-import cc.gospy.core.Recoverable;
 import cc.gospy.core.entity.Task;
+import cc.gospy.core.scheduler.Recoverable;
 import cc.gospy.core.scheduler.filter.DuplicateRemover;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.*;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class HashDuplicateRemover implements DuplicateRemover, Recoverable {
+    public static Logger logger = LoggerFactory.getLogger(HashDuplicateRemover.class);
     private Map<Task, AtomicInteger> tasks = new ConcurrentHashMap<>();
 
     @Override
@@ -55,12 +59,20 @@ public class HashDuplicateRemover implements DuplicateRemover, Recoverable {
     }
 
     @Override
-    public void pause() {
-        // TODO
+    public synchronized void pause(String dir) throws Throwable {
+        File file = new File(dir, this.getClass().getTypeName() + ".tmp");
+        logger.info("Saving hash filter data to file {}...", file.getPath());
+        ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(file, false));
+        outputStream.writeObject(tasks);
+        logger.info("Hash filter data is successfully saved.");
     }
 
     @Override
-    public void resume() {
-        // TODO
+    public synchronized void resume(String dir) throws Throwable {
+        File file = new File(dir, this.getClass().getTypeName() + ".tmp");
+        logger.info("Reading hash filter data from file {}...", file.getPath());
+        ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(file));
+        tasks = (Map<Task, AtomicInteger>) inputStream.readObject();
+        logger.info("Hash filter data is successfully loaded.");
     }
 }

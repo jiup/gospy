@@ -14,14 +14,11 @@
  * limitations under the License.
  */
 
-package cc.gospy.core;
+package cc.gospy.core.scheduler;
 
-import cc.gospy.core.entity.Task;
+import cc.gospy.core.scheduler.impl.GeneralScheduler;
 
-import java.io.Serializable;
-import java.util.function.Predicate;
-
-@FunctionalInterface
-public interface TaskFilter extends Predicate<Task>, Serializable {
-    TaskFilter HTTP_DEFAULT = task -> task.getUrl().matches("^https?://((?!javascript:|mailto:| ).)*");
+public class Schedulers {
+    public static GeneralScheduler GeneralScheduler;
 }
+

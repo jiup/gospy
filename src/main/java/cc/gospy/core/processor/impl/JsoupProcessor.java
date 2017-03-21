@@ -20,7 +20,7 @@ import cc.gospy.core.TaskFilter;
 import cc.gospy.core.entity.Page;
 import cc.gospy.core.entity.Result;
 import cc.gospy.core.entity.Task;
-import cc.gospy.core.processor.DocumentExtractor;
+import cc.gospy.core.processor.Extractor;
 import cc.gospy.core.processor.ProcessException;
 import cc.gospy.core.processor.Processor;
 import cc.gospy.core.util.StringHelper;
@@ -35,10 +35,10 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 
 public class JsoupProcessor implements Processor {
-    private DocumentExtractor<Document, ?> handler;
+    private Extractor<Document, ?> handler;
     private TaskFilter filter;
 
-    private JsoupProcessor(DocumentExtractor<Document, ?> handler, TaskFilter filter) {
+    private JsoupProcessor(Extractor<Document, ?> handler, TaskFilter filter) {
         this.handler = handler;
         this.filter = filter;
     }
@@ -52,10 +52,10 @@ public class JsoupProcessor implements Processor {
     }
 
     public static class Builder {
-        private DocumentExtractor<Document, ?> ha;
+        private Extractor<Document, ?> ha;
         private TaskFilter fi = TaskFilter.HTTP_DEFAULT;
 
-        public <T> Builder setDocumentExtractor(DocumentExtractor<Document, T> handler) {
+        public <T> Builder setDocumentExtractor(Extractor<Document, T> handler) {
             ha = handler;
             return this;
         }
@@ -122,7 +122,7 @@ public class JsoupProcessor implements Processor {
         return null;
     }
 
-    public DocumentExtractor<Document, ?> getDocumentExtractor() {
+    public Extractor<Document, ?> getDocumentExtractor() {
         return handler;
     }
 

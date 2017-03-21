@@ -22,6 +22,8 @@ import cc.gospy.core.fetcher.FetchException;
 import cc.gospy.core.fetcher.Fetcher;
 import cc.gospy.core.fetcher.UserAgent;
 import cc.gospy.core.util.Experimental;
+import net.sf.jmimemagic.Magic;
+import net.sf.jmimemagic.MagicMatch;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.phantomjs.PhantomJSDriver;
 import org.openqa.selenium.remote.DesiredCapabilities;
@@ -30,6 +32,9 @@ import java.io.Closeable;
 import java.io.IOException;
 
 @Experimental
+/**
+ * for ajax rendered pages
+ */
 public class PhantomJSFetcher implements Fetcher, Closeable {
     private WebDriver driver;
 
@@ -81,9 +86,15 @@ public class PhantomJSFetcher implements Fetcher, Closeable {
     public Page fetch(Task task) throws FetchException {
         try {
             Page page = new Page();
-            page.setTask(task);
             driver.get(task.getUrl());
-            page.setContent(driver.getPageSource().getBytes());
+            byte[] bytes = driver.getPageSource().getBytes();
+            page.setTask(task);
+            page.setContent(bytes);
+            // we cannot get content-type form selenium :(
+            // see https://github.com/seleniumhq/selenium-google-code-issue-archive/issues/141#issuecomment-191404952
+            // using magic-match is a compromise.
+            MagicMatch match = Magic.getMagicMatch(bytes);
+            page.setContentType(match.getMimeType());
             //            driver.manage().addCookie();
             return page;
         } catch (Throwable throwable) {
@@ -93,7 +104,7 @@ public class PhantomJSFetcher implements Fetcher, Closeable {
 
     @Override
     public String[] getAcceptedProtocols() {
-        return new String[]{"text/html", "text/xml"};
+        return new String[]{"http", "https"};
     }
 
     @Override

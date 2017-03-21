@@ -14,10 +14,14 @@
  * limitations under the License.
  */
 
-package cc.gospy.core;
+package cc.gospy.core.scheduler.queue;
 
-public interface Recoverable {
-    void pause();
+import cc.gospy.core.scheduler.queue.impl.FIFOTaskQueue;
+import cc.gospy.core.scheduler.queue.impl.PriorityTaskQueue;
+import cc.gospy.core.scheduler.queue.impl.TimingLazyTaskQueue;
 
-    void resume();
+public class TaskQueues {
+    public static FIFOTaskQueue FIFOTaskQueue;
+    public static PriorityTaskQueue PriorityTaskQueue;
+    public static TimingLazyTaskQueue TimingLazyTaskQueue;
 }

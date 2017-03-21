@@ -39,6 +39,14 @@ public abstract class LazyTaskQueue extends TaskQueue {
         return task;
     }
 
+    public PriorityBlockingQueue<Task> dump() {
+        try {
+            return lazyTaskQueue;
+        } finally {
+            lazyTaskQueue.clear();
+        }
+    }
+
     public abstract void stop();
 
 }
