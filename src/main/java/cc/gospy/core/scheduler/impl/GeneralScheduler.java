@@ -16,9 +16,9 @@
 
 package cc.gospy.core.scheduler.impl;
 
-import cc.gospy.core.Observable;
 import cc.gospy.core.TaskFilter;
 import cc.gospy.core.entity.Task;
+import cc.gospy.core.scheduler.Observable;
 import cc.gospy.core.scheduler.Recoverable;
 import cc.gospy.core.scheduler.Scheduler;
 import cc.gospy.core.scheduler.filter.DuplicateRemover;
@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class GeneralScheduler implements Scheduler, Observable, Recoverable {
-    private static Logger logger = LoggerFactory.getLogger(GeneralScheduler.class);
+    private static final Logger logger = LoggerFactory.getLogger(GeneralScheduler.class);
 
     private volatile AtomicLong totalTaskInputCount;
     private volatile AtomicLong totalTaskOutputCount;
@@ -46,7 +46,7 @@ public class GeneralScheduler implements Scheduler, Observable, Recoverable {
     private DuplicateRemover duplicateRemover;
     private TaskFilter taskFilter;
 
-    private GeneralScheduler(TaskQueue taskQueue
+    GeneralScheduler(TaskQueue taskQueue
             , LazyTaskQueue lazyTaskQueue
             , DuplicateRemover duplicateRemover
             , TaskFilter filter) {
@@ -60,7 +60,7 @@ public class GeneralScheduler implements Scheduler, Observable, Recoverable {
     }
 
     @Override
-    public Task getTask() {
+    public synchronized Task getTask(String fetcherId) {
         if (isSuspend.get()) {
             return null;
         }
@@ -85,7 +85,7 @@ public class GeneralScheduler implements Scheduler, Observable, Recoverable {
     }
 
     @Override
-    public void addTask(Task task) {
+    public synchronized void addTask(String executorAddress, Task task) {
         if (isSuspend.get()) {
             return;
         }
@@ -106,7 +106,7 @@ public class GeneralScheduler implements Scheduler, Observable, Recoverable {
     }
 
     @Override
-    public void addLazyTask(Task task) {
+    public void addLazyTask(String executorAddress, Task task) {
         if (isSuspend.get()) {
             return;
         }
@@ -214,7 +214,7 @@ public class GeneralScheduler implements Scheduler, Observable, Recoverable {
     public static class Builder {
         private GeneralScheduler scheduler;
         private TaskQueue tq = new FIFOTaskQueue();
-        private LazyTaskQueue ltq = new TimingLazyTaskQueue(wakedTask -> scheduler.addTask(wakedTask));
+        private LazyTaskQueue ltq = new TimingLazyTaskQueue(wakedTask -> scheduler.addTask(null, wakedTask));
         private DuplicateRemover dr = new HashDuplicateRemover();
         private TaskFilter tf = TaskFilter.HTTP_DEFAULT;
 

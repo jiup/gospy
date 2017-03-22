@@ -26,8 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ScalableBloomFilter implements Serializable {
-    public static Logger logger = LoggerFactory.getLogger(ScalableBloomFilter.class);
-
+    private static final Logger logger = LoggerFactory.getLogger(ScalableBloomFilter.class);
     private List<BloomFilter<Task>> bloomFilters;
     private BloomFilter<Task> activateBloomFilter;
     private final long expectedInsertions;

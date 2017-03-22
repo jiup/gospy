@@ -26,7 +26,7 @@ import java.util.Iterator;
 import java.util.concurrent.PriorityBlockingQueue;
 
 public class TimingLazyTaskQueue extends LazyTaskQueue {
-    private static Logger logger = LoggerFactory.getLogger(TimingLazyTaskQueue.class);
+    private static final Logger logger = LoggerFactory.getLogger(TimingLazyTaskQueue.class);
     private Thread checkThread = null;
     private volatile int checkPeriod = 60; // in seconds
 

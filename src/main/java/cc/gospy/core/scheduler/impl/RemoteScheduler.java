@@ -16,27 +16,50 @@
 
 package cc.gospy.core.scheduler.impl;
 
-import cc.gospy.core.scheduler.Scheduler;
 import cc.gospy.core.entity.Task;
+import cc.gospy.core.scheduler.Scheduler;
+import cc.gospy.core.scheduler.Verifiable;
 
-public class RemoteScheduler implements Scheduler {
+import java.util.Map;
+
+public class RemoteScheduler implements Scheduler, Verifiable {
     @Override
-    public Task getTask() {
+    public Task getTask(String fetcherId) {
         return null;
     }
 
     @Override
-    public void addTask(Task task) {
-        return;
+    public void addTask(String executorAddress, Task task) {
+
     }
 
     @Override
-    public void addLazyTask(Task task) {
-        return;
+    public void addLazyTask(String executorAddress, Task task) {
+
     }
 
     @Override
     public void stop() {
 
+    }
+
+    @Override
+    public void feedback(String fetcherId, Task task) {
+
+    }
+
+    @Override
+    public long getPendingTaskSize() {
+        return 0;
+    }
+
+    @Override
+    public Map<String, Long> getTotalTaskDistributeCounts() {
+        return null;
+    }
+
+    @Override
+    public Map<String, Long> getPendingTaskDistributeCounts() {
+        return null;
     }
 }

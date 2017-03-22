@@ -24,11 +24,9 @@ import cc.gospy.core.fetcher.Fetchers;
 import cc.gospy.core.pipeline.Pipeline;
 import cc.gospy.core.pipeline.Pipelines;
 import cc.gospy.core.processor.*;
-import cc.gospy.core.scheduler.Recoverable;
-import cc.gospy.core.scheduler.Scheduler;
-import cc.gospy.core.scheduler.Schedulers;
-import cc.gospy.core.scheduler.Verifiable;
+import cc.gospy.core.scheduler.*;
 import cc.gospy.core.util.Experimental;
+import cc.gospy.core.util.StringHelper;
 import cc.gospy.core.util.TaskBlockedException;
 import com.brandwatch.robots.RobotsConfig;
 import com.brandwatch.robots.RobotsFactory;
@@ -55,7 +53,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Gospy implements Observable {
-    private static Logger logger = LoggerFactory.getLogger(Gospy.class);
+    private static final Logger logger = LoggerFactory.getLogger(Gospy.class);
+
+    private final String identifier;
 
     private Scheduler scheduler;
     private Fetchers fetcherFactory;
@@ -69,13 +69,14 @@ public class Gospy implements Observable {
     private Thread operationChainThread;
     private RobotsService robotsService;
 
-    private Gospy(Scheduler scheduler
+    private Gospy(String identifier, Scheduler scheduler
             , Fetchers fetcherFactory
             , PageProcessors pageProcessorFactory
             , Processors processorFactory
             , Pipelines pipelineFactory
             , ExceptionHandler handler
             , boolean checkForRobots) {
+        this.identifier = identifier;
         this.scheduler = scheduler;
         this.fetcherFactory = fetcherFactory;
         this.pageProcessorFactory = pageProcessorFactory;
@@ -101,7 +102,7 @@ public class Gospy implements Observable {
         return new Thread(() -> {
             Task t0;
             while (running) {
-                while ((t0 = scheduler.getTask()) != null) {
+                while ((t0 = scheduler.getTask(identifier)) != null) {
                     Task task = t0;
                     threadPool.execute(() -> {
                         Page page = null;
@@ -126,7 +127,7 @@ public class Gospy implements Observable {
                                 if (result.getNewTasks() != null) {
                                     Iterator<Task> taskIterator = result.getNewTasks().iterator();
                                     while (taskIterator.hasNext()) {
-                                        scheduler.addTask(taskIterator.next());
+                                        scheduler.addTask(identifier, taskIterator.next());
                                     }
                                 }
                                 if (result.getData() != null) {
@@ -214,7 +215,7 @@ public class Gospy implements Observable {
             }
             pageProcessor.process();
             if (scheduler instanceof Verifiable) {
-                ((Verifiable) scheduler).feedback(page.getTask());
+                ((Verifiable) scheduler).feedback(identifier, page.getTask());
             }
             Result<?> result = new Result<>(pageProcessor.getNewTasks(), pageProcessor.getResultData());
             result.setPage(page);
@@ -309,7 +310,7 @@ public class Gospy implements Observable {
     }
 
     public Gospy addTask(Task task) {
-        scheduler.addTask(task);
+        scheduler.addTask(identifier, task);
         return this;
     }
 
@@ -370,13 +371,19 @@ public class Gospy implements Observable {
     }
 
     public static class Builder {
+        private String id = StringHelper.getRandomIdentifier();
         private Scheduler sc = Schedulers.GeneralScheduler.getDefault();
         private Fetchers ff = new Fetchers();
         private PageProcessors ppf = new PageProcessors();
         private Processors pf = new Processors();
         private Pipelines plf = new Pipelines();
         private ExceptionHandler eh = ExceptionHandler.DEFAULT;
-        private boolean checkForRobots = false;
+        private boolean cfr = false;
+
+        public Builder setIdentifier(String identifier) {
+            id = identifier;
+            return this;
+        }
 
         public Builder setScheduler(Scheduler scheduler) {
             sc = scheduler;
@@ -409,12 +416,12 @@ public class Gospy implements Observable {
         }
 
         public Builder checkForRobots() {
-            checkForRobots = true;
+            cfr = true;
             return this;
         }
 
         public Gospy build() {
-            return new Gospy(sc, ff, ppf, pf, plf, eh, checkForRobots);
+            return new Gospy(id, sc, ff, ppf, pf, plf, eh, cfr);
         }
 
     }

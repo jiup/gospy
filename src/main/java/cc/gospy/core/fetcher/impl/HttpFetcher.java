@@ -63,7 +63,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class HttpFetcher implements Fetcher, Closeable {
-    private static Logger logger = LoggerFactory.getLogger(HttpFetcher.class);
+    private static final Logger logger = LoggerFactory.getLogger(HttpFetcher.class);
     private static final int TIMEOUT = 3000;
 
     private int maxConnCount = 200;

@@ -28,7 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class HashDuplicateRemover implements DuplicateRemover, Recoverable {
-    public static Logger logger = LoggerFactory.getLogger(HashDuplicateRemover.class);
+    private static final Logger logger = LoggerFactory.getLogger(HashDuplicateRemover.class);
     private Map<Task, AtomicInteger> tasks = new ConcurrentHashMap<>();
 
     @Override

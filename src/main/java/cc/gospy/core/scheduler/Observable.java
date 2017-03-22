@@ -14,14 +14,23 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.scheduler.impl;
+package cc.gospy.core.scheduler;
 
-import cc.gospy.core.entity.Task;
-import cc.gospy.core.scheduler.Verifiable;
+import cc.gospy.core.util.Experimental;
 
-public class FeedbackScheduler implements Verifiable {
-    @Override
-    public void feedback(Task task) {
-        
-    }
+@Experimental
+public interface Observable {
+
+    long getTotalTaskInputCount();
+
+    long getTotalTaskOutputCount();
+
+    long getRecodedTaskSize();
+
+    long getCurrentTaskQueueSize();
+
+    long getCurrentLazyTaskQueueSize();
+
+    long getRunningTimeMillis();
+
 }

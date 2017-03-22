@@ -18,6 +18,14 @@ package cc.gospy.core.scheduler;
 
 import cc.gospy.core.entity.Task;
 
+import java.util.Map;
+
 public interface Verifiable {
-    void feedback(Task task);
+    void feedback(String fetcherId, Task task);
+
+    long getPendingTaskSize();
+
+    Map<String, Long> getTotalTaskDistributeCounts();
+
+    Map<String, Long> getPendingTaskDistributeCounts();
 }

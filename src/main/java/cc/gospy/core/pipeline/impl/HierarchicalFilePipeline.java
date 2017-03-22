@@ -31,7 +31,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
 public class HierarchicalFilePipeline implements Pipeline {
-    private static Logger logger = LoggerFactory.getLogger(HierarchicalFilePipeline.class);
+    private static final Logger logger = LoggerFactory.getLogger(HierarchicalFilePipeline.class);
     private static int counter = 0;
 
     private String basePath = "/";

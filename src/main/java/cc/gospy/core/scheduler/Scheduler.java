@@ -19,11 +19,11 @@ package cc.gospy.core.scheduler;
 import cc.gospy.core.entity.Task;
 
 public interface Scheduler {
-    Task getTask();
+    Task getTask(String fetcherId);
 
-    void addTask(Task task);
+    void addTask(String executorAddress, Task task);
 
-    void addLazyTask(Task task);
+    void addLazyTask(String executorAddress, Task task);
 
     void stop();
 }

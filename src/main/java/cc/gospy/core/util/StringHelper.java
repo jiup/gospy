@@ -17,8 +17,31 @@
 package cc.gospy.core.util;
 
 import cc.gospy.core.entity.Task;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
 
 public class StringHelper {
+    private static final Logger logger = LoggerFactory.getLogger(StringHelper.class);
+    public static String myExternalIp;
+
+    static {
+        try {
+            URL ipEcho = new URL("http://ipecho.net/plain");
+            BufferedReader in = new BufferedReader(new InputStreamReader(ipEcho.openStream()));
+            myExternalIp = in.readLine();
+            in.close();
+        } catch (IOException e) {
+            myExternalIp = "unknown ip";
+            logger.error("Get external ip failure, cause: {}", e.getMessage());
+        }
+    }
+
     public static String toAbsoluteUrl(final String protocol, final String host, final String parentUrl, final String anyUrl) {
         String res, path = anyUrl.trim();
         if (path.matches("^https?://.*")) {
@@ -123,6 +146,14 @@ public class StringHelper {
         return absUrl;
     }
 
+    public static String getRandomSerial() {
+        return RandomStringUtils.randomAlphanumeric(6).toLowerCase();
+    }
+
+    public static String getRandomIdentifier() {
+        return getRandomSerial().concat(" @ ") + myExternalIp;
+    }
+
     @Experimental
     public static String toEscapedFileName(String unescapedFileName, String escapeStr) {
         if (unescapedFileName == null || unescapedFileName.equals("")) {
@@ -145,7 +176,7 @@ public class StringHelper {
         char[] hex = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
         buffer.append("byte[").append(value.length).append("]");
         for (int i = 0; i < value.length; i++) {
-            buffer.append(i % 32 == 0 ? String.format("\n%-6d:\t", i) : "")
+            buffer.append(i % 32 == 0 ? String.format("\n%06d:\t", i) : "")
                     .append(hex[(value[i] >>> 4) & 0x0F]).append(hex[(value[i]) & 0x0F]).append(" ");
         }
         return buffer.append("\n").toString();
