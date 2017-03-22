@@ -28,7 +28,7 @@ import java.util.concurrent.PriorityBlockingQueue;
 public class TimingLazyTaskQueue extends LazyTaskQueue {
     private static final Logger logger = LoggerFactory.getLogger(TimingLazyTaskQueue.class);
     private Thread checkThread = null;
-    private volatile int checkPeriod = 60; // in seconds
+    private int checkPeriodInSeconds = 60;
 
     public TimingLazyTaskQueue(LazyTaskHandler handler) {
         this(5, handler);
@@ -43,11 +43,11 @@ public class TimingLazyTaskQueue extends LazyTaskQueue {
 
     class TimingLazyTaskChecker implements Runnable {
         public void run() {
-            while (checkPeriod != 0) {
+            while (checkPeriodInSeconds != 0) {
                 try {
-                    Thread.sleep(checkPeriod * 1000);
+                    Thread.sleep(checkPeriodInSeconds * 1000);
                     while (poll() != null) {
-                        if (checkPeriod == 0) break;
+                        if (checkPeriodInSeconds == 0) break;
                     }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -55,7 +55,7 @@ public class TimingLazyTaskQueue extends LazyTaskQueue {
                 }
             }
             checkThread = null;
-            checkPeriod = 60;
+            checkPeriodInSeconds = 60;
         }
     }
 
@@ -75,15 +75,15 @@ public class TimingLazyTaskQueue extends LazyTaskQueue {
             logger.info("Lazy task queue stopped.");
         }
         lazyTaskQueue.clear();
-        checkPeriod = 0;
+        checkPeriodInSeconds = 0;
         checkThread = null;
     }
 
     @Override
     public boolean add(Task task) {
         int taskExpectedRecallCycle = task.getExpectedVisitPeriod();
-        if (taskExpectedRecallCycle > 0 && (checkPeriod == 0 || taskExpectedRecallCycle < checkPeriod)) {
-            checkPeriod = taskExpectedRecallCycle;
+        if (taskExpectedRecallCycle > 0 && (checkPeriodInSeconds == 0 || taskExpectedRecallCycle < checkPeriodInSeconds)) {
+            checkPeriodInSeconds = taskExpectedRecallCycle;
         }
         if (checkThread == null) {
             checkThread = new Thread(new TimingLazyTaskChecker());
@@ -96,7 +96,7 @@ public class TimingLazyTaskQueue extends LazyTaskQueue {
     public synchronized Task poll() {
         Task task = super.poll();
         if (lazyTaskQueue.size() == 0) {
-            checkPeriod = 0;
+            checkPeriodInSeconds = 0;
         }
         return task;
     }

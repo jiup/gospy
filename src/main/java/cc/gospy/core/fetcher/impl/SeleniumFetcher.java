@@ -100,8 +100,11 @@ public class SeleniumFetcher implements Fetcher, Closeable {
     public Page fetch(Task task) throws FetchException {
         try {
             Page page = new Page();
+            long timer = System.currentTimeMillis();
             driver.get(task.getUrl());
+            task.addVisitCount();
             page.setTask(task);
+            page.setResponseTime(System.currentTimeMillis() - timer);
             byte[] bytes = driver.getPageSource().getBytes();
             page.setContent(bytes);
             // we cannot get content-type form selenium :(

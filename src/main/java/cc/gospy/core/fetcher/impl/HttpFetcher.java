@@ -332,7 +332,6 @@ public class HttpFetcher implements Fetcher, Closeable {
             if (page != null) {
                 page.setResponseTime(timer);
                 task.addVisitCount();
-                task.setLastVisitTime(System.currentTimeMillis());
                 page.setTask(task);
             }
             response.close();

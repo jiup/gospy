@@ -29,6 +29,7 @@ public class SkipHttpFetcher implements Fetcher {
     @Override
     public Page fetch(Task task) throws FetchException {
         Page page = new Page();
+        task.addVisitCount();
         page.setTask(task);
         page.setContent(new byte[0]);
         page.setContentType("skip");

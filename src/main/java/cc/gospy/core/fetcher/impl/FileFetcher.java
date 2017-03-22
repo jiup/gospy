@@ -52,6 +52,7 @@ public class FileFetcher implements Fetcher {
             byte[] bytes = getBytesFromFile(url);
             timer = System.currentTimeMillis() - timer;
             Page page = new Page();
+            task.addVisitCount();
             page.setTask(task);
             page.setStatusCode(200);
             page.setContent(bytes);

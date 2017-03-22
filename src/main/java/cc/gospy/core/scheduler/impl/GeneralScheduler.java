@@ -41,10 +41,11 @@ public class GeneralScheduler implements Scheduler, Observable, Recoverable {
     private volatile AtomicLong totalTaskOutputCount;
     private volatile AtomicBoolean isSuspend;
     private long firstVisitTimeMillis;
-    private TaskQueue taskQueue;
-    private LazyTaskQueue lazyTaskQueue;
-    private DuplicateRemover duplicateRemover;
-    private TaskFilter taskFilter;
+
+    TaskQueue taskQueue;
+    LazyTaskQueue lazyTaskQueue;
+    DuplicateRemover duplicateRemover;
+    TaskFilter taskFilter;
 
     GeneralScheduler(TaskQueue taskQueue
             , LazyTaskQueue lazyTaskQueue
@@ -69,6 +70,7 @@ public class GeneralScheduler implements Scheduler, Observable, Recoverable {
         }
         if (taskQueue.size() > 0) {
             Task task = taskQueue.poll();
+            task.setLastVisitTime(System.currentTimeMillis());
             duplicateRemover.record(task);
             totalTaskOutputCount.getAndIncrement();
             return task;

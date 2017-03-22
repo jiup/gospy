@@ -86,8 +86,11 @@ public class PhantomJSFetcher implements Fetcher, Closeable {
     public Page fetch(Task task) throws FetchException {
         try {
             Page page = new Page();
+            long timer = System.currentTimeMillis();
             driver.get(task.getUrl());
             byte[] bytes = driver.getPageSource().getBytes();
+            page.setResponseTime(System.currentTimeMillis() - timer);
+            task.addVisitCount();
             page.setTask(task);
             page.setContent(bytes);
             // we cannot get content-type form selenium :(
