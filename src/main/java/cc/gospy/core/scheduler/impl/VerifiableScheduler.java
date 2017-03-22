@@ -42,14 +42,17 @@ public class VerifiableScheduler extends GeneralScheduler implements Verifiable 
     private Thread checkerThread;
     private int pendingTimeInSeconds;
     private boolean checkerRunning;
+    private boolean autoExit;
 
     VerifiableScheduler(TaskQueue taskQueue,
                         LazyTaskQueue lazyTaskQueue,
                         DuplicateRemover duplicateRemover,
                         TaskFilter filter,
-                        int pendingTimeInSeconds) {
+                        int pendingTimeInSeconds,
+                        boolean autoExit) {
         super(taskQueue, lazyTaskQueue, duplicateRemover, filter);
         this.pendingTimeInSeconds = pendingTimeInSeconds;
+        this.autoExit = autoExit;
     }
 
     @Override
@@ -66,6 +69,7 @@ public class VerifiableScheduler extends GeneralScheduler implements Verifiable 
     public Task getTask(String fetcherId) {
         Task task = super.getTask(fetcherId);
         if (task == null) {
+            exitTrigger();
             return null;
         }
         checkerTrigger();
@@ -86,6 +90,12 @@ public class VerifiableScheduler extends GeneralScheduler implements Verifiable 
             checkerThread = new PendingTaskChecker(pendingTimeInSeconds);
             checkerRunning = true;
             checkerThread.start();
+        }
+    }
+
+    public void exitTrigger() {
+        if (autoExit && pendingTasks.size() == 0 && taskQueue.size() == 0 && lazyTaskQueue.size() == 0) {
+            System.exit(0);
         }
     }
 
@@ -186,6 +196,7 @@ public class VerifiableScheduler extends GeneralScheduler implements Verifiable 
         private DuplicateRemover dr = new HashDuplicateRemover();
         private TaskFilter tf = TaskFilter.HTTP_DEFAULT;
         private int pt = 10;
+        private boolean ae = true;
 
         public Builder setTaskQueue(TaskQueue taskQueue) {
             tq = taskQueue;
@@ -212,8 +223,13 @@ public class VerifiableScheduler extends GeneralScheduler implements Verifiable 
             return this;
         }
 
+        public Builder setAutoExit(boolean autoExit) {
+            ae = autoExit;
+            return this;
+        }
+
         public VerifiableScheduler build() {
-            return scheduler = new VerifiableScheduler(tq, ltq, dr, tf, pt);
+            return scheduler = new VerifiableScheduler(tq, ltq, dr, tf, pt, ae);
         }
     }
 

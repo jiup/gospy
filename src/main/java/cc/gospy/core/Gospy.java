@@ -108,6 +108,9 @@ public class Gospy implements Observable {
                         Page page = null;
                         try {
                             Fetcher fetcher = fetcherFactory.get(task.getProtocol());
+                            if (scheduler instanceof Verifiable) {
+                                ((Verifiable) scheduler).feedback(identifier, page.getTask());
+                            }
 
                             // check robots.txt
                             if (!(robotsService == null || robotsService.isAllowed(fetcher.getUserAgent(), URI.create(task.getUrl())))) {
@@ -214,18 +217,16 @@ public class Gospy implements Observable {
                 }
             }
             pageProcessor.process();
-            if (scheduler instanceof Verifiable) {
-                ((Verifiable) scheduler).feedback(identifier, page.getTask());
-            }
             Result<?> result = new Result<>(pageProcessor.getNewTasks(), pageProcessor.getResultData());
             result.setPage(page);
-            if (pageProcessor instanceof Closeable) {
-                ((Closeable) pageProcessor).close();
-            }
             return result;
         } catch (Throwable throwable) {
             pageProcessor.onError(throwable);
             return null;
+        } finally {
+            if (pageProcessor instanceof Closeable) {
+                ((Closeable) pageProcessor).close();
+            }
         }
     }
 
