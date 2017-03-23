@@ -136,6 +136,6 @@ public class SeleniumProcessor implements Processor {
 
     @Override
     public String[] getAcceptedContentType() {
-        return new String[]{"skip"};
+        return new String[]{"selenium"};
     }
 }

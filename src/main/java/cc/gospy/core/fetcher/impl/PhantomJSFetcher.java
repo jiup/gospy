@@ -85,6 +85,7 @@ public class PhantomJSFetcher implements Fetcher, Closeable {
     @Override
     public Page fetch(Task task) throws FetchException {
         try {
+            task.setUrl(task.getUrl().substring("phantomjs://".length()));
             Page page = new Page();
             long timer = System.currentTimeMillis();
             driver.get(task.getUrl());
@@ -107,7 +108,7 @@ public class PhantomJSFetcher implements Fetcher, Closeable {
 
     @Override
     public String[] getAcceptedProtocols() {
-        return new String[]{"http", "https"};
+        return new String[]{"phantomjs"};
     }
 
     @Override

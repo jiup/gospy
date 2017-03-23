@@ -29,7 +29,7 @@ public class Task implements Serializable, Comparable<Task> {
     public enum Priority {EMERGENCY, HIGH, MEDIUM, LOW}
 
     private Priority priority;
-    private final String url;
+    private String url;
     private String host;
     private String protocol;
     private Map<String, Object> extra;
@@ -68,6 +68,7 @@ public class Task implements Serializable, Comparable<Task> {
             host = !host.contains("/") ? host : host.substring(0, host.indexOf('/'));
         } else {
             protocol = null;
+            throw new RuntimeException("unresolved protocol: " + protocol);
         }
         extra = new HashMap<>();
     }
@@ -92,6 +93,10 @@ public class Task implements Serializable, Comparable<Task> {
     @Override
     public String toString() {
         return "Task{" + priority.name().charAt(0) + "-" + url + '}';
+    }
+
+    public void setUrl(String newUrl) {
+        this.url = url;
     }
 
     public void addVisitCount() {

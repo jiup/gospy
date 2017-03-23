@@ -140,6 +140,6 @@ public class PhantomJSProcessor implements Processor {
 
     @Override
     public String[] getAcceptedContentType() {
-        return new String[]{"skip"};
+        return new String[]{"phantomjs"};
     }
 }

@@ -99,6 +99,7 @@ public class SeleniumFetcher implements Fetcher, Closeable {
     @Override
     public Page fetch(Task task) throws FetchException {
         try {
+            task.setUrl(task.getUrl().substring("selenium://".length()));
             Page page = new Page();
             long timer = System.currentTimeMillis();
             driver.get(task.getUrl());
@@ -120,7 +121,7 @@ public class SeleniumFetcher implements Fetcher, Closeable {
 
     @Override
     public String[] getAcceptedProtocols() {
-        return new String[]{"http", "https"};
+        return new String[]{"selenium"};
     }
 
     @Override

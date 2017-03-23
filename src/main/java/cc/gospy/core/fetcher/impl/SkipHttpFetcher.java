@@ -28,17 +28,18 @@ import cc.gospy.core.fetcher.Fetcher;
 public class SkipHttpFetcher implements Fetcher {
     @Override
     public Page fetch(Task task) throws FetchException {
+        task.setUrl(task.getUrl().substring(task.getProtocol().concat("://").length()));
         Page page = new Page();
         task.addVisitCount();
         page.setTask(task);
         page.setContent(new byte[0]);
-        page.setContentType("skip");
+        page.setContentType(task.getProtocol());
         return page;
     }
 
     @Override
     public String[] getAcceptedProtocols() {
-        return new String[]{"http", "https"};
+        return new String[]{"phantomjs", "selenium"};
     }
 
     @Override
