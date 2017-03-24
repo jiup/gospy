@@ -33,8 +33,8 @@ import org.openqa.selenium.remote.DesiredCapabilities;
  * <p>
  * This is a phantomJs implementation of a processor, this is out of the frameworks's
  * origin design because of its self independent on browser actions instead of pure
- * link visiting by our fetchers. Therefore, we offer a SkipHttpFetcher which should
- * be declared when using a PhantomJsProcessor, by using of the SkipHttpFetcher, pages
+ * link visiting by our fetchers. Therefore, we offer a TransparentFetcher which should
+ * be declared when using a PhantomJsProcessor, by using of the TransparentFetcher, pages
  * will not be downloaded during the fetching process. Hence the page will be ignored
  * , so that you can deal with that by using the given api from web driver. (the web
  * driver cannot split into two sections like a fetcher and a processor, only in this

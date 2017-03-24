@@ -96,7 +96,7 @@ public class Task implements Serializable, Comparable<Task> {
     }
 
     public void setUrl(String newUrl) {
-        this.url = url;
+        this.url = newUrl;
     }
 
     public void addVisitCount() {

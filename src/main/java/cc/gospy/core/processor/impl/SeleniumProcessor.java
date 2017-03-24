@@ -28,14 +28,16 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.htmlunit.HtmlUnitDriver;
 import org.openqa.selenium.ie.InternetExplorerDriver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Note:
  * <p>
  * This is a selenium implementation of a processor, this is out of the frameworks's
  * origin design because of its self independent on browser actions instead of pure
- * link visiting by our fetchers. Therefore, we offer a SkipHttpFetcher which should
- * be declared when using a SeleniumProcessor, by using of the SkipHttpFetcher, pages
+ * link visiting by our fetchers. Therefore, we offer a TransparentFetcher which should
+ * be declared when using a SeleniumProcessor, by using of the TransparentFetcher, pages
  * will not be downloaded during the fetching process. Hence the page will be ignored
  * , so that you can deal with that by using the given api from web driver. (the web
  * driver cannot split into two sections like a fetcher and a processor, only in this
@@ -48,6 +50,7 @@ import org.openqa.selenium.ie.InternetExplorerDriver;
  * as a single procedure in <code>process()</code>.</p>
  */
 public class SeleniumProcessor implements Processor {
+    private static Logger logger = LoggerFactory.getLogger(SeleniumProcessor.class);
 
     public enum Kernel {HtmlUnit, Chrome, Firefox, IE}
 
@@ -59,17 +62,21 @@ public class SeleniumProcessor implements Processor {
     private SeleniumProcessor(Kernel browser, String path, Extractor<WebDriver, ?> handler, TaskFilter filter) {
         switch (browser) {
             case HtmlUnit:
+                logger.info("Initializing selenium web driver for HtmlUnit...");
                 this.webDriver = new HtmlUnitDriver();
                 break;
             case Chrome:
+                logger.info("Initializing selenium web driver for Chrome...");
                 System.setProperty("webdriver.chrome.driver", path);
                 this.webDriver = new ChromeDriver();
                 break;
             case Firefox:
+                logger.info("Initializing selenium web driver for Firefox...");
                 System.setProperty("webdriver.firefox.bin", path);
                 this.webDriver = new FirefoxDriver();
                 break;
             case IE:
+                logger.info("Initializing selenium web driver for Internet Explorer...");
                 System.setProperty("webdriver.ie.driver", path);
                 this.webDriver = new InternetExplorerDriver();
                 break;

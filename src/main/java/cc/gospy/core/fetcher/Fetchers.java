@@ -27,7 +27,7 @@ public class Fetchers {
     public static FileFetcher FileFetcher;
     public static cc.gospy.core.fetcher.impl.PhantomJSFetcher PhantomJSFetcher;
     public static SeleniumFetcher SeleniumFetcher;
-    public static SkipHttpFetcher SkipHttpFetcher;
+    public static TransparentFetcher TransparentFetcher;
 
     private Map<String, Fetcher> fetchers = new HashMap<>();
 

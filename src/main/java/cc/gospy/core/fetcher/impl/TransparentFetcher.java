@@ -25,14 +25,19 @@ import cc.gospy.core.fetcher.Fetcher;
  * This Fetcher is only reserve for a 3-party processor,
  * eg: PhantomJSProcessor, SeleniumProcessor, etc.
  */
-public class SkipHttpFetcher implements Fetcher {
-    public SkipHttpFetcher getDefault() {
-        return new SkipHttpFetcher();
+public class TransparentFetcher implements Fetcher {
+    private TransparentFetcher() {
+    }
+
+    public static TransparentFetcher getDefault() {
+        return new TransparentFetcher();
     }
 
     @Override
     public Page fetch(Task task) throws FetchException {
-        task.setUrl(task.getUrl().substring(task.getProtocol().concat("://").length()));
+        if (task.getUrl().startsWith(task.getProtocol().concat("://"))) {
+            task.setUrl(task.getUrl().substring(task.getProtocol().concat("://").length()));
+        }
         Page page = new Page();
         task.addVisitCount();
         page.setTask(task);

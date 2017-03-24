@@ -16,10 +16,7 @@
 
 package cc.gospy.core.processor;
 
-import cc.gospy.core.processor.impl.JsoupProcessor;
-import cc.gospy.core.processor.impl.RegexProcessor;
-import cc.gospy.core.processor.impl.UniversalProcessor;
-import cc.gospy.core.processor.impl.XPathProcessor;
+import cc.gospy.core.processor.impl.*;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -30,6 +27,8 @@ public class Processors {
     public static XPathProcessor XPathProcessor;
     public static RegexProcessor RegexProcessor;
     public static UniversalProcessor UniversalProcessor;
+    public static PhantomJSProcessor PhantomJSProcessor;
+    public static SeleniumProcessor SeleniumProcessor;
 
     private Map<String, Processor> processors = new HashMap<>();
 
