@@ -23,7 +23,7 @@ import cc.gospy.core.entity.Result;
 
 public class RemotePipeline implements Pipeline {
     @Override
-    public void pipe(Page page, Result<?> result) throws PipeException {
+    public void pipe(Result<?> result) throws PipeException {
 
     }
 

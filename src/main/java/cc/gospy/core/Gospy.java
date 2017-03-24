@@ -137,7 +137,7 @@ public class Gospy implements Observable {
                                 if (result.getData() != null) {
                                     Iterator<Pipeline> pipelineIterator = pipelineFactory.get(result.getType()).iterator();
                                     while (pipelineIterator.hasNext()) {
-                                        pipelineIterator.next().pipe(page, result);
+                                        pipelineIterator.next().pipe(result);
                                     }
                                 }
                             }

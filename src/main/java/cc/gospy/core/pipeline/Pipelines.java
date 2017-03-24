@@ -41,11 +41,9 @@ public class Pipelines {
     public <T> List<Pipeline> get(Class<T> resultType) throws PipelineNotFoundException {
         List<Pipeline> list = pipelines.get(resultType);/*new ArrayList<>();
         pipelines.get(resultType).forEach(p -> list.add(p));*/
+        list.addAll(pipelines.get(Object.class));
         if (list.size() == 0) {
-            list = pipelines.get(Object.class);
-            if (list.size() == 0) {
-                throw new PipelineNotFoundException(resultType.getSimpleName());
-            }
+            throw new PipelineNotFoundException(resultType.getSimpleName());
         }
         return list;
     }

@@ -16,10 +16,11 @@
 
 package cc.gospy.core.pipeline.impl;
 
-import cc.gospy.core.pipeline.PipeException;
-import cc.gospy.core.pipeline.Pipeline;
 import cc.gospy.core.entity.Page;
 import cc.gospy.core.entity.Result;
+import cc.gospy.core.pipeline.PipeException;
+import cc.gospy.core.pipeline.Pipeline;
+import cc.gospy.core.util.StringHelper;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -27,18 +28,43 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
 public class SimpleFilePipeline implements Pipeline {
+    private String dir;
+
+    private SimpleFilePipeline(String dir) {
+        this.dir = dir;
+    }
 
     public static SimpleFilePipeline getDefault() {
-        return new SimpleFilePipeline();
+        return new Builder().build();
+    }
+
+    public static Builder custom() {return new Builder();}
+
+    public static class Builder {
+        private String dir;
+
+        public Builder setDir(String path) {
+            this.dir = path;
+            return this;
+        }
+
+        public SimpleFilePipeline build() {
+            return new SimpleFilePipeline(dir);
+        }
     }
 
     @Override
-    public void pipe(Page page, Result result) throws PipeException {
+    public void pipe(Result result) throws PipeException {
         String savePath;
-        if (page.getExtra() != null && page.getExtra().get("savePath") != null) {
-            savePath = page.getExtra().get("savePath").toString();
+        Page page = result.getPage();
+        if (dir == null) {
+            if (page.getExtra() != null && page.getExtra().get("savePath") != null) {
+                savePath = page.getExtra().get("savePath").toString();
+            } else {
+                throw new PipeException("runtime config: parameter [savePath] cannot found in page.extra, please check your code.");
+            }
         } else {
-            throw new PipeException("parameter [savePath] cannot found in page.extra, please check your code.");
+            savePath = dir + StringHelper.toEscapedFileName(page.getTask().getUrl());
         }
         File file = new File(savePath);
         try {

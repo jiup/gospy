@@ -16,7 +16,6 @@
 
 package cc.gospy.core.pipeline.impl;
 
-import cc.gospy.core.entity.Page;
 import cc.gospy.core.entity.Result;
 import cc.gospy.core.pipeline.PipeException;
 import cc.gospy.core.pipeline.Pipeline;
@@ -53,7 +52,7 @@ public class ConsolePipeline implements Pipeline {
     }
 
     @Override
-    public void pipe(Page page, Result result) throws PipeException {
+    public void pipe(Result result) throws PipeException {
         Object data = result.getData();
         if (data == null) {
             return;

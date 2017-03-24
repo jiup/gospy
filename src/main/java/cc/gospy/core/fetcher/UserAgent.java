@@ -78,6 +78,7 @@ public class UserAgent {
     public static final String Chrome_36_0_1985_67_Win_8_64_bit = "Mozilla/5.0 (Windows NT 5.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1985.67 Safari/537.36";
     public static final String Chrome_37_0_2049_0_Win_8_1_64_bit = "Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36";
     public static final String Chrome_41_0_2228_0_Win_7_32_bit = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36";
+    public static final String Chrome_56_0_2924_87_Win_10_64_bit = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36";
     public static final String Firefox_14_0_1_Win_Vista = "Mozilla/5.0 (Windows NT 6.0; rv:14.0) Gecko/20100101 Firefox/14.0.1";
     public static final String Firefox_15_0a1_Win_7_64 = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:15.0) Gecko/20120427 Firefox/15.0a1";
     public static final String Firefox_16_0_Win_8_64 = "Mozilla/5.0 (Windows NT 6.2; Win64; x64; rv:16.0) Gecko/16.0 Firefox/16.0";

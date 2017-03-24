@@ -26,6 +26,10 @@ import cc.gospy.core.fetcher.Fetcher;
  * eg: PhantomJSProcessor, SeleniumProcessor, etc.
  */
 public class SkipHttpFetcher implements Fetcher {
+    public SkipHttpFetcher getDefault() {
+        return new SkipHttpFetcher();
+    }
+
     @Override
     public Page fetch(Task task) throws FetchException {
         task.setUrl(task.getUrl().substring(task.getProtocol().concat("://").length()));

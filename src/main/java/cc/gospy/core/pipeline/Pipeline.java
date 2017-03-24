@@ -20,7 +20,7 @@ import cc.gospy.core.entity.Page;
 import cc.gospy.core.entity.Result;
 
 public interface Pipeline {
-    void pipe(Page page, Result<?> result) throws PipeException;
+    void pipe(Result<?> result) throws PipeException;
 
     Class getAcceptedType();
 }

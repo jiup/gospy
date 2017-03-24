@@ -68,10 +68,11 @@ public class HierarchicalFilePipeline implements Pipeline {
     }
 
     @Override
-    public void pipe(Page page, Result result) throws PipeException {
+    public void pipe(Result result) throws PipeException {
         if (!baseDir.exists()) {
             throw new PipeException("Base directory not exists");
         }
+        Page page = result.getPage();
         String savePath, saveType = "";
         if (page.getExtra() != null && page.getExtra().get("savePath") != null) {
             savePath = page.getExtra().get("savePath").toString();

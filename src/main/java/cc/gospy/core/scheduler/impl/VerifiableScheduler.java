@@ -102,7 +102,7 @@ public class VerifiableScheduler extends GeneralScheduler implements Verifiable 
             // we cannot ensure other components' (such as a pipeline) functions are finished. Thus,
             // if you are running your program in standalone mode and want to keep the subsequent
             // process completely done (might in minutes), please turn off the auto exit.
-            logger.info("All tasks are fed back, thus it will exit in five seconds.");
+            logger.info("All tasks are fed back, thus it will exit in few seconds.");
             try {
                 Thread.currentThread().join(5000);
             } catch (InterruptedException e) {
