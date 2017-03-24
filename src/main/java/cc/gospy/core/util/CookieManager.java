@@ -17,4 +17,5 @@
 package cc.gospy.core.util;
 
 public class CookieManager {
+
 }

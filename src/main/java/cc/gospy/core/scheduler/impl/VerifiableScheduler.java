@@ -93,8 +93,22 @@ public class VerifiableScheduler extends GeneralScheduler implements Verifiable 
         }
     }
 
+    @Experimental
     public void exitTrigger() {
         if (autoExit && pendingTasks.size() == 0 && taskQueue.size() == 0 && lazyTaskQueue.size() == 0) {
+            // In Gospy, other components' activities are invisible to a scheduler, so this scheduler
+            // will shutdown itself in few seconds, which is naturally adapting to distribution
+            // environments. However, in standalone programs, this might cause a premature interruption,
+            // we cannot ensure other components' (such as a pipeline) functions are finished. Thus,
+            // if you are running your program in standalone mode and want to keep the subsequent
+            // process completely done (might in minutes), please turn off the auto exit.
+            logger.info("All tasks are fed back, thus it will exit in five seconds.");
+            try {
+                Thread.currentThread().join(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            logger.info("Bye!");
             System.exit(0);
         }
     }
@@ -146,7 +160,6 @@ public class VerifiableScheduler extends GeneralScheduler implements Verifiable 
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                System.out.println("check!");
                 Iterator<Task> iterator = pendingTasks.iterator();
                 while (iterator.hasNext()) {
                     Task task = iterator.next();

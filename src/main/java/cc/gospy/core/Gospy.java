@@ -108,9 +108,6 @@ public class Gospy implements Observable {
                         Page page = null;
                         try {
                             Fetcher fetcher = fetcherFactory.get(task.getProtocol());
-                            if (scheduler instanceof Verifiable) {
-                                ((Verifiable) scheduler).feedback(identifier, page.getTask());
-                            }
 
                             // check robots.txt
                             if (!(robotsService == null || robotsService.isAllowed(fetcher.getUserAgent(), URI.create(task.getUrl())))) {
@@ -119,11 +116,15 @@ public class Gospy implements Observable {
 
                             page = fetcher.fetch(task);
                             Result<?> result;
-
                             try {
                                 result = invokePageProcessor(page, pageProcessorFactory.get(page.getTask().getUrl()));
                             } catch (PageProcessorNotFoundException e) {
                                 result = processorFactory.get(page.getContentType()).process(task, page);
+                            }
+
+                            // response to the scheduler after a successful process
+                            if (scheduler instanceof Verifiable) {
+                                ((Verifiable) scheduler).feedback(identifier, task);
                             }
 
                             if (result != null) {
@@ -148,7 +149,7 @@ public class Gospy implements Observable {
                 try {
                     Thread.sleep(visitGapMillis);
                 } catch (InterruptedException e) {
-                    handler.exceptionCaught(e, null, null);
+                    e.printStackTrace();
                 }
             }
             logger.info("Operation chain stopped.");
@@ -232,7 +233,7 @@ public class Gospy implements Observable {
 
 
     public void start() {
-        this.start(10);
+        this.start(1);
     }
 
     public void start(int nThreads) {

@@ -16,15 +16,40 @@
 
 package cc.gospy.core.pipeline.impl;
 
+import cc.gospy.core.entity.Page;
+import cc.gospy.core.entity.Result;
 import cc.gospy.core.pipeline.PipeException;
 import cc.gospy.core.pipeline.Pipeline;
 import cc.gospy.core.util.StringHelper;
-import cc.gospy.core.entity.Page;
-import cc.gospy.core.entity.Result;
+
+import java.nio.charset.Charset;
 
 public class ConsolePipeline implements Pipeline {
+    private boolean bytesToString;
+
+    private ConsolePipeline(boolean bytesToString) {
+        this.bytesToString = bytesToString;
+    }
+
     public static ConsolePipeline getDefault() {
-        return new ConsolePipeline();
+        return new Builder().build();
+    }
+
+    public static Builder custom() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private boolean b2s;
+
+        public Builder bytesToString() {
+            b2s = true;
+            return this;
+        }
+
+        public ConsolePipeline build() {
+            return new ConsolePipeline(b2s);
+        }
     }
 
     @Override
@@ -37,7 +62,14 @@ public class ConsolePipeline implements Pipeline {
             if (data.getClass() == boolean[].class) {
                 System.out.println(StringHelper.toString((boolean[]) data));
             } else if (data.getClass() == byte[].class) {
-                System.out.println(StringHelper.toString((byte[]) data));
+                if (bytesToString) {
+                    System.out.println("byte[" + ((byte[]) data).length + "]");
+                    System.out.println("------------------------------------------------------------------------------");
+                    System.out.println(new String((byte[]) data, Charset.defaultCharset()));
+                    System.out.println("------------------------------------------------------------------------------");
+                } else {
+                    System.out.println(StringHelper.toString((byte[]) data));
+                }
             } else if (data.getClass() == short[].class) {
                 System.out.println(StringHelper.toString((short[]) data));
             } else if (data.getClass() == int[].class) {
