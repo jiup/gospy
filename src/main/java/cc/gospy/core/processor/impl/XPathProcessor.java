@@ -36,7 +36,6 @@ public class XPathProcessor implements Processor {
 
     private XPathProcessor(Map<String, ResultHandler> handlerChain, TaskFilter filter) {
         this.filter = filter;
-        ;
         this.handlerChain = handlerChain;
     }
 
@@ -104,9 +103,12 @@ public class XPathProcessor implements Processor {
             Document document = parse(page);
             handlerChain.forEach((xpath, handler) -> {
                 List<String> links = Xsoup.compile(xpath).evaluate(document).list();
-                tasks.addAll(handler.handle(task, links));
+                Collection<Task> newTasks = handler.handle(task, links);
+                if (newTasks != null) {
+                    tasks.addAll(newTasks);
+                }
             });
-            Result<Collection<Task>> result = new Result<>(tasks, tasks);
+            Result<Collection<Task>> result = new Result<>(tasks, tasks.size() > 0 ? tasks : null);
             result.setPage(page);
             return result;
         } catch (Throwable throwable) {

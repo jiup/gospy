@@ -104,7 +104,6 @@ public class GeneralScheduler implements Scheduler, Observable, Recoverable {
         } else {
             addTask0(task);
         }
-        return;
     }
 
     @Override
@@ -175,6 +174,7 @@ public class GeneralScheduler implements Scheduler, Observable, Recoverable {
         lazyTaskQueue.stop();
         outputStream.writeObject(taskQueue);
         outputStream.writeObject(taskFilter);
+        outputStream.close();
         taskQueue.clear();
         logger.info("The scheduler is successfully suspended.");
 
@@ -201,6 +201,7 @@ public class GeneralScheduler implements Scheduler, Observable, Recoverable {
         this.totalTaskOutputCount.set(inputStream.readLong());
         this.taskQueue = (TaskQueue) inputStream.readObject();
         this.taskFilter = (TaskFilter) inputStream.readObject();
+        inputStream.close();
         isSuspend.set(false);
         logger.info("The scheduler is successfully recovered.");
     }

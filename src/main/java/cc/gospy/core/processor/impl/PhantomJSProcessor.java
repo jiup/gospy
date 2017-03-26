@@ -72,7 +72,7 @@ public class PhantomJSProcessor implements Processor {
         private boolean loadImages = false;
         private String userAgent = UserAgent.Default;
         private Extractor<WebDriver, ?> handler;
-        private TaskFilter filter = TaskFilter.HTTP_DEFAULT;
+        private TaskFilter filter = TaskFilter.ALLOW_ALL;
 
         public <T> Builder setWebDriverExecutor(Extractor<WebDriver, T> executor) {
             this.handler = executor;

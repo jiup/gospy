@@ -122,17 +122,16 @@ public class Gospy implements Observable {
                                 result = processorFactory.get(page.getContentType()).process(task, page);
                             }
 
-                            // response to the scheduler after a successful process
-                            if (scheduler instanceof Verifiable) {
-                                ((Verifiable) scheduler).feedback(identifier, task);
-                            }
-
                             if (result != null) {
                                 if (result.getNewTasks() != null) {
                                     Iterator<Task> taskIterator = result.getNewTasks().iterator();
                                     while (taskIterator.hasNext()) {
                                         scheduler.addTask(identifier, taskIterator.next());
                                     }
+                                }
+                                // response to the scheduler after declare new tasks
+                                if (scheduler instanceof Verifiable) {
+                                    ((Verifiable) scheduler).feedback(identifier, task);
                                 }
                                 if (result.getData() != null) {
                                     Iterator<Pipeline> pipelineIterator = pipelineFactory.get(result.getType()).iterator();

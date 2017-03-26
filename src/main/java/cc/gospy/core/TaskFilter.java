@@ -24,4 +24,7 @@ import java.util.function.Predicate;
 @FunctionalInterface
 public interface TaskFilter extends Predicate<Task>, Serializable {
     TaskFilter HTTP_DEFAULT = task -> task.getUrl().matches("^https?://((?!javascript:|mailto:| ).)*");
+    TaskFilter SELENIUM = task -> task.getUrl().startsWith("selenium://");
+    TaskFilter PHANTOMJS = task -> task.getUrl().startsWith("phantomjs://");
+    TaskFilter ALLOW_ALL = task -> true;
 }

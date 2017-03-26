@@ -21,9 +21,9 @@ import cc.gospy.core.entity.Task;
 import cc.gospy.core.fetcher.FetchException;
 import cc.gospy.core.fetcher.Fetcher;
 import cc.gospy.core.fetcher.UserAgent;
-import cc.gospy.core.util.Experimental;
 import net.sf.jmimemagic.Magic;
 import net.sf.jmimemagic.MagicMatch;
+import org.openqa.selenium.Cookie;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
@@ -32,18 +32,18 @@ import org.openqa.selenium.ie.InternetExplorerDriver;
 
 import java.io.Closeable;
 import java.io.IOException;
-
-@Experimental
+import java.util.ArrayList;
+import java.util.Collection;
 
 // for ajax rendered pages and test flow visualization
 public class SeleniumFetcher implements Fetcher, Closeable {
     public enum Kernel {HtmlUnit, Chrome, Firefox, IE}
 
-    private String userAgent;
-
     private WebDriver driver;
+    private String userAgent;
+    private Collection<Cookie> cookies;
 
-    private SeleniumFetcher(Kernel browser, String path, String userAgent) {
+    private SeleniumFetcher(Kernel browser, String path, String userAgent, Collection<Cookie> cookies) {
         switch (browser) {
             case HtmlUnit:
                 driver = new HtmlUnitDriver();
@@ -64,10 +64,11 @@ public class SeleniumFetcher implements Fetcher, Closeable {
                 throw new RuntimeException("unsupported browser " + browser);
         }
         this.userAgent = userAgent;
+        this.cookies = cookies;
     }
 
     public static SeleniumFetcher getDefault() {
-        return new SeleniumFetcher(Kernel.HtmlUnit, null, UserAgent.Default);
+        return new Builder().build();
     }
 
     public static Builder custom() {
@@ -78,6 +79,7 @@ public class SeleniumFetcher implements Fetcher, Closeable {
         private Kernel kernel = Kernel.HtmlUnit;
         private String path = "/path/to/" + kernel.name();
         private String userAgent = UserAgent.Default;
+        private Collection<Cookie> cookies = new ArrayList<>();
 
         public Builder setUserAgent(String userAgent) {
             this.userAgent = userAgent;
@@ -90,8 +92,13 @@ public class SeleniumFetcher implements Fetcher, Closeable {
             return this;
         }
 
+        public Builder addCookie(Cookie cookie) {
+            this.cookies.add(cookie);
+            return this;
+        }
+
         public SeleniumFetcher build() {
-            return new SeleniumFetcher(kernel, path, userAgent);
+            return new SeleniumFetcher(kernel, path, userAgent, cookies);
         }
 
     }
@@ -102,6 +109,9 @@ public class SeleniumFetcher implements Fetcher, Closeable {
             task.setUrl(task.getUrl().substring("selenium://".length()));
             Page page = new Page();
             long timer = System.currentTimeMillis();
+            if (cookies.size() > 0) {
+                cookies.forEach(cookie -> driver.manage().addCookie(cookie));
+            }
             driver.get(task.getUrl());
             task.addVisitCount();
             page.setTask(task);

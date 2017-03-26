@@ -21,23 +21,25 @@ import cc.gospy.core.entity.Task;
 import cc.gospy.core.fetcher.FetchException;
 import cc.gospy.core.fetcher.Fetcher;
 import cc.gospy.core.fetcher.UserAgent;
-import cc.gospy.core.util.Experimental;
 import net.sf.jmimemagic.Magic;
 import net.sf.jmimemagic.MagicMatch;
+import org.openqa.selenium.Cookie;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.phantomjs.PhantomJSDriver;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 
-@Experimental
 // for ajax rendered pages
 public class PhantomJSFetcher implements Fetcher, Closeable {
     private WebDriver driver;
     private String userAgent;
+    private Collection<Cookie> cookies;
 
-    private PhantomJSFetcher(String phantomJsBinaryPath, int timeout, boolean loadImages, String userAgent) {
+    private PhantomJSFetcher(String phantomJsBinaryPath, int timeout, boolean loadImages, String userAgent, Collection<Cookie> cookies) {
         System.setProperty("phantomjs.binary.path", phantomJsBinaryPath);
         DesiredCapabilities capabilities = DesiredCapabilities.phantomjs();
         capabilities.setCapability("phantomjs.page.settings.resourceTimeout", timeout);
@@ -45,6 +47,7 @@ public class PhantomJSFetcher implements Fetcher, Closeable {
         capabilities.setCapability("phantomjs.page.settings.userAgent", userAgent);
         this.driver = new PhantomJSDriver(capabilities);
         this.userAgent = userAgent;
+        this.cookies = cookies;
     }
 
     public static Builder custom() {
@@ -56,6 +59,7 @@ public class PhantomJSFetcher implements Fetcher, Closeable {
         private int timeout = 3000;
         private boolean loadImages = false;
         private String userAgent = UserAgent.Default;
+        private Collection<Cookie> cookies = new ArrayList<>();
 
         public Builder setPhantomJsBinaryPath(String phantomJsBinaryPath) {
             path = phantomJsBinaryPath;
@@ -77,8 +81,13 @@ public class PhantomJSFetcher implements Fetcher, Closeable {
             return this;
         }
 
+        public Builder addCookie(Cookie cookie) {
+            this.cookies.add(cookie);
+            return this;
+        }
+
         public PhantomJSFetcher build() {
-            return new PhantomJSFetcher(path, timeout, loadImages, userAgent);
+            return new PhantomJSFetcher(path, timeout, loadImages, userAgent, cookies);
         }
     }
 
@@ -88,6 +97,9 @@ public class PhantomJSFetcher implements Fetcher, Closeable {
             task.setUrl(task.getUrl().substring("phantomjs://".length()));
             Page page = new Page();
             long timer = System.currentTimeMillis();
+            if (cookies.size() > 0) {
+                cookies.forEach(cookie -> driver.manage().addCookie(cookie));
+            }
             driver.get(task.getUrl());
             byte[] bytes = driver.getPageSource().getBytes();
             page.setResponseTime(System.currentTimeMillis() - timer);
@@ -96,10 +108,9 @@ public class PhantomJSFetcher implements Fetcher, Closeable {
             page.setContent(bytes);
             // we cannot get content-type form selenium :(
             // see https://github.com/seleniumhq/selenium-google-code-issue-archive/issues/141#issuecomment-191404952
-            // using magic-match is a compromise.
+            // using magic-match is a compromise, which might cause efficiency problems.
             MagicMatch match = Magic.getMagicMatch(bytes);
             page.setContentType(match.getMimeType());
-            //            driver.manage().addCookie();
             return page;
         } catch (Throwable throwable) {
             throw new FetchException(throwable.getMessage(), throwable);

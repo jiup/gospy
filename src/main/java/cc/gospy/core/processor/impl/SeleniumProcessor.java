@@ -31,6 +31,9 @@ import org.openqa.selenium.ie.InternetExplorerDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Closeable;
+import java.io.IOException;
+
 /**
  * Note:
  * <p>
@@ -49,7 +52,7 @@ import org.slf4j.LoggerFactory;
  * We recommend you to manage yourself on a single ajax load page (with some event binding)
  * as a single procedure in <code>process()</code>.</p>
  */
-public class SeleniumProcessor implements Processor {
+public class SeleniumProcessor implements Processor, Closeable {
     private static Logger logger = LoggerFactory.getLogger(SeleniumProcessor.class);
 
     public enum Kernel {HtmlUnit, Chrome, Firefox, IE}
@@ -95,7 +98,7 @@ public class SeleniumProcessor implements Processor {
         private Kernel kernel = Kernel.HtmlUnit;
         private String kernelPath = "/path/to/" + kernel.name();
         private Extractor<WebDriver, ?> handler;
-        private TaskFilter filter = TaskFilter.HTTP_DEFAULT;
+        private TaskFilter filter = TaskFilter.ALLOW_ALL;
 
         public Builder setKernel(Kernel kernel, String kernelPath) {
             this.kernel = kernel;
@@ -139,6 +142,14 @@ public class SeleniumProcessor implements Processor {
         } catch (Throwable throwable) {
             throw new ProcessException(throwable.getMessage(), throwable);
         }
+    }
+
+    @Override
+    public void close() throws IOException {
+        logger.info("Closing web driver...");
+        webDriver.close();
+        webDriver.quit();
+        logger.info("Web driver has successfully closed.");
     }
 
     @Override

@@ -38,7 +38,9 @@ public class SimpleFilePipeline implements Pipeline {
         return new Builder().build();
     }
 
-    public static Builder custom() {return new Builder();}
+    public static Builder custom() {
+        return new Builder();
+    }
 
     public static class Builder {
         private String dir;
@@ -55,18 +57,17 @@ public class SimpleFilePipeline implements Pipeline {
 
     @Override
     public void pipe(Result result) throws PipeException {
-        String savePath;
         Page page = result.getPage();
+        File file;
         if (dir == null) {
             if (page.getExtra() != null && page.getExtra().get("savePath") != null) {
-                savePath = page.getExtra().get("savePath").toString();
+                file = new File(page.getExtra().get("savePath").toString());
             } else {
                 throw new PipeException("runtime config: parameter [savePath] cannot found in page.extra, please check your code.");
             }
         } else {
-            savePath = dir + StringHelper.toEscapedFileName(page.getTask().getUrl());
+            file = new File(dir, StringHelper.toEscapedFileName(page.getTask().getUrl()));
         }
-        File file = new File(savePath);
         try {
             file.createNewFile();
             FileChannel channel = new FileOutputStream(file).getChannel();
