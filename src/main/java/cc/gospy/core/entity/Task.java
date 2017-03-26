@@ -57,6 +57,7 @@ public class Task implements Serializable, Comparable<Task> {
         this.depth = depth;
         this.createTime = System.currentTimeMillis();
         this.expectedVisitPeriod = expectedVisitPeriod;
+        this.extra = new HashMap<>();
         this.init();
     }
 
@@ -70,7 +71,6 @@ public class Task implements Serializable, Comparable<Task> {
             protocol = null;
             throw new RuntimeException("unresolved protocol: " + protocol);
         }
-        extra = new HashMap<>();
     }
 
     @Override

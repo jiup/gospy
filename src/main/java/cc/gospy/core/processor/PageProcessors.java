@@ -41,7 +41,7 @@ public class PageProcessors {
 
     public Class<? extends PageProcessor> get(String url) throws PageProcessorNotFoundException {
         for (String pattern : pageProcessors.keySet()) {
-            if (pattern.matches(url)) {
+            if (url.matches(pattern)) {
                 return pageProcessors.get(pattern);
             }
         }

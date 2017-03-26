@@ -151,9 +151,9 @@ public class GeneralScheduler implements Scheduler, Observable, Recoverable {
 
     @Override
     public synchronized void pause(String dir) throws Throwable {
-        if (isSuspend.get()) {
-            throw new RuntimeException("the scheduler has already suspended.");
-        }
+//        if (isSuspend.get()) {
+//            throw new RuntimeException("the scheduler has already suspended.");
+//        }
 
         if (duplicateRemover instanceof Recoverable) {
             ((Recoverable) duplicateRemover).pause(dir);
@@ -163,18 +163,18 @@ public class GeneralScheduler implements Scheduler, Observable, Recoverable {
 
         File file = new File(dir, this.getClass().getTypeName() + ".tmp");
         logger.info("Writing scheduler data to {}", file.getPath());
-        ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(file, false));
-        outputStream.writeLong(firstVisitTimeMillis);
-        outputStream.writeLong(totalTaskInputCount.get());
-        outputStream.writeLong(totalTaskOutputCount.get());
+        try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(file, false))) {
+            outputStream.writeLong(firstVisitTimeMillis);
+            outputStream.writeLong(totalTaskInputCount.get());
+            outputStream.writeLong(totalTaskOutputCount.get());
 
-        // notice that the lazy-tasks will not lazy load later, they are
-        // directly appended to the rear of the activate-task-queue.
-        lazyTaskQueue.dump().forEach(task -> taskQueue.add(task));
-        lazyTaskQueue.stop();
-        outputStream.writeObject(taskQueue);
-        outputStream.writeObject(taskFilter);
-        outputStream.close();
+            // notice that the lazy-tasks will not lazy load later, they are
+            // directly appended to the rear of the activate-task-queue.
+            lazyTaskQueue.dump().forEach(task -> taskQueue.add(task));
+            lazyTaskQueue.stop();
+            outputStream.writeObject(taskQueue);
+            outputStream.writeObject(taskFilter);
+        }
         taskQueue.clear();
         logger.info("The scheduler is successfully suspended.");
 
@@ -183,9 +183,9 @@ public class GeneralScheduler implements Scheduler, Observable, Recoverable {
 
     @Override
     public void resume(String dir) throws Throwable {
-        if (!isSuspend.get()) {
-            throw new RuntimeException("the scheduler has already recovered.");
-        }
+//        if (!isSuspend.get()) {
+//            throw new RuntimeException("the scheduler has already recovered.");
+//        }
 
         if (duplicateRemover instanceof Recoverable) {
             ((Recoverable) duplicateRemover).resume(dir);
@@ -195,13 +195,13 @@ public class GeneralScheduler implements Scheduler, Observable, Recoverable {
 
         File file = new File(dir, this.getClass().getTypeName() + ".tmp");
         logger.info("Reading scheduler data from {}", file.getPath());
-        ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(file));
-        this.firstVisitTimeMillis = inputStream.readLong();
-        this.totalTaskInputCount.set(inputStream.readLong());
-        this.totalTaskOutputCount.set(inputStream.readLong());
-        this.taskQueue = (TaskQueue) inputStream.readObject();
-        this.taskFilter = (TaskFilter) inputStream.readObject();
-        inputStream.close();
+        try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(file))) {
+            this.firstVisitTimeMillis = inputStream.readLong();
+            this.totalTaskInputCount.set(inputStream.readLong());
+            this.totalTaskOutputCount.set(inputStream.readLong());
+            this.taskQueue = (TaskQueue) inputStream.readObject();
+            this.taskFilter = (TaskFilter) inputStream.readObject();
+        }
         isSuspend.set(false);
         logger.info("The scheduler is successfully recovered.");
     }

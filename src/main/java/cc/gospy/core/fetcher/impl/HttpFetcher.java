@@ -56,10 +56,7 @@ import java.net.SocketTimeoutException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class HttpFetcher implements Fetcher, Closeable {
@@ -284,21 +281,44 @@ public class HttpFetcher implements Fetcher, Closeable {
 
     private CloseableHttpClient client;
 
-    private CloseableHttpResponse doGet(String url) throws IOException {
+    private CloseableHttpResponse doGet(String url, String cookie) throws IOException {
         HttpGet request = new HttpGet(url);
         request.setHeader("User-Agent", userAgent);
+        if (cookie != null) {
+            request.setHeader("Cookie", cookie);
+        }
         requestHandler.handle(request);
         return client.execute(request);
     }
 
-    private CloseableHttpResponse doPost(String url, Map<String, Object> attributes) throws IOException {
+    private CloseableHttpResponse doPost(String url, String cookie, Map<String, String> attributes) throws IOException {
         HttpPost request = new HttpPost(url);
         request.setHeader("User-Agent", userAgent);
+        if (cookie != null) {
+            request.setHeader("Cookie", cookie);
+        }
         requestHandler.handle(request);
         List<NameValuePair> pairs = new ArrayList<>();
         attributes.keySet().forEach(key -> pairs.add(new BasicNameValuePair(key, attributes.get(key).toString())));
         request.setEntity(new UrlEncodedFormEntity(pairs));
         return client.execute(request);
+    }
+
+    private String getCookieString(Map<String, String> cookies) {
+        if (cookies != null) {
+            StringBuilder builder = new StringBuilder();
+            Iterator<Map.Entry<String, String>> iterator = cookies.entrySet().iterator();
+            while (iterator.hasNext()) {
+                Map.Entry<String, String> entry = iterator.next();
+                builder.append(entry.getKey()).append("=").append(entry.getValue()).append("; ");
+            }
+            if (builder.length() > 2) {
+                return builder.substring(0, builder.length() - 2);
+            } else {
+                logger.warn("Found cookie field in task.extra, but its content is null.");
+            }
+        }
+        return null;
     }
 
     @FunctionalInterface
@@ -324,7 +344,15 @@ public class HttpFetcher implements Fetcher, Closeable {
             // send request
             long timer = System.currentTimeMillis();
             String url = task.getUrl();
-            response = (extra != null && extra.get("form") != null) ? doPost(url, (Map<String, Object>) extra.get("form")) : doGet(url);
+            String cookies = null;
+            if (extra.get("cookies") != null) {
+                cookies = getCookieString((Map<String, String>) extra.get("cookies"));
+            } else if (extra.get("cookie") != null) {
+                cookies = extra.get("cookie").toString();
+            }
+            response = (extra != null && extra.get("form") != null) ?
+                    doPost(url, cookies, (Map<String, String>) extra.get("form")) :
+                    doGet(url, cookies);
             timer = System.currentTimeMillis() - timer;
 
             // load page

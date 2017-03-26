@@ -62,8 +62,9 @@ public class HashDuplicateRemover implements DuplicateRemover, Recoverable {
     public synchronized void pause(String dir) throws Throwable {
         File file = new File(dir, this.getClass().getTypeName() + ".tmp");
         logger.info("Saving hash filter data to file {}...", file.getPath());
-        ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(file, false));
-        outputStream.writeObject(tasks);
+        try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(file, false))) {
+            outputStream.writeObject(tasks);
+        }
         logger.info("Hash filter data is successfully saved.");
     }
 
@@ -71,8 +72,9 @@ public class HashDuplicateRemover implements DuplicateRemover, Recoverable {
     public synchronized void resume(String dir) throws Throwable {
         File file = new File(dir, this.getClass().getTypeName() + ".tmp");
         logger.info("Reading hash filter data from file {}...", file.getPath());
-        ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(file));
-        tasks = (Map<Task, AtomicInteger>) inputStream.readObject();
+        try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(file))) {
+            tasks = (Map<Task, AtomicInteger>) inputStream.readObject();
+        }
         logger.info("Hash filter data is successfully loaded.");
     }
 }
