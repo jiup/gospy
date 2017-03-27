@@ -151,7 +151,7 @@ public class StringHelper {
     }
 
     public static String getRandomIdentifier() {
-        return getRandomSerial().concat(" @ ") + myExternalIp;
+        return getRandomSerial().concat("_") + myExternalIp;
     }
 
     @Experimental

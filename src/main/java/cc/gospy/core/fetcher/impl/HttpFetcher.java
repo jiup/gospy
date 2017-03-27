@@ -350,8 +350,8 @@ public class HttpFetcher implements Fetcher, Closeable {
             } else if (extra.get("cookie") != null) {
                 cookies = extra.get("cookie").toString();
             }
-            response = (extra != null && extra.get("form") != null) ?
-                    doPost(url, cookies, (Map<String, String>) extra.get("form")) :
+            response = (extra != null && extra.get("post") != null) ?
+                    doPost(url, cookies, (Map<String, String>) extra.get("post")) :
                     doGet(url, cookies);
             timer = System.currentTimeMillis() - timer;
 

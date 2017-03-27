@@ -25,9 +25,10 @@ import java.util.Map;
 public class Fetchers {
     public static HttpFetcher HttpFetcher;
     public static FileFetcher FileFetcher;
-    public static cc.gospy.core.fetcher.impl.PhantomJSFetcher PhantomJSFetcher;
+    public static PhantomJSFetcher PhantomJSFetcher;
     public static SeleniumFetcher SeleniumFetcher;
     public static TransparentFetcher TransparentFetcher;
+    public static RemoteFetcher RemoteFetcher;
 
     private Map<String, Fetcher> fetchers = new HashMap<>();
 
