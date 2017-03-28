@@ -29,6 +29,7 @@ public class Processors {
     public static UniversalProcessor UniversalProcessor;
     public static PhantomJSProcessor PhantomJSProcessor;
     public static SeleniumProcessor SeleniumProcessor;
+    public static RemoteProcessor RemoteProcessor;
 
     private Map<String, Processor> processors = new HashMap<>();
 

@@ -96,7 +96,7 @@ public class ConsolePipeline implements Pipeline {
     }
 
     @Override
-    public Class getAcceptedType() {
+    public Class getAcceptedDataType() {
         return Object.class;
     }
 }

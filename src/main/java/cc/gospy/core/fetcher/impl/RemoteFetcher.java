@@ -22,7 +22,6 @@ import cc.gospy.core.entity.Task;
 import cc.gospy.core.fetcher.FetchException;
 import cc.gospy.core.fetcher.Fetcher;
 import hprose.client.HproseClient;
-import hprose.common.InvokeSettings;
 import hprose.io.HproseMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +36,6 @@ public class RemoteFetcher implements Fetcher, RemoteComponent, Closeable {
     private Fetcher fetcher;
     private String identifier;
     private String[] acceptedProtocols;
-    private InvokeSettings settings;
 
     private RemoteFetcher(String[] uriList) throws Throwable {
         this.init(uriList);
@@ -56,6 +54,9 @@ public class RemoteFetcher implements Fetcher, RemoteComponent, Closeable {
         }
 
         public RemoteFetcher build() throws Throwable {
+            if (uri == null) {
+                throw new RuntimeException("Uri list (for remote fetcher) not specified, please check your code.");
+            }
             return new RemoteFetcher(uri);
         }
     }
@@ -67,14 +68,14 @@ public class RemoteFetcher implements Fetcher, RemoteComponent, Closeable {
             this.fetcher = client.useService(Fetcher.class);
             this.identifier = String.valueOf(client.invoke("getIdentifier"));
             this.acceptedProtocols = fetcher.getAcceptedProtocols();
-            this.settings = new InvokeSettings();
-            this.settings.setIdempotent(true);
-            this.settings.setRetry(2);
+            client.setIdempotent(true);
+            client.setRetry(2);
             logger.info("Remote fetcher [{}] initialized.", identifier);
         } catch (Throwable throwable) {
-            logger.error("Remote fetcher initialize failure ({})", throwable.getMessage());
-            throwable.printStackTrace();
+            logger.error("Remote fetcher initialization failed ({})", throwable.getMessage());
             this.client.close();
+            throwable.printStackTrace();
+            throw new RuntimeException(throwable.getMessage());
         }
     }
 
@@ -82,12 +83,7 @@ public class RemoteFetcher implements Fetcher, RemoteComponent, Closeable {
     public Page fetch(Task task) throws FetchException {
         Page page = null;
         if (task != null) {
-            try {
-                page = fetcher.fetch(task);
-            } catch (Throwable throwable) {
-                logger.error("{}", throwable.getMessage());
-                throwable.printStackTrace();
-            }
+            page = fetcher.fetch(task);
         }
         return page;
     }
@@ -108,7 +104,23 @@ public class RemoteFetcher implements Fetcher, RemoteComponent, Closeable {
     }
 
     @Override
+    public void quit(String originator) {
+        try {
+            client.invoke("quit", new Object[]{originator});
+            client.close();
+            logger.info("Remote fetcher [{}] terminated.", identifier);
+        } catch (Throwable throwable) {
+            throwable.printStackTrace();
+            throw new RuntimeException(throwable.getMessage());
+        }
+    }
+
+    @Override
     public void close() throws IOException {
-        client.close();
+        try {
+            client.invoke("close");
+        } catch (Throwable throwable) {
+//            throwable.printStackTrace();
+        }
     }
 }

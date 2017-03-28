@@ -17,10 +17,12 @@
 package cc.gospy.core.scheduler;
 
 import cc.gospy.core.scheduler.impl.GeneralScheduler;
+import cc.gospy.core.scheduler.impl.RemoteScheduler;
 import cc.gospy.core.scheduler.impl.VerifiableScheduler;
 
 public class Schedulers {
     public static GeneralScheduler GeneralScheduler;
     public static VerifiableScheduler VerifiableScheduler;
+    public static RemoteScheduler RemoteScheduler;
 }
 

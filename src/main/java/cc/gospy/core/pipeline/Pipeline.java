@@ -22,5 +22,5 @@ import cc.gospy.core.entity.Result;
 public interface Pipeline {
     void pipe(Result<?> result) throws PipeException;
 
-    Class getAcceptedType();
+    Class getAcceptedDataType();
 }

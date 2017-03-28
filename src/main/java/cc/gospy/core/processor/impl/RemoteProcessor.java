@@ -16,20 +16,107 @@
 
 package cc.gospy.core.processor.impl;
 
-import cc.gospy.core.processor.ProcessException;
-import cc.gospy.core.processor.Processor;
+import cc.gospy.core.RemoteComponent;
 import cc.gospy.core.entity.Page;
 import cc.gospy.core.entity.Result;
 import cc.gospy.core.entity.Task;
+import cc.gospy.core.processor.ProcessException;
+import cc.gospy.core.processor.Processor;
+import hprose.client.HproseClient;
+import hprose.io.HproseMode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class RemoteProcessor implements Processor {
+import java.io.Closeable;
+import java.io.IOException;
+
+public class RemoteProcessor implements Processor, RemoteComponent, Closeable {
+    private static Logger logger = LoggerFactory.getLogger(RemoteProcessor.class);
+
+    private HproseClient client;
+    private Processor processor;
+    private String identifier;
+    private String[] acceptedContentType;
+
+    private RemoteProcessor(String[] uriList) {
+        this.init(uriList);
+    }
+
+    public static Builder custom() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private String[] uri;
+
+        public Builder setUri(String... uri) {
+            this.uri = uri;
+            return this;
+        }
+
+        public RemoteProcessor build() throws Throwable {
+            if (uri == null) {
+                throw new RuntimeException("Uri list (for remote processor) not specified, please check your code.");
+            }
+            return new RemoteProcessor(uri);
+        }
+    }
+
+    private void init(String[] uriList) {
+        try {
+            logger.info("Connecting to remote processor...");
+            this.client = HproseClient.create(uriList, HproseMode.MemberMode);
+            this.processor = client.useService(Processor.class);
+            this.identifier = String.valueOf(client.invoke("getIdentifier"));
+            this.acceptedContentType = processor.getAcceptedContentType();
+            client.setIdempotent(true);
+            client.setRetry(2);
+            logger.info("Remote processor [{}] initialized.", identifier);
+        } catch (Throwable throwable) {
+            logger.error("Remote processor initialization failed ({})", throwable.getMessage());
+            this.client.close();
+            throwable.printStackTrace();
+            throw new RuntimeException(throwable.getMessage());
+        }
+    }
+
     @Override
     public <T> Result<T> process(Task task, Page page) throws ProcessException {
-        return null;
+        Result<T> result = null;
+        if (task != null && page != null) {
+            result = processor.process(task, page);
+        }
+        return result;
     }
 
     @Override
     public String[] getAcceptedContentType() {
-        return new String[0];
+        return acceptedContentType;
+    }
+
+    @Override
+    public String getIdentifier() {
+        return identifier;
+    }
+
+    @Override
+    public void quit(String originator) {
+        try {
+            client.invoke("quit", new Object[]{originator});
+            client.close();
+            logger.info("Remote processor [{}] terminated.", identifier);
+        } catch (Throwable throwable) {
+            throwable.printStackTrace();
+            throw new RuntimeException(throwable.getMessage());
+        }
+    }
+
+    @Override
+    public void close() throws IOException {
+        try {
+            client.invoke("close");
+        } catch (Throwable throwable) {
+//            throwable.printStackTrace();
+        }
     }
 }

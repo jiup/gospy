@@ -18,4 +18,5 @@ package cc.gospy.core;
 
 public interface RemoteComponent {
     String getIdentifier();
+    void quit(String originator);
 }

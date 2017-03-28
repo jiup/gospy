@@ -32,10 +32,12 @@ public class StringHelper {
 
     static {
         try {
+            logger.info("Querying external ip...");
             URL ipEcho = new URL("http://ipecho.net/plain");
             BufferedReader in = new BufferedReader(new InputStreamReader(ipEcho.openStream()));
             myExternalIp = in.readLine();
             in.close();
+            logger.info("My external ip: {}", myExternalIp);
         } catch (IOException e) {
             myExternalIp = "unknown ip";
             logger.error("Get external ip failure, cause: {}", e.getMessage());

@@ -79,7 +79,7 @@ public class SimpleFilePipeline implements Pipeline {
     }
 
     @Override
-    public Class getAcceptedType() {
+    public Class getAcceptedDataType() {
         return byte[].class;
     }
 }

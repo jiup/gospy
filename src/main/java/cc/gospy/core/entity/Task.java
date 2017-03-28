@@ -69,7 +69,7 @@ public class Task implements Serializable, Comparable<Task> {
             host = !host.contains("/") ? host : host.substring(0, host.indexOf('/'));
         } else {
             protocol = null;
-            throw new RuntimeException("unresolved protocol: " + protocol);
+            throw new RuntimeException("unresolved protocol: " + url);
         }
     }
 
