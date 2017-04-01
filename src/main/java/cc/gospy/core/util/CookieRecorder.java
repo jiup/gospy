@@ -16,6 +16,6 @@
 
 package cc.gospy.core.util;
 
-public class HttpProxyProvider {
+public class CookieRecorder {
 
 }

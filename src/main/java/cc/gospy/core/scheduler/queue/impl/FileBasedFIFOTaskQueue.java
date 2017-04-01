@@ -14,8 +14,36 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.util;
+package cc.gospy.core.scheduler.queue.impl;
 
-public class HttpProxyProvider {
+import cc.gospy.core.entity.Task;
+import cc.gospy.core.scheduler.queue.TaskQueue;
 
+import java.util.Iterator;
+
+public class FileBasedFIFOTaskQueue extends TaskQueue {
+    @Override
+    public Iterator<Task> iterator() {
+        return null;
+    }
+
+    @Override
+    public int size() {
+        return 0;
+    }
+
+    @Override
+    public boolean offer(Task task) {
+        return false;
+    }
+
+    @Override
+    public Task poll() {
+        return null;
+    }
+
+    @Override
+    public Task peek() {
+        return null;
+    }
 }

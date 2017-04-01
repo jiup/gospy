@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.util;
+package cc.gospy.extension.activemq;
 
-public class CookieManager {
-
+public class ActiveMQTaskQueueAdapter {
 }
