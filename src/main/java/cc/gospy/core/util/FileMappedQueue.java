@@ -190,10 +190,12 @@ public class FileMappedQueue<T extends Serializable> extends AbstractQueue<T> {
             enqueuePage.force(); // sync to disk whatever
         } else {
             close(enqueuePageFile, enqueuePageChannel, enqueuePage);
+            enqueueBuf = null;
         }
         loadEnqueuePage(getPageFile(getPagePath(nextEnqueuePageNumber)));
         setEnqueuePageNumber(nextEnqueuePageNumber);
         setEnqueuePosition(0);
+        logger.info("Enqueue page has successfully shifted to [${}].", enqueuePageNumber);
     }
 
     private void shiftDequeuePage() throws IOException {
@@ -203,11 +205,30 @@ public class FileMappedQueue<T extends Serializable> extends AbstractQueue<T> {
         }
         int nextDequeuePageNumber = dequeuePageNumber == Integer.MAX_VALUE ? 0 : dequeuePageNumber + 1; // rotate if int overflows
         close(dequeuePageFile, dequeuePageChannel, dequeuePage);
+        dequeueBuf = null;
         new Thread(() -> {
-            int target = dequeuePageNumber;
-            File pastPage = getPageFile(getPagePath(target));
-            if (pastPage.exists() && pastPage.delete()) {
-                logger.info("Past dequeue page [{}] has been removed.", pastPage.getPath());
+            try {
+                int target = dequeuePageNumber;
+                int retry = 3;
+                logger.info("Removing dequeue page [${}]...", target);
+                File pastPage = getPageFile(getPagePath(target));
+                while (pastPage.exists()) { // TODO file may not be deleted
+                    if (retry <= 0) {
+                        logger.error("Fail to delete dequeue page [{}].", pastPage.getPath());
+                        pastPage.deleteOnExit();
+                        return;
+                    }
+                    if (pastPage.delete()) {
+                        logger.info("Past dequeue page [{}] has been removed.", pastPage.getPath());
+                        return;
+                    } else {
+                        logger.error("Fail to delete dequeue page [{}], retrying ({}) ...", pastPage.getPath(), retry);
+                        System.err.println("Failure: " + "\t" + pastPage.getPath());
+                    }
+                    retry--;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }).start();
         if (nextDequeuePageNumber == enqueuePageNumber) {
@@ -224,14 +245,22 @@ public class FileMappedQueue<T extends Serializable> extends AbstractQueue<T> {
     }
 
     private <T> T bytesToObject(byte[] bytes) throws IOException, ClassNotFoundException {
-        return bytes == null ? null : (T) new ObjectInputStream(new ByteArrayInputStream(bytes)).readObject();
+        if (bytes == null) {
+            return null;
+        }
+        try (ByteArrayInputStream stream = new ByteArrayInputStream(bytes);
+             ObjectInputStream inputStream = new ObjectInputStream(stream)) {
+            return (T) inputStream.readObject();
+        }
+//        return bytes == null ? null : (T) new ObjectInputStream(new ByteArrayInputStream(bytes)).readObject();
     }
 
     private byte[] objectToBytes(T t) throws IOException {
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        ObjectOutputStream outputStream = new ObjectOutputStream(stream);
-        outputStream.writeObject(t);
-        return stream.toByteArray();
+        try (ByteArrayOutputStream stream = new ByteArrayOutputStream();
+             ObjectOutputStream outputStream = new ObjectOutputStream(stream)) {
+            outputStream.writeObject(t);
+            return stream.toByteArray();
+        }
     }
 
     private T dequeueFromPage() throws Exception {
