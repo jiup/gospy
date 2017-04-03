@@ -108,6 +108,7 @@ public class XPathProcessor implements Processor {
                     tasks.addAll(newTasks);
                 }
             });
+            tasks.removeIf(filter.negate());
             Result<Collection<Task>> result = new Result<>(tasks, tasks.size() > 0 ? tasks : null);
             result.setPage(page);
             return result;

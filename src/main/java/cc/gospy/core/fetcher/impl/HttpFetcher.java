@@ -61,7 +61,7 @@ import java.util.concurrent.TimeUnit;
 
 public class HttpFetcher implements Fetcher, Closeable {
     private static final Logger logger = LoggerFactory.getLogger(HttpFetcher.class);
-    private static final int TIMEOUT = 3000;
+    private static int _TIMEOUT = 3000;
 
     private int maxConnCount = 200;
     private int maxConnPerRoute = 20;
@@ -71,6 +71,10 @@ public class HttpFetcher implements Fetcher, Closeable {
     private boolean useProxy = false;
     private InetSocketAddress proxyAddress = new InetSocketAddress("localhost", 1080);
     private String userAgent = UserAgent.Default;
+
+    public static void setTimeout(int timeout) {
+        HttpFetcher._TIMEOUT = timeout;
+    }
 
     private void init() throws KeyManagementException, NoSuchAlgorithmException {
         if (useProxy) {
@@ -104,9 +108,9 @@ public class HttpFetcher implements Fetcher, Closeable {
                         .setRedirectsEnabled(false)
                         .setRelativeRedirectsAllowed(false)
                         .setCircularRedirectsAllowed(false)
-                        .setConnectionRequestTimeout(TIMEOUT)
-                        .setConnectTimeout(TIMEOUT)
-                        .setSocketTimeout(TIMEOUT).build())
+                        .setConnectionRequestTimeout(_TIMEOUT)
+                        .setConnectTimeout(_TIMEOUT)
+                        .setSocketTimeout(_TIMEOUT).build())
                 , response -> {
                     Page page = new Page();
                     ByteArrayOutputStream responseBody = new ByteArrayOutputStream();
