@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package cc.gospy.example.standalone;
+package cc.gospy.example.func;
 
 import cc.gospy.core.Gospy;
 import cc.gospy.core.fetcher.Fetchers;

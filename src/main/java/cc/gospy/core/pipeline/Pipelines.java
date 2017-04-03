@@ -44,9 +44,9 @@ public class Pipelines {
         List<Pipeline> list = pipelines.get(resultType);/*new ArrayList<>();
         pipelines.get(resultType).forEach(p -> list.add(p));*/
         list.addAll(pipelines.get(Object.class));
-        if (list.size() == 0) {
-            throw new PipelineNotFoundException(resultType.getSimpleName());
-        }
+//        if (list.size() == 0) {
+//            throw new PipelineNotFoundException(resultType.getSimpleName());
+//        }
         return list;
     }
 

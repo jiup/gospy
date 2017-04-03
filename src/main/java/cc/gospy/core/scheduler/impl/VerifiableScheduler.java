@@ -18,6 +18,7 @@ package cc.gospy.core.scheduler.impl;
 
 import cc.gospy.core.TaskFilter;
 import cc.gospy.core.entity.Task;
+import cc.gospy.core.scheduler.ExitCallback;
 import cc.gospy.core.scheduler.Verifiable;
 import cc.gospy.core.scheduler.filter.DuplicateRemover;
 import cc.gospy.core.scheduler.filter.impl.HashDuplicateRemover;
@@ -40,6 +41,7 @@ public class VerifiableScheduler extends GeneralScheduler implements Verifiable 
     private Map<String, Long> totalTaskDistributeCounts = Collections.synchronizedMap(new LinkedHashMap<>());
     private Map<String, Long> pendingTaskDistributeCounts = Collections.synchronizedMap(new LinkedHashMap<>());
     private Thread checkerThread;
+    private ExitCallback callback;
     private int pendingTimeInSeconds;
     private boolean checkerRunning;
     private boolean autoExit;
@@ -48,10 +50,12 @@ public class VerifiableScheduler extends GeneralScheduler implements Verifiable 
                         LazyTaskQueue lazyTaskQueue,
                         DuplicateRemover duplicateRemover,
                         TaskFilter filter,
+                        ExitCallback callback,
                         int pendingTimeInSeconds,
                         boolean autoExit) {
         super(taskQueue, lazyTaskQueue, duplicateRemover, filter);
         this.pendingTimeInSeconds = pendingTimeInSeconds;
+        this.callback = callback;
         this.autoExit = autoExit;
     }
 
@@ -96,20 +100,7 @@ public class VerifiableScheduler extends GeneralScheduler implements Verifiable 
     @Experimental
     public void exitTrigger() {
         if (autoExit && pendingTasks.size() == 0 && taskQueue.size() == 0 && lazyTaskQueue.size() == 0) {
-            // In Gospy, other components' activities are invisible to a scheduler, so this scheduler
-            // will shutdown itself in few seconds, which is naturally adapting to distribution
-            // environments. However, in standalone programs, this might cause a premature interruption,
-            // we cannot ensure other components' (such as a pipeline) functions are finished. Thus,
-            // if you are running your program in standalone mode and want to keep the subsequent
-            // process completely done (might in minutes), please turn off the auto exit.
-            logger.info("All tasks are fed back, thus it will exit in few seconds.");
-            try {
-                Thread.currentThread().join(5000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            logger.info("Bye!");
-            System.exit(0);
+            callback.onExit();
         }
     }
 
@@ -208,6 +199,7 @@ public class VerifiableScheduler extends GeneralScheduler implements Verifiable 
         private LazyTaskQueue ltq = new TimingLazyTaskQueue(wakedTask -> scheduler.addTask(null, wakedTask));
         private DuplicateRemover dr = new HashDuplicateRemover();
         private TaskFilter tf = TaskFilter.HTTP_DEFAULT;
+        private ExitCallback ec = ExitCallback.DEFAULT;
         private int pt = 10;
         private boolean ae = true;
 
@@ -223,6 +215,11 @@ public class VerifiableScheduler extends GeneralScheduler implements Verifiable 
 
         public Builder setDuplicateRemover(DuplicateRemover duplicateRemover) {
             dr = duplicateRemover;
+            return this;
+        }
+
+        public Builder setExitCallback(ExitCallback callback) {
+            ec = callback;
             return this;
         }
 
@@ -242,7 +239,7 @@ public class VerifiableScheduler extends GeneralScheduler implements Verifiable 
         }
 
         public VerifiableScheduler build() {
-            return scheduler = new VerifiableScheduler(tq, ltq, dr, tf, pt, ae);
+            return scheduler = new VerifiableScheduler(tq, ltq, dr, tf, ec, pt, ae);
         }
     }
 
