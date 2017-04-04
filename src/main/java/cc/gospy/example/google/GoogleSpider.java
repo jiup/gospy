@@ -24,7 +24,6 @@ import cc.gospy.core.scheduler.Schedulers;
 import org.apache.http.HttpHost;
 import org.apache.http.client.config.RequestConfig;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -34,11 +33,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class GoogleSpider {
 
     public static void main(String[] args) {
-        new GoogleSpider().getResultLinks("keyword").forEach(resultLink -> System.out.println(resultLink));
+        new GoogleSpider().getResultLinks("keyword").forEach(System.out::println);
     }
 
     public Collection<String> getResultLinks(final String keyword) {
-        return getResultLinks(keyword, 1, 2);
+        return getResultLinks(keyword, 1);
     }
 
     public Collection<String> getResultLinks(final String keyword, final int pageCount) {
@@ -58,30 +57,32 @@ public class GoogleSpider {
         final AtomicBoolean returned = new AtomicBoolean(false);
         final Collection<String> links = new LinkedHashSet<>();
         Gospy googleSpider = Gospy.custom()
-                .setScheduler(Schedulers.VerifiableScheduler.custom().setExitCallback(() -> returned.set(true)).build())
+                .setScheduler(Schedulers.VerifiableScheduler.custom()
+                        .setExitCallback(() -> returned.set(true))
+                        .build())
                 .addFetcher(Fetchers.HttpFetcher.custom()
-                        .setAutoKeepAlive(false)
                         .before(request -> request.setConfig(RequestConfig.custom().setProxy(new HttpHost("127.0.0.1", 8118)).build()))
                         .build())
-                .addProcessor(Processors.XPathProcessor.custom().extract("//*[@id='ires']/ol/div/h3/a/@href", (task, resultList) -> {
-                    resultList.forEach(a -> {
-                        if (a.startsWith("/url?q=")) {
-                            String link = a.substring(7);
-                            int end = link.indexOf("&sa=");
-                            links.add(link.substring(0, end != -1 ? end : link.length()));
-                        }
-                    });
-                    currentPage.incrementAndGet();
-                    if (pageFrom <= currentPage.get() && currentPage.get() < pageTo) {
-                        return Arrays.asList(new Task(String.format("http://www.google.com/search?q=%s&start=%d&*", keyword, (currentPage.get() - 1) * 10)));
-                    } else {
-                        return new ArrayList<>();
-                    }
-                }).build())
+                .addProcessor(Processors.XPathProcessor.custom()
+                        .extract("//*[@id='ires']/ol/div/h3/a/@href", (task, resultList) -> {
+                            resultList.forEach(a -> {
+                                if (a.startsWith("/url?q=")) {
+                                    String link = a.substring(7);
+                                    int end = link.indexOf("&sa=");
+                                    links.add(link.substring(0, end != -1 ? end : link.length()));
+                                }
+                            });
+                            currentPage.incrementAndGet();
+                            if (pageFrom <= currentPage.get() && currentPage.get() < pageTo) {
+                                return Arrays.asList(new Task(String.format("http://www.google.com/search?q=%s&start=%d&*", keyword, (currentPage.get() - 1) * 10)));
+                            } else {
+                                return Arrays.asList();
+                            }
+                        })
+                        .build())
                 .build().addTask(String.format("http://www.google.com/search?q=%s&*", keyword));
         googleSpider.start();
-        while (!returned.get()) {
-        }
+        while (!returned.get()) ; // block until spider returned
         googleSpider.stop();
         return links;
     }

@@ -22,7 +22,6 @@ import cc.gospy.core.fetcher.Fetchers;
 import cc.gospy.core.processor.Processors;
 import cc.gospy.core.scheduler.Schedulers;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -31,11 +30,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class BaiduSpider {
     public static void main(String[] args) {
-        new BaiduSpider().getResultLinks("keyword").forEach(resultLink -> System.out.println(resultLink));
+        new BaiduSpider().getResultLinks("keyword").forEach(System.out::println);
     }
 
     public Collection<String> getResultLinks(final String keyword) {
-        return getResultLinks(keyword, 1, 2);
+        return getResultLinks(keyword, 1);
     }
 
     public Collection<String> getResultLinks(final String keyword, final int pageCount) {
@@ -55,22 +54,25 @@ public class BaiduSpider {
         final AtomicBoolean returned = new AtomicBoolean(false);
         final Collection<String> links = new LinkedHashSet<>();
         Gospy baiduSpider = Gospy.custom()
-                .setScheduler(Schedulers.VerifiableScheduler.custom().setExitCallback(() -> returned.set(true)).build())
-                .addFetcher(Fetchers.HttpFetcher.custom().setAutoKeepAlive(false).build())
-                .addProcessor(Processors.XPathProcessor.custom().extract("//*/h3/a/@href", (task, resultList) -> {
-                    resultList.removeIf(s -> !s.startsWith("http://www.baidu.com/link"));
-                    links.addAll(resultList);
-                    currentPage.incrementAndGet();
-                    if (pageFrom <= currentPage.get() && currentPage.get() < pageTo) {
-                        return Arrays.asList(new Task(String.format("http://www.baidu.com/s?wd=%s&pn=%d", keyword, (currentPage.get() - 1) * 10)));
-                    } else {
-                        return new ArrayList<>();
-                    }
-                }).build())
+                .setScheduler(Schedulers.VerifiableScheduler.custom()
+                        .setExitCallback(() -> returned.set(true))
+                        .build())
+                .addFetcher(Fetchers.HttpFetcher.getDefault())
+                .addProcessor(Processors.XPathProcessor.custom()
+                        .extract("//*/h3/a/@href", (task, resultList) -> {
+                            resultList.removeIf(s -> !s.startsWith("http://www.baidu.com/link"));
+                            links.addAll(resultList);
+                            currentPage.incrementAndGet();
+                            if (pageFrom <= currentPage.get() && currentPage.get() < pageTo) {
+                                return Arrays.asList(new Task(String.format("http://www.baidu.com/s?wd=%s&pn=%d", keyword, (currentPage.get() - 1) * 10)));
+                            } else {
+                                return Arrays.asList();
+                            }
+                        })
+                        .build())
                 .build().addTask(String.format("http://www.baidu.com/s?wd=%s", keyword));
         baiduSpider.start();
-        while (!returned.get()) {
-        }
+        while (!returned.get()) ; // block until spider returned
         baiduSpider.stop();
         return links;
     }
