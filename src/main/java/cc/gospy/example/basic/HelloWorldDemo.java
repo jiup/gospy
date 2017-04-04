@@ -21,12 +21,12 @@ import cc.gospy.core.fetcher.Fetchers;
 import cc.gospy.core.pipeline.Pipelines;
 import cc.gospy.core.processor.Processors;
 
-public class HelloWorldSpider {
+public class HelloWorldDemo {
     public static void main(String[] args) {
         Gospy.custom()
                 .addFetcher(Fetchers.HttpFetcher.getDefault())
                 .addProcessor(Processors.UniversalProcessor.getDefault())
                 .addPipeline(Pipelines.ConsolePipeline.custom().bytesToString().build())
-                .build().addTask("https://www.helloworld.com/").start();
+                .build().addTask("https://github.com/ZhangJiupeng/Gospy/blob/master/src/main/java/cc/gospy/example/basic/HelloWorldDemo.java").start();
     }
 }
