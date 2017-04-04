@@ -373,7 +373,7 @@ public class Gospy implements Observable {
 
     public static class Builder {
         private String id = StringHelper.getRandomIdentifier();
-        private Scheduler sc = Schedulers.GeneralScheduler.getDefault();
+        private Scheduler sc = Schedulers.VerifiableScheduler.getDefault();
         private Fetchers ff = new Fetchers();
         private PageProcessors ppf = new PageProcessors();
         private Processors pf = new Processors();
