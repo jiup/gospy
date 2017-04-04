@@ -70,7 +70,7 @@ public class BaiduSpider {
                             }
                         })
                         .build())
-                .build().addTask(String.format("http://www.baidu.com/s?wd=%s", keyword));
+                .build().addTask(String.format("http://www.baidu.com/s?wd=%s&pn=%d", keyword, pageFrom));
         baiduSpider.start();
         while (!returned.get()) ; // block until spider returned
         baiduSpider.stop();

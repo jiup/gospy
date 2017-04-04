@@ -80,7 +80,7 @@ public class GoogleSpider {
                             }
                         })
                         .build())
-                .build().addTask(String.format("http://www.google.com/search?q=%s&*", keyword));
+                .build().addTask(String.format("http://www.google.com/search?q=%s&start=%d&*", keyword, pageFrom));
         googleSpider.start();
         while (!returned.get()) ; // block until spider returned
         googleSpider.stop();

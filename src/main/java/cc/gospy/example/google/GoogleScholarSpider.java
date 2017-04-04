@@ -74,7 +74,7 @@ public class GoogleScholarSpider {
                             }
                         })
                         .build())
-                .build().addTask(String.format("https://scholar.google.com/scholar?q=%s", keyword));
+                .build().addTask(String.format("https://scholar.google.com/scholar?start=%d&q=%s", pageFrom, keyword));
         googleScholarSpider.start();
         while (!returned.get()) ; // block until spider returned
         googleScholarSpider.stop();
