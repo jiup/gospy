@@ -17,27 +17,29 @@
 package cc.gospy.example.basic;
 
 import cc.gospy.core.Gospy;
+import cc.gospy.core.entity.Task;
 import cc.gospy.core.fetcher.Fetchers;
+import cc.gospy.core.pipeline.Pipelines;
 import cc.gospy.core.processor.Processors;
 import cc.gospy.core.scheduler.Schedulers;
 
-public class XPathDemo {
+import java.util.LinkedHashMap;
+
+public class PostDemo {
     public static void main(String[] args) {
+        Task task = new Task("some post-able website (absolutely url)"); // specify by yourself
+        new LinkedHashMap() {{
+            put("foo", "123");
+            put("bar", "abc");
+            put("baz", "tada");
+            task.getExtra().put("post", this);
+        }};
+        System.out.println(task.getExtra().get("post"));
         Gospy.custom()
                 .setScheduler(Schedulers.VerifiableScheduler.getDefault())
                 .addFetcher(Fetchers.HttpFetcher.getDefault())
-                .addProcessor(Processors.XPathProcessor.custom()
-                        .extract("//*[@id='u1']/a/text()", (task, resultList) -> {
-                            System.out.println("Links text:");
-                            resultList.forEach(System.out::println);
-                            System.out.println();
-                            return null;
-                        }).extract("//*[@id='u1]/a/@href", (task, resultList) -> {
-                            System.out.println("Links target:");
-                            resultList.forEach(System.out::println);
-                            System.out.println();
-                            return null;
-                        }).build())
-                .build().addTask("http://www.baidu.com/index.php").start();
+                .addProcessor(Processors.UniversalProcessor.getDefault())
+                .addPipeline(Pipelines.ConsolePipeline.custom().bytesToString().build())
+                .build().addTask(task).setVisitGap(1000).start();
     }
 }

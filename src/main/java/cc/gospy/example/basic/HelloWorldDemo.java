@@ -20,10 +20,12 @@ import cc.gospy.core.Gospy;
 import cc.gospy.core.fetcher.Fetchers;
 import cc.gospy.core.pipeline.Pipelines;
 import cc.gospy.core.processor.Processors;
+import cc.gospy.core.scheduler.Schedulers;
 
 public class HelloWorldDemo {
     public static void main(String[] args) {
         Gospy.custom()
+                .setScheduler(Schedulers.VerifiableScheduler.getDefault())
                 .addFetcher(Fetchers.HttpFetcher.getDefault())
                 .addProcessor(Processors.UniversalProcessor.getDefault())
                 .addPipeline(Pipelines.ConsolePipeline.custom().bytesToString().build())

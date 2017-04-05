@@ -37,7 +37,7 @@ public class Task implements Serializable, Comparable<Task> {
     private long createTime;
     private long lastVisitTime;
     private int depth;
-    private int expectedVisitPeriod; // in seconds, must less than 24 days, 0 to off
+    private int expectedVisitInSeconds; // in seconds, must less than 24 days, 0 to off
     private int visitCount;
 
     // identify a unique task for duplicate remover
@@ -50,13 +50,13 @@ public class Task implements Serializable, Comparable<Task> {
         this(Priority.MEDIUM, url, 0, 0);
     }
 
-    public Task(Priority priority, String url, int depth, int expectedVisitPeriod) {
+    public Task(Priority priority, String url, int depth, int expectedVisitInSeconds) {
         assert url != null;
         this.priority = priority;
         this.url = url;
         this.depth = depth;
         this.createTime = System.currentTimeMillis();
-        this.expectedVisitPeriod = expectedVisitPeriod;
+        this.expectedVisitInSeconds = expectedVisitInSeconds;
         this.extra = new HashMap<>();
         this.init();
     }
@@ -111,8 +111,8 @@ public class Task implements Serializable, Comparable<Task> {
         this.priority = priority;
     }
 
-    public void setExpectedVisitPeriod(int expectedVisitPeriod) {
-        this.expectedVisitPeriod = expectedVisitPeriod;
+    public void setExpectedVisitInSeconds(int expectedVisitInSeconds) {
+        this.expectedVisitInSeconds = expectedVisitInSeconds;
     }
 
     public void setLastVisitTime(long lastVisitTime) {
@@ -163,8 +163,8 @@ public class Task implements Serializable, Comparable<Task> {
         return depth;
     }
 
-    public int getExpectedVisitPeriod() {
-        return expectedVisitPeriod;
+    public int getExpectedVisitInSeconds() {
+        return expectedVisitInSeconds;
     }
 
     public int getVisitCount() {

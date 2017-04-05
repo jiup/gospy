@@ -248,4 +248,8 @@ public class StringHelper {
         return buffer.append("\n").toString();
     }
 
+    public static boolean isNotNull(String s) {
+        return s != null && !s.equals("");
+    }
+
 }

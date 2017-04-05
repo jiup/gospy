@@ -79,7 +79,7 @@ public class GeneralScheduler implements Scheduler, Observable, Recoverable {
     }
 
     private void addTask0(Task task) {
-        if (task.getExpectedVisitPeriod() == 0) {
+        if (task.getExpectedVisitInSeconds() == 0) {
             taskQueue.add(task);
         } else {
             lazyTaskQueue.add(task);

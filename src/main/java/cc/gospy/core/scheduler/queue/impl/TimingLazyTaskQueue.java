@@ -37,8 +37,8 @@ public class TimingLazyTaskQueue extends LazyTaskQueue {
     public TimingLazyTaskQueue(int initialCapacity, LazyTaskHandler handler) {
         super(handler);
         this.lazyTaskQueue = new PriorityBlockingQueue<>(initialCapacity, (t0, t1)
-                -> (int) ((t0.getLastVisitTime() + t0.getExpectedVisitPeriod() * 1000)
-                - (t1.getLastVisitTime() + t1.getExpectedVisitPeriod() * 1000)));
+                -> (int) ((t0.getLastVisitTime() + t0.getExpectedVisitInSeconds() * 1000)
+                - (t1.getLastVisitTime() + t1.getExpectedVisitInSeconds() * 1000)));
     }
 
     class TimingLazyTaskChecker implements Runnable {
@@ -63,9 +63,9 @@ public class TimingLazyTaskQueue extends LazyTaskQueue {
     protected boolean ready() {
         Task peakTask = peek();
         return peakTask != null &&
-                peakTask.getExpectedVisitPeriod() != 0 &&
+                peakTask.getExpectedVisitInSeconds() != 0 &&
                 System.currentTimeMillis() - peakTask.getLastVisitTime()
-                        > peakTask.getExpectedVisitPeriod() * 1000;
+                        > peakTask.getExpectedVisitInSeconds() * 1000;
     }
 
     @Override
@@ -81,7 +81,7 @@ public class TimingLazyTaskQueue extends LazyTaskQueue {
 
     @Override
     public boolean add(Task task) {
-        int taskExpectedRecallCycle = task.getExpectedVisitPeriod();
+        int taskExpectedRecallCycle = task.getExpectedVisitInSeconds();
         if (taskExpectedRecallCycle > 0 && (checkPeriodInSeconds == 0 || taskExpectedRecallCycle < checkPeriodInSeconds)) {
             checkPeriodInSeconds = taskExpectedRecallCycle;
         }

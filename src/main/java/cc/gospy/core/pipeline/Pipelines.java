@@ -21,9 +21,10 @@ import cc.gospy.core.pipeline.impl.HierarchicalFilePipeline;
 import cc.gospy.core.pipeline.impl.RemotePipeline;
 import cc.gospy.core.pipeline.impl.SimpleFilePipeline;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Sets;
 
 import java.util.Collection;
-import java.util.List;
+import java.util.Set;
 
 public class Pipelines {
     public static HierarchicalFilePipeline HierarchicalFilePipeline;
@@ -40,12 +41,13 @@ public class Pipelines {
         pipelines.put(pipeline.getAcceptedDataType(), pipeline);
     }
 
-    public <T> List<Pipeline> get(Class<T> resultType) throws PipelineNotFoundException {
-        List<Pipeline> list = pipelines.get(resultType);
+    public <T> Collection<Pipeline> get(Class<T> resultType) throws PipelineNotFoundException {
+        Set<Pipeline> activatedPipelines = Sets.newLinkedHashSet(this.pipelines.get(resultType));
         if (resultType != Object.class) {
-            list.addAll(pipelines.get(Object.class));
+            // add universal pipelines
+            activatedPipelines.addAll(this.pipelines.get(Object.class));
         }
-        return list;
+        return activatedPipelines;
     }
 
     public Collection<Pipeline> getAll() {

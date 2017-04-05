@@ -140,15 +140,14 @@ public class Gospy implements Observable {
                                     }
                                 }
                             }
+                            Thread.sleep(visitGapMillis);
                         } catch (Throwable e) {
-                            handler.exceptionCaught(e, task, page);
+                            Collection<Task> tasks = handler.exceptionCaught(e, task, page);
+                            if (tasks != null) {
+                                tasks.forEach(t -> scheduler.addTask(identifier, t));
+                            }
                         }
                     });
-                }
-                try {
-                    Thread.sleep(visitGapMillis);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
                 }
             }
             logger.info("Operation chain stopped.");
@@ -373,7 +372,7 @@ public class Gospy implements Observable {
 
     public static class Builder {
         private String id = StringHelper.getRandomIdentifier();
-        private Scheduler sc = Schedulers.VerifiableScheduler.getDefault();
+        private Scheduler sc = Schedulers.GeneralScheduler.getDefault();
         private Fetchers ff = new Fetchers();
         private PageProcessors ppf = new PageProcessors();
         private Processors pf = new Processors();

@@ -18,6 +18,7 @@ package cc.gospy.core.processor;
 
 import cc.gospy.core.util.Experimental;
 
+import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -33,6 +34,9 @@ public class PageProcessors {
         UrlPattern urlPattern = processorClazz.getAnnotation(UrlPattern.class);
         if (urlPattern == null) {
             throw new RuntimeException("annotation \"cc.gospy.core.processor.UrlPattern\" not found, please declare url patterns first for your processor.");
+        }
+        if (!Modifier.isStatic(processorClazz.getModifiers())) {
+            throw new RuntimeException("page processor should be static, please check your code.");
         }
         for (String pattern : urlPattern.value()) {
             pageProcessors.put(pattern, processorClazz);

@@ -86,7 +86,7 @@ public class ConsolePipeline implements Pipeline {
                 Object[] value = (Object[]) data;
                 buffer.append(data.getClass().getSimpleName()).append("[").append(value.length).append("]");
                 for (int i = 0; i < value.length; i++) {
-                    buffer.append("\n").append(value);
+                    buffer.append("\n").append(value[i]);
                 }
                 System.out.println(buffer.append("\n").toString());
             }

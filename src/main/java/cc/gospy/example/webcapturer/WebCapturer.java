@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package cc.gospy.example.func;
+package cc.gospy.example.webcapturer;
 
 import cc.gospy.core.Gospy;
+import cc.gospy.core.entity.Result;
+import cc.gospy.core.entity.Task;
 import cc.gospy.core.fetcher.Fetchers;
 import cc.gospy.core.pipeline.Pipelines;
 import cc.gospy.core.processor.Processors;
 import cc.gospy.core.scheduler.Schedulers;
 import cc.gospy.core.util.StringHelper;
-import cc.gospy.core.entity.Result;
-import cc.gospy.core.entity.Task;
 import org.jsoup.nodes.Element;
 
 import java.net.URLDecoder;
@@ -34,9 +34,11 @@ import java.util.HashSet;
 
 public class WebCapturer {
     public static void main(String[] args) {
+        Task target = new Task("https://www.zhangjiupeng.com/");
+        String base = "D:/temp/" + target.getHost() + "/";
         Gospy.custom()
-                .setScheduler(Schedulers.GeneralScheduler.custom().build())
-                .addFetcher(Fetchers.HttpFetcher.custom().build())
+                .setScheduler(Schedulers.VerifiableScheduler.getDefault())
+                .addFetcher(Fetchers.HttpFetcher.getDefault())
                 .addProcessor(Processors.JsoupProcessor.custom()
                         .setDocumentExtractor((page, document) -> {
                             Task task = page.getTask();
@@ -74,7 +76,6 @@ public class WebCapturer {
                                     }
                                     rUrl = rUrl.substring(0, rUrl.lastIndexOf('/') + 1);
                                     String modifiedLink = rUrl.concat(name);
-//                                    System.out.println(modifiedLink + " = " + rUrl + " + " + name);
                                     element.attr(element.hasAttr("href") ? "href" : "src", modifiedLink);
                                 }
                             }
@@ -82,12 +83,14 @@ public class WebCapturer {
                             name = name.endsWith(".html") ? name : name.concat(".html");
                             String dir = StringHelper.cutOffProtocolAndHost(task.getUrl().substring(0, task.getUrl().lastIndexOf('/') + 1));
                             page.getExtra().put("savePath", URLDecoder.decode(dir.concat(name), Charset.defaultCharset().name()));
+                            System.out.println("Saving [" + page.getExtra().get("savePath") + "] ...");
                             Result<byte[]> result = new Result<>(tasks, document.toString().getBytes());
                             return result;
                         }).build())
-                .addProcessor(Processors.UniversalProcessor.custom().build())
-//                .addPipeline(Pipelines.ConsolePipeline.getDefault())
-                .addPipeline(Pipelines.HierarchicalFilePipeline.custom().setBasePath("D:/Gospy/test.blog.timeliar.date/").build())
-                .build().addTask("https://blog.timeliar.date/links/").setVisitGap(1000).start(1);
+                .addProcessor(Processors.UniversalProcessor.getDefault())
+                .addPipeline(Pipelines.HierarchicalFilePipeline.custom()
+                        .setBasePath(base)
+                        .build())
+                .build().addTask(target).start(1);
     }
 }
