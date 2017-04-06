@@ -7,44 +7,14 @@
 
     <groupId>cc.gospy</groupId>
     <artifactId>gospy</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.0.8</version>
     <name>gospy</name>
     <url>www.gospy.cc</url>
 
     <properties>
-        <!-- Specific Param -->
-        <JAVA_HOME>C:/Program Files/Java/jdk1.8.0_66</JAVA_HOME>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-
-    <repositories>
-        <repository>
-            <id>alimaven</id>
-            <name>aliyun maven</name>
-            <url>http://maven.aliyun.com/nexus/content/groups/public/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
-
-    <pluginRepositories>
-        <pluginRepository>
-            <id>alimaven</id>
-            <name>aliyun maven</name>
-            <url>http://maven.aliyun.com/nexus/content/groups/public/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </pluginRepository>
-    </pluginRepositories>
 
     <build>
         <pluginManagement>
@@ -84,11 +54,6 @@
             <artifactId>xsoup</artifactId>
             <version>0.3.1</version>
         </dependency>
-        <!--<dependency>-->
-        <!--<groupId>com.machinepublishers</groupId>-->
-        <!--<artifactId>jbrowserdriver</artifactId>-->
-        <!--<version>0.17.6</version>-->
-        <!--</dependency>-->
         <dependency>
             <groupId>com.github.detro</groupId>
             <artifactId>phantomjsdriver</artifactId>
@@ -129,7 +94,6 @@
             <artifactId>guava</artifactId>
             <version>19.0</version>
         </dependency>
-        <!-- Experimental -->
         <dependency>
             <groupId>com.brandwatch</groupId>
             <artifactId>robots-core</artifactId>

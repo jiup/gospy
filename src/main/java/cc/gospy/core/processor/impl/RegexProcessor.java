@@ -99,6 +99,6 @@ public class RegexProcessor implements Processor {
 
     @Override
     public String[] getAcceptedContentType() {
-        return new String[]{"text/html", "text/xml"};
+        return new String[]{"text/*"};
     }
 }

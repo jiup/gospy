@@ -219,7 +219,7 @@ public class GeneralScheduler implements Scheduler, Observable, Recoverable {
         private TaskQueue tq = new FIFOTaskQueue();
         private LazyTaskQueue ltq = new TimingLazyTaskQueue(wakedTask -> scheduler.addTask(null, wakedTask));
         private DuplicateRemover dr = new HashDuplicateRemover();
-        private TaskFilter tf = TaskFilter.HTTP_DEFAULT;
+        private TaskFilter tf = TaskFilter.ALLOW_ALL;
 
         public Builder setTaskQueue(TaskQueue taskQueue) {
             tq = taskQueue;

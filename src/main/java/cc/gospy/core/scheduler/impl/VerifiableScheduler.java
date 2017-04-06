@@ -198,7 +198,7 @@ public class VerifiableScheduler extends GeneralScheduler implements Verifiable 
         private TaskQueue tq = new FIFOTaskQueue();
         private LazyTaskQueue ltq = new TimingLazyTaskQueue(wakedTask -> scheduler.addTask(null, wakedTask));
         private DuplicateRemover dr = new HashDuplicateRemover();
-        private TaskFilter tf = TaskFilter.HTTP_DEFAULT;
+        private TaskFilter tf = TaskFilter.ALLOW_ALL;
         private ExitCallback ec = ExitCallback.DEFAULT;
         private int pt = 10;
         private boolean ae = true;

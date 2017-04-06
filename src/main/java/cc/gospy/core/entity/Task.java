@@ -58,10 +58,10 @@ public class Task implements Serializable, Comparable<Task> {
         this.createTime = System.currentTimeMillis();
         this.expectedVisitInSeconds = expectedVisitInSeconds;
         this.extra = new HashMap<>();
-        this.init();
+        this.resolveUrl();
     }
 
-    private void init() {
+    private void resolveUrl() {
         int prefixIndex = url.indexOf("://");
         if (prefixIndex > 0) {
             protocol = url.substring(0, prefixIndex);
@@ -97,6 +97,7 @@ public class Task implements Serializable, Comparable<Task> {
 
     public void setUrl(String newUrl) {
         this.url = newUrl;
+        this.resolveUrl();
     }
 
     public void addVisitCount() {
