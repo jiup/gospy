@@ -122,6 +122,7 @@ public class PhantomJSProcessor implements Processor {
     @Override
     public <T> Result<T> process(Task task, Page page) throws ProcessException {
         try {
+            task.setUrl(task.getUrl().substring("phantomjs://".length()));
             webDriver.get(task.getUrl());
             Result result = handler.handle(page, webDriver);
             if (result != null) {

@@ -23,7 +23,6 @@ import cc.gospy.core.entity.Task;
 import cc.gospy.core.processor.Extractor;
 import cc.gospy.core.processor.ProcessException;
 import cc.gospy.core.processor.Processor;
-import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
@@ -129,6 +128,7 @@ public class SeleniumProcessor implements Processor, Closeable {
     @Override
     public <T> Result<T> process(Task task, Page page) throws ProcessException {
         try {
+            task.setUrl(task.getUrl().substring("selenium://".length()));
             webDriver.get(task.getUrl());
             Result result = handler.handle(page, webDriver);
             if (result != null) {

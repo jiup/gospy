@@ -92,7 +92,7 @@ public class Task implements Serializable, Comparable<Task> {
 
     @Override
     public String toString() {
-        return "Task{" + priority.name().charAt(0) + "-" + url + '}';
+        return "Task{" + priority.name().charAt(0) + "-\"" + url + "\"}";
     }
 
     public void setUrl(String newUrl) {

@@ -26,6 +26,9 @@ import cc.gospy.core.fetcher.Fetcher;
  * eg: PhantomJSProcessor, SeleniumProcessor, etc.
  */
 public class TransparentFetcher implements Fetcher {
+    private boolean convertHttpToPhantomJs;
+    private boolean convertHttpToSelenium;
+
     private TransparentFetcher() {
     }
 
@@ -33,21 +36,60 @@ public class TransparentFetcher implements Fetcher {
         return new TransparentFetcher();
     }
 
+    public static Builder custom() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private boolean convertHttpToPhantomJs;
+        private boolean convertHttpToSelenium;
+
+        public Builder convertHttpTaskToPhantomJs() {
+            convertHttpToPhantomJs = true;
+            convertHttpToSelenium = false;
+            return this;
+        }
+
+        public Builder convertHttpTaskToSelenium() {
+            convertHttpToPhantomJs = false;
+            convertHttpToSelenium = true;
+            return this;
+        }
+
+        public TransparentFetcher build() {
+            TransparentFetcher fetcher = new TransparentFetcher();
+            fetcher.convertHttpToPhantomJs = convertHttpToPhantomJs;
+            fetcher.convertHttpToSelenium = convertHttpToSelenium;
+            return fetcher;
+        }
+
+    }
+
     @Override
     public Page fetch(Task task) throws FetchException {
-        if (task.getUrl().startsWith(task.getProtocol().concat("://"))) {
-            task.setUrl(task.getUrl().substring(task.getProtocol().concat("://").length()));
+        switch (task.getProtocol()) {
+            case "http":
+            case "https":
+                if (convertHttpToPhantomJs) {
+                    task.setUrl("phantomjs://".concat(task.getUrl()));
+                } else if (convertHttpToSelenium) {
+                    task.setUrl("selenium://".concat(task.getUrl()));
+                }
+            default:
+                Page page = new Page();
+                task.addVisitCount();
+                page.setTask(task);
+                page.setContent(new byte[0]);
+                page.setContentType(task.getProtocol());
+                return page;
         }
-        Page page = new Page();
-        task.addVisitCount();
-        page.setTask(task);
-        page.setContent(new byte[0]);
-        page.setContentType(task.getProtocol());
-        return page;
     }
 
     @Override
     public String[] getAcceptedProtocols() {
+        if (convertHttpToPhantomJs || convertHttpToSelenium) {
+            return new String[]{"phantomjs", "selenium", "http", "https"};
+        }
         return new String[]{"phantomjs", "selenium"};
     }
 
