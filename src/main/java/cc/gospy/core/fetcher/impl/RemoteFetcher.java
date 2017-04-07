@@ -45,22 +45,6 @@ public class RemoteFetcher implements Fetcher, RemoteComponent, Closeable {
         return new Builder();
     }
 
-    public static class Builder {
-        private String[] uri;
-
-        public Builder setUri(String... uri) {
-            this.uri = uri;
-            return this;
-        }
-
-        public RemoteFetcher build() throws Throwable {
-            if (uri == null) {
-                throw new RuntimeException("Uri list (for remote fetcher) not specified, please check your code.");
-            }
-            return new RemoteFetcher(uri);
-        }
-    }
-
     private void init(String[] uriList) {
         try {
             logger.info("Connecting to remote fetcher...");
@@ -121,6 +105,22 @@ public class RemoteFetcher implements Fetcher, RemoteComponent, Closeable {
             client.invoke("close");
         } catch (Throwable throwable) {
 //            throwable.printStackTrace();
+        }
+    }
+
+    public static class Builder {
+        private String[] uri;
+
+        public Builder setUri(String... uri) {
+            this.uri = uri;
+            return this;
+        }
+
+        public RemoteFetcher build() throws Throwable {
+            if (uri == null) {
+                throw new RuntimeException("Uri list (for remote fetcher) not specified, please check your code.");
+            }
+            return new RemoteFetcher(uri);
         }
     }
 }

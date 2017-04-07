@@ -44,22 +44,6 @@ public class RemoteScheduler implements Scheduler, RemoteComponent, Verifiable, 
         return new Builder();
     }
 
-    public static class Builder {
-        private String[] uri;
-
-        public Builder setUri(String... uri) {
-            this.uri = uri;
-            return this;
-        }
-
-        public RemoteScheduler build() throws Throwable {
-            if (uri == null) {
-                throw new RuntimeException("Uri list (for remote scheduler) not specified, please check your code.");
-            }
-            return new RemoteScheduler(uri);
-        }
-    }
-
     private void init(String[] uriList) {
         try {
             logger.info("Connecting to remote scheduler...");
@@ -254,5 +238,21 @@ public class RemoteScheduler implements Scheduler, RemoteComponent, Verifiable, 
 //            throwable.printStackTrace();
         }
         return -1;
+    }
+
+    public static class Builder {
+        private String[] uri;
+
+        public Builder setUri(String... uri) {
+            this.uri = uri;
+            return this;
+        }
+
+        public RemoteScheduler build() throws Throwable {
+            if (uri == null) {
+                throw new RuntimeException("Uri list (for remote scheduler) not specified, please check your code.");
+            }
+            return new RemoteScheduler(uri);
+        }
     }
 }

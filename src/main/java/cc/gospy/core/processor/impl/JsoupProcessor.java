@@ -51,6 +51,51 @@ public class JsoupProcessor implements Processor {
         return new Builder().build();
     }
 
+    protected static String getCharacterEncoding(Page page) {
+        if (page.getExtra() == null || page.getExtra().get("Content-Type") == null) {
+            return null;
+        }
+        for (String kv : page.getExtra().get("Content-Type").toString().split(";")) {
+            if (kv.trim().startsWith("charset=")) {
+                return kv.trim().substring(8);
+            }
+        }
+        return null;
+    }
+
+    public Extractor<Document, ?> getDocumentExtractor() {
+        return handler;
+    }
+
+    private Document parse(Page page) throws UnsupportedEncodingException {
+        String charsetName = getCharacterEncoding(page);
+        String html = new String(page.getContent(), charsetName != null ? charsetName : Charset.defaultCharset().name());
+        return Jsoup.parse(html);
+    }
+
+    @Override
+    public <T> Result<T> process(Task task, Page page) throws ProcessException {
+        try {
+            Result result = handler.handle(page, parse(page));
+            if (result != null) {
+                if (result.getNewTasks() != null) {
+                    result.getNewTasks().removeIf(filter.negate());
+                }
+                if (result.getPage() == null) {
+                    result.setPage(page);
+                }
+            }
+            return result;
+        } catch (Throwable throwable) {
+            throw new ProcessException(throwable.getMessage(), throwable);
+        }
+    }
+
+    @Override
+    public String[] getAcceptedContentType() {
+        return new String[]{"text/*"};
+    }
+
     public static class Builder {
         private Extractor<Document, ?> ha;
         private TaskFilter fi = TaskFilter.HTTP_DEFAULT;
@@ -108,51 +153,6 @@ public class JsoupProcessor implements Processor {
         public JsoupProcessor build() {
             return ha == null ? this.setPageLinkDocumentExtractor().build() : new JsoupProcessor(ha, fi);
         }
-    }
-
-    protected static String getCharacterEncoding(Page page) {
-        if (page.getExtra() == null || page.getExtra().get("Content-Type") == null) {
-            return null;
-        }
-        for (String kv : page.getExtra().get("Content-Type").toString().split(";")) {
-            if (kv.trim().startsWith("charset=")) {
-                return kv.trim().substring(8);
-            }
-        }
-        return null;
-    }
-
-    public Extractor<Document, ?> getDocumentExtractor() {
-        return handler;
-    }
-
-    private Document parse(Page page) throws UnsupportedEncodingException {
-        String charsetName = getCharacterEncoding(page);
-        String html = new String(page.getContent(), charsetName != null ? charsetName : Charset.defaultCharset().name());
-        return Jsoup.parse(html);
-    }
-
-    @Override
-    public <T> Result<T> process(Task task, Page page) throws ProcessException {
-        try {
-            Result result = handler.handle(page, parse(page));
-            if (result != null) {
-                if (result.getNewTasks() != null) {
-                    result.getNewTasks().removeIf(filter.negate());
-                }
-                if (result.getPage() == null) {
-                    result.setPage(page);
-                }
-            }
-            return result;
-        } catch (Throwable throwable) {
-            throw new ProcessException(throwable.getMessage(), throwable);
-        }
-    }
-
-    @Override
-    public String[] getAcceptedContentType() {
-        return new String[]{"text/*"};
     }
 
 }

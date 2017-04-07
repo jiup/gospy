@@ -40,31 +40,6 @@ public class TransparentFetcher implements Fetcher {
         return new Builder();
     }
 
-    public static class Builder {
-        private boolean convertHttpToPhantomJs;
-        private boolean convertHttpToSelenium;
-
-        public Builder convertHttpTaskToPhantomJs() {
-            convertHttpToPhantomJs = true;
-            convertHttpToSelenium = false;
-            return this;
-        }
-
-        public Builder convertHttpTaskToSelenium() {
-            convertHttpToPhantomJs = false;
-            convertHttpToSelenium = true;
-            return this;
-        }
-
-        public TransparentFetcher build() {
-            TransparentFetcher fetcher = new TransparentFetcher();
-            fetcher.convertHttpToPhantomJs = convertHttpToPhantomJs;
-            fetcher.convertHttpToSelenium = convertHttpToSelenium;
-            return fetcher;
-        }
-
-    }
-
     @Override
     public Page fetch(Task task) throws FetchException {
         switch (task.getProtocol()) {
@@ -96,5 +71,30 @@ public class TransparentFetcher implements Fetcher {
     @Override
     public String getUserAgent() {
         return null;
+    }
+
+    public static class Builder {
+        private boolean convertHttpToPhantomJs;
+        private boolean convertHttpToSelenium;
+
+        public Builder convertHttpTaskToPhantomJs() {
+            convertHttpToPhantomJs = true;
+            convertHttpToSelenium = false;
+            return this;
+        }
+
+        public Builder convertHttpTaskToSelenium() {
+            convertHttpToPhantomJs = false;
+            convertHttpToSelenium = true;
+            return this;
+        }
+
+        public TransparentFetcher build() {
+            TransparentFetcher fetcher = new TransparentFetcher();
+            fetcher.convertHttpToPhantomJs = convertHttpToPhantomJs;
+            fetcher.convertHttpToSelenium = convertHttpToSelenium;
+            return fetcher;
+        }
+
     }
 }

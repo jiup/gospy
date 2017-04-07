@@ -23,11 +23,8 @@ import cc.gospy.core.entity.Task;
 import cc.gospy.core.processor.Extractor;
 import cc.gospy.core.processor.ProcessException;
 import cc.gospy.core.processor.Processor;
+import cc.gospy.core.util.Browser;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.htmlunit.HtmlUnitDriver;
-import org.openqa.selenium.ie.InternetExplorerDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,74 +52,18 @@ import java.io.IOException;
 public class SeleniumProcessor implements Processor, Closeable {
     private static Logger logger = LoggerFactory.getLogger(SeleniumProcessor.class);
 
-    public enum Kernel {HtmlUnit, Chrome, Firefox, IE}
-
-
     private WebDriver webDriver;
     private Extractor<WebDriver, ?> handler;
     private TaskFilter filter;
 
-    private SeleniumProcessor(Kernel browser, String path, Extractor<WebDriver, ?> handler, TaskFilter filter) {
-        switch (browser) {
-            case HtmlUnit:
-                logger.info("Initializing selenium web driver for HtmlUnit...");
-                this.webDriver = new HtmlUnitDriver();
-                break;
-            case Chrome:
-                logger.info("Initializing selenium web driver for Chrome...");
-                System.setProperty("webdriver.chrome.driver", path);
-                this.webDriver = new ChromeDriver();
-                break;
-            case Firefox:
-                logger.info("Initializing selenium web driver for Firefox...");
-                System.setProperty("webdriver.firefox.bin", path);
-                this.webDriver = new FirefoxDriver();
-                break;
-            case IE:
-                logger.info("Initializing selenium web driver for Internet Explorer...");
-                System.setProperty("webdriver.ie.driver", path);
-                this.webDriver = new InternetExplorerDriver();
-                break;
-            default:
-                throw new RuntimeException("unsupported browser " + browser);
-        }
+    private SeleniumProcessor(Browser browser, String path, Extractor<WebDriver, ?> handler, TaskFilter filter) {
+        this.webDriver = browser.init(path);
         this.handler = handler;
         this.filter = filter;
     }
 
     public static Builder custom() {
         return new Builder();
-    }
-
-    public static class Builder {
-        private Kernel kernel = Kernel.HtmlUnit;
-        private String kernelPath = "/path/to/" + kernel.name();
-        private Extractor<WebDriver, ?> handler;
-        private TaskFilter filter = TaskFilter.ALLOW_ALL;
-
-        public Builder setKernel(Kernel kernel, String kernelPath) {
-            this.kernel = kernel;
-            this.kernelPath = kernelPath;
-            return this;
-        }
-
-        public <T> Builder setWebDriverExecutor(Extractor<WebDriver, T> executor) {
-            this.handler = executor;
-            return this;
-        }
-
-        public Builder setTaskFilter(TaskFilter filter) {
-            this.filter = filter;
-            return this;
-        }
-
-        public SeleniumProcessor build() {
-            if (handler == null) {
-                throw new RuntimeException("WebDriverExecutor not specified, please check you code.");
-            }
-            return new SeleniumProcessor(kernel, kernelPath, handler, filter);
-        }
-
     }
 
     @Override
@@ -156,5 +97,36 @@ public class SeleniumProcessor implements Processor, Closeable {
     @Override
     public String[] getAcceptedContentType() {
         return new String[]{"selenium"};
+    }
+
+    public static class Builder {
+        private Browser browser = Browser.HtmlUnit;
+        private String browserPath = "/path/to/" + browser.name();
+        private Extractor<WebDriver, ?> handler;
+        private TaskFilter filter = TaskFilter.ALLOW_ALL;
+
+        public Builder setDriver(Browser browser, String browserPath) {
+            this.browser = browser;
+            this.browserPath = browserPath;
+            return this;
+        }
+
+        public <T> Builder setWebDriverExecutor(Extractor<WebDriver, T> executor) {
+            this.handler = executor;
+            return this;
+        }
+
+        public Builder setTaskFilter(TaskFilter filter) {
+            this.filter = filter;
+            return this;
+        }
+
+        public SeleniumProcessor build() {
+            if (handler == null) {
+                throw new RuntimeException("WebDriverExecutor not specified, please check you code.");
+            }
+            return new SeleniumProcessor(browser, browserPath, handler, filter);
+        }
+
     }
 }

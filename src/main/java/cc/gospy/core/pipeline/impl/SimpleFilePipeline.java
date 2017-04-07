@@ -42,19 +42,6 @@ public class SimpleFilePipeline implements Pipeline {
         return new Builder();
     }
 
-    public static class Builder {
-        private String dir;
-
-        public Builder setDir(String path) {
-            this.dir = path;
-            return this;
-        }
-
-        public SimpleFilePipeline build() {
-            return new SimpleFilePipeline(dir);
-        }
-    }
-
     @Override
     public void pipe(Result result) throws PipeException {
         Page page = result.getPage();
@@ -81,5 +68,18 @@ public class SimpleFilePipeline implements Pipeline {
     @Override
     public Class getAcceptedDataType() {
         return byte[].class;
+    }
+
+    public static class Builder {
+        private String dir;
+
+        public Builder setDir(String path) {
+            this.dir = path;
+            return this;
+        }
+
+        public SimpleFilePipeline build() {
+            return new SimpleFilePipeline(dir);
+        }
     }
 }

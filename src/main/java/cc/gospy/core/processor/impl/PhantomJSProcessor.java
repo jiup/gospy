@@ -66,6 +66,31 @@ public class PhantomJSProcessor implements Processor {
         return new Builder();
     }
 
+    @Override
+    public <T> Result<T> process(Task task, Page page) throws ProcessException {
+        try {
+            task.setUrl(task.getUrl().substring("phantomjs://".length()));
+            webDriver.get(task.getUrl());
+            Result result = handler.handle(page, webDriver);
+            if (result != null) {
+                if (result.getNewTasks() != null) {
+                    result.getNewTasks().removeIf(filter.negate());
+                }
+                if (result.getPage() == null) {
+                    result.setPage(page);
+                }
+            }
+            return result;
+        } catch (Throwable throwable) {
+            throw new ProcessException(throwable.getMessage(), throwable);
+        }
+    }
+
+    @Override
+    public String[] getAcceptedContentType() {
+        return new String[]{"phantomjs"};
+    }
+
     public static class Builder {
         private String phantomJsBinaryPath = "/path/to/phantomjs";
         private int timeout = 3000;
@@ -117,30 +142,5 @@ public class PhantomJSProcessor implements Processor {
                     filter);
         }
 
-    }
-
-    @Override
-    public <T> Result<T> process(Task task, Page page) throws ProcessException {
-        try {
-            task.setUrl(task.getUrl().substring("phantomjs://".length()));
-            webDriver.get(task.getUrl());
-            Result result = handler.handle(page, webDriver);
-            if (result != null) {
-                if (result.getNewTasks() != null) {
-                    result.getNewTasks().removeIf(filter.negate());
-                }
-                if (result.getPage() == null) {
-                    result.setPage(page);
-                }
-            }
-            return result;
-        } catch (Throwable throwable) {
-            throw new ProcessException(throwable.getMessage(), throwable);
-        }
-    }
-
-    @Override
-    public String[] getAcceptedContentType() {
-        return new String[]{"phantomjs"};
     }
 }

@@ -45,6 +45,34 @@ public class RegexProcessor implements Processor {
         return new Builder().build();
     }
 
+    @FunctionalInterface
+    public interface ResultHandler {
+        Collection<Task> handle(Task task, Matcher matcher);
+    }
+
+    @Override
+    public Result<Collection<Task>> process(Task task, Page page) throws ProcessException {
+        try {
+            Collection<Task> tasks = new LinkedHashSet<>();
+            String content = new String(page.getContent(), Charset.defaultCharset());
+            handlerChain.forEach((regex, resultHandler) -> {
+                Pattern pattern = Pattern.compile(regex);
+                Matcher matcher = pattern.matcher(content);
+                tasks.addAll(resultHandler.handle(task, matcher));
+            });
+            Result<Collection<Task>> result = new Result<>(tasks, tasks);
+            result.setPage(page);
+            return result;
+        } catch (Throwable throwable) {
+            throw new ProcessException(throwable.getMessage(), throwable);
+        }
+    }
+
+    @Override
+    public String[] getAcceptedContentType() {
+        return new String[]{"text/*"};
+    }
+
     public static class Builder {
         private Map<String, ResultHandler> hc = new LinkedHashMap<>();
         private TaskFilter fi = TaskFilter.HTTP_DEFAULT;
@@ -72,33 +100,5 @@ public class RegexProcessor implements Processor {
             }
             return new RegexProcessor(hc, fi);
         }
-    }
-
-    @FunctionalInterface
-    public interface ResultHandler {
-        Collection<Task> handle(Task task, Matcher matcher);
-    }
-
-    @Override
-    public Result<Collection<Task>> process(Task task, Page page) throws ProcessException {
-        try {
-            Collection<Task> tasks = new LinkedHashSet<>();
-            String content = new String(page.getContent(), Charset.defaultCharset());
-            handlerChain.forEach((regex, resultHandler) -> {
-                Pattern pattern = Pattern.compile(regex);
-                Matcher matcher = pattern.matcher(content);
-                tasks.addAll(resultHandler.handle(task, matcher));
-            });
-            Result<Collection<Task>> result = new Result<>(tasks, tasks);
-            result.setPage(page);
-            return result;
-        } catch (Throwable throwable) {
-            throw new ProcessException(throwable.getMessage(), throwable);
-        }
-    }
-
-    @Override
-    public String[] getAcceptedContentType() {
-        return new String[]{"text/*"};
     }
 }

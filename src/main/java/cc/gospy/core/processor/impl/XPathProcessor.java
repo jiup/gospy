@@ -47,32 +47,6 @@ public class XPathProcessor implements Processor {
         return new Builder().build();
     }
 
-    public static class Builder {
-        private Map<String, ResultHandler> hc = new LinkedHashMap<>();
-        private TaskFilter fi = TaskFilter.HTTP_DEFAULT;
-
-        public Builder setTaskFilter(TaskFilter filter) {
-            fi = filter;
-            return this;
-        }
-
-        public Builder extract(String xpath, ResultHandler handler) {
-            hc.put(xpath, handler);
-            return this;
-        }
-
-        public XPathProcessor build() {
-            if (hc.size() == 0) {
-                return extract("//a/@href", (task, resultList) -> {
-                    Collection<Task> tasks = new ArrayList<>();
-                    resultList.forEach(link -> tasks.add(new Task(link)));
-                    return tasks;
-                }).build();
-            }
-            return new XPathProcessor(hc, fi);
-        }
-    }
-
     protected static String getCharacterEncoding(Page page) {
         if (page.getExtra() == null || page.getExtra().get("Content-Type") == null) {
             return null;
@@ -120,6 +94,32 @@ public class XPathProcessor implements Processor {
     @Override
     public String[] getAcceptedContentType() {
         return new String[]{"text/*"};
+    }
+
+    public static class Builder {
+        private Map<String, ResultHandler> hc = new LinkedHashMap<>();
+        private TaskFilter fi = TaskFilter.HTTP_DEFAULT;
+
+        public Builder setTaskFilter(TaskFilter filter) {
+            fi = filter;
+            return this;
+        }
+
+        public Builder extract(String xpath, ResultHandler handler) {
+            hc.put(xpath, handler);
+            return this;
+        }
+
+        public XPathProcessor build() {
+            if (hc.size() == 0) {
+                return extract("//a/@href", (task, resultList) -> {
+                    Collection<Task> tasks = new ArrayList<>();
+                    resultList.forEach(link -> tasks.add(new Task(link)));
+                    return tasks;
+                }).build();
+            }
+            return new XPathProcessor(hc, fi);
+        }
     }
 
 }

@@ -38,19 +38,6 @@ public class ConsolePipeline implements Pipeline {
         return new Builder();
     }
 
-    public static class Builder {
-        private boolean b2s;
-
-        public Builder bytesToString() {
-            b2s = true;
-            return this;
-        }
-
-        public ConsolePipeline build() {
-            return new ConsolePipeline(b2s);
-        }
-    }
-
     @Override
     public void pipe(Result result) throws PipeException {
         Object data = result.getData();
@@ -98,5 +85,18 @@ public class ConsolePipeline implements Pipeline {
     @Override
     public Class getAcceptedDataType() {
         return Object.class;
+    }
+
+    public static class Builder {
+        private boolean b2s;
+
+        public Builder bytesToString() {
+            b2s = true;
+            return this;
+        }
+
+        public ConsolePipeline build() {
+            return new ConsolePipeline(b2s);
+        }
     }
 }

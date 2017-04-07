@@ -76,32 +76,6 @@ public class HttpFetcher implements Fetcher, Closeable {
         HttpFetcher._TIMEOUT = timeout;
     }
 
-    private void init() throws KeyManagementException, NoSuchAlgorithmException {
-        if (useProxy) {
-            connectionManager = new PoolingHttpClientConnectionManager(RegistryBuilder
-                    .<ConnectionSocketFactory>create()
-                    .register("http", new ProxyPlainConnectionSocketFactory())
-                    .register("https", new ProxySSLConnectionSocketFactory(getWeakenedSSLContextInstance()))
-                    .build()
-            );
-        } else {
-            connectionManager = new PoolingHttpClientConnectionManager(RegistryBuilder
-                    .<ConnectionSocketFactory>create()
-                    .register("http", PlainConnectionSocketFactory.INSTANCE)
-                    .register("https", new SSLConnectionSocketFactory(getWeakenedSSLContextInstance()))
-                    .build()
-            );
-        }
-        if (autoKeepAlive) {
-            ((PoolingHttpClientConnectionManager) connectionManager).setMaxTotal(maxConnCount);
-            ((PoolingHttpClientConnectionManager) connectionManager).setDefaultMaxPerRoute(maxConnPerRoute);
-            client = getHttpClientInstance();
-            cleanerThread = new PoolingHttpClientConnectionCleaner(connectionManager, connExpireSeconds);
-            cleanerThread.setDaemon(true);
-            cleanerThread.start();
-        }
-    }
-
     private HttpFetcher() {
         this(
                 request -> request.setConfig(RequestConfig.custom()
@@ -137,66 +111,29 @@ public class HttpFetcher implements Fetcher, Closeable {
         this.responseHandler = responseHandler;
     }
 
-    public static class Builder {
-        private HttpFetcher fetcher;
-
-        private Builder() {
-            fetcher = new HttpFetcher();
+    private void init() throws KeyManagementException, NoSuchAlgorithmException {
+        if (useProxy) {
+            connectionManager = new PoolingHttpClientConnectionManager(RegistryBuilder
+                    .<ConnectionSocketFactory>create()
+                    .register("http", new ProxyPlainConnectionSocketFactory())
+                    .register("https", new ProxySSLConnectionSocketFactory(getWeakenedSSLContextInstance()))
+                    .build()
+            );
+        } else {
+            connectionManager = new PoolingHttpClientConnectionManager(RegistryBuilder
+                    .<ConnectionSocketFactory>create()
+                    .register("http", PlainConnectionSocketFactory.INSTANCE)
+                    .register("https", new SSLConnectionSocketFactory(getWeakenedSSLContextInstance()))
+                    .build()
+            );
         }
-
-        public Builder before(BeforeFetch requestHandler) {
-            fetcher.requestHandler = requestHandler;
-            return this;
-        }
-
-        public Builder after(AfterFetch responseHandler) {
-            fetcher.responseHandler = responseHandler;
-            return this;
-        }
-
-        public Builder setMaxConnCount(int maxConnCount) {
-            fetcher.maxConnCount = maxConnCount;
-            return this;
-        }
-
-        public Builder setMaxConnPerRoute(int maxConnPerRoute) {
-            fetcher.maxConnPerRoute = maxConnPerRoute;
-            return this;
-        }
-
-        public Builder setCleanPeriodSeconds(int cleanPeriodSeconds) {
-            fetcher.cleanPeriodSeconds = cleanPeriodSeconds;
-            return this;
-        }
-
-        public Builder setConnExpireSeconds(int connExpireSeconds) {
-            fetcher.connExpireSeconds = connExpireSeconds;
-            return this;
-        }
-
-        public Builder setAutoKeepAlive(boolean autoKeepAlive) {
-            fetcher.autoKeepAlive = autoKeepAlive;
-            return this;
-        }
-
-        public Builder setProxyAddress(InetSocketAddress proxyAddress) {
-            fetcher.proxyAddress = proxyAddress;
-            fetcher.useProxy = true;
-            return this;
-        }
-
-        public Builder setUserAgent(String userAgent) {
-            fetcher.userAgent = userAgent;
-            return this;
-        }
-
-        public HttpFetcher build() {
-            try {
-                fetcher.init();
-            } catch (KeyManagementException | NoSuchAlgorithmException e) {
-                e.printStackTrace();
-            }
-            return fetcher;
+        if (autoKeepAlive) {
+            ((PoolingHttpClientConnectionManager) connectionManager).setMaxTotal(maxConnCount);
+            ((PoolingHttpClientConnectionManager) connectionManager).setDefaultMaxPerRoute(maxConnPerRoute);
+            client = getHttpClientInstance();
+            cleanerThread = new PoolingHttpClientConnectionCleaner(connectionManager, connExpireSeconds);
+            cleanerThread.setDaemon(true);
+            cleanerThread.start();
         }
     }
 
@@ -433,6 +370,69 @@ public class HttpFetcher implements Fetcher, Closeable {
     public void close() {
         if (autoKeepAlive) {
             cleanerThread.shutdown();
+        }
+    }
+
+    public static class Builder {
+        private HttpFetcher fetcher;
+
+        private Builder() {
+            fetcher = new HttpFetcher();
+        }
+
+        public Builder before(BeforeFetch requestHandler) {
+            fetcher.requestHandler = requestHandler;
+            return this;
+        }
+
+        public Builder after(AfterFetch responseHandler) {
+            fetcher.responseHandler = responseHandler;
+            return this;
+        }
+
+        public Builder setMaxConnCount(int maxConnCount) {
+            fetcher.maxConnCount = maxConnCount;
+            return this;
+        }
+
+        public Builder setMaxConnPerRoute(int maxConnPerRoute) {
+            fetcher.maxConnPerRoute = maxConnPerRoute;
+            return this;
+        }
+
+        public Builder setCleanPeriodSeconds(int cleanPeriodSeconds) {
+            fetcher.cleanPeriodSeconds = cleanPeriodSeconds;
+            return this;
+        }
+
+        public Builder setConnExpireSeconds(int connExpireSeconds) {
+            fetcher.connExpireSeconds = connExpireSeconds;
+            return this;
+        }
+
+        public Builder setAutoKeepAlive(boolean autoKeepAlive) {
+            fetcher.autoKeepAlive = autoKeepAlive;
+            return this;
+        }
+
+        public Builder setProxyAddress(InetSocketAddress proxyAddress) {
+            fetcher.proxyAddress = proxyAddress;
+            fetcher.useProxy = true;
+            return this;
+        }
+
+        public Builder setUserAgent(String userAgent) {
+            fetcher.userAgent = userAgent;
+            return this;
+        }
+
+        public HttpFetcher build() {
+            try {
+                fetcher.init();
+            } catch (KeyManagementException | NoSuchAlgorithmException e) {
+                e.printStackTrace();
+            }
+            return fetcher;
         }
     }
 }

@@ -21,14 +21,11 @@ import cc.gospy.core.entity.Task;
 import cc.gospy.core.fetcher.FetchException;
 import cc.gospy.core.fetcher.Fetcher;
 import cc.gospy.core.fetcher.UserAgent;
+import cc.gospy.core.util.Browser;
 import net.sf.jmimemagic.Magic;
 import net.sf.jmimemagic.MagicMatch;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.htmlunit.HtmlUnitDriver;
-import org.openqa.selenium.ie.InternetExplorerDriver;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -37,70 +34,23 @@ import java.util.Collection;
 
 // for ajax rendered pages and test flow visualization
 public class SeleniumFetcher implements Fetcher, Closeable {
-    public enum Kernel {HtmlUnit, Chrome, Firefox, IE}
 
-    private WebDriver driver;
+    private WebDriver webDriver;
     private String userAgent;
     private Collection<Cookie> cookies;
 
-    private SeleniumFetcher(Kernel browser, String path, String userAgent, Collection<Cookie> cookies) {
-        switch (browser) {
-            case HtmlUnit:
-                driver = new HtmlUnitDriver();
-                break;
-            case Chrome:
-                System.setProperty("webdriver.chrome.driver", path);
-                driver = new ChromeDriver();
-                break;
-            case Firefox:
-                System.setProperty("webdriver.firefox.bin", path);
-                driver = new FirefoxDriver();
-                break;
-            case IE:
-                System.setProperty("webdriver.ie.driver", path);
-                driver = new InternetExplorerDriver();
-                break;
-            default:
-                throw new RuntimeException("unsupported browser " + browser);
-        }
+    private SeleniumFetcher(Browser browser, String path, String userAgent, Collection<Cookie> cookies) {
+        this.webDriver = browser.init(path);
         this.userAgent = userAgent;
         this.cookies = cookies;
     }
 
     public static SeleniumFetcher getDefault() {
-        return new Builder().build();
+        return new SeleniumFetcher(Browser.HtmlUnit, null, UserAgent.Default, new ArrayList<>());
     }
 
     public static Builder custom() {
         return new Builder();
-    }
-
-    public static class Builder {
-        private Kernel kernel = Kernel.HtmlUnit;
-        private String path = "/path/to/" + kernel.name();
-        private String userAgent = UserAgent.Default;
-        private Collection<Cookie> cookies = new ArrayList<>();
-
-        public Builder setUserAgent(String userAgent) {
-            this.userAgent = userAgent;
-            return this;
-        }
-
-        public Builder setKernel(Kernel kernel, String path) {
-            this.kernel = kernel;
-            this.path = path;
-            return this;
-        }
-
-        public Builder addCookie(Cookie cookie) {
-            this.cookies.add(cookie);
-            return this;
-        }
-
-        public SeleniumFetcher build() {
-            return new SeleniumFetcher(kernel, path, userAgent, cookies);
-        }
-
     }
 
     @Override
@@ -110,13 +60,13 @@ public class SeleniumFetcher implements Fetcher, Closeable {
             Page page = new Page();
             long timer = System.currentTimeMillis();
             if (cookies.size() > 0) {
-                cookies.forEach(cookie -> driver.manage().addCookie(cookie));
+                cookies.forEach(cookie -> webDriver.manage().addCookie(cookie));
             }
-            driver.get(task.getUrl());
+            webDriver.get(task.getUrl());
             task.addVisitCount();
             page.setTask(task);
             page.setResponseTime(System.currentTimeMillis() - timer);
-            byte[] bytes = driver.getPageSource().getBytes();
+            byte[] bytes = webDriver.getPageSource().getBytes();
             page.setContent(bytes);
             // we cannot get content-type form selenium :(
             // see https://github.com/seleniumhq/selenium-google-code-issue-archive/issues/141#issuecomment-191404952
@@ -141,7 +91,35 @@ public class SeleniumFetcher implements Fetcher, Closeable {
 
     @Override
     public void close() throws IOException {
-        driver.close();
-        driver.quit();
+        webDriver.close();
+        webDriver.quit();
+    }
+
+    public static class Builder {
+        private Browser browser = Browser.HtmlUnit;
+        private String path = "/path/to/" + browser.name();
+        private String userAgent = UserAgent.Default;
+        private Collection<Cookie> cookies = new ArrayList<>();
+
+        public Builder setUserAgent(String userAgent) {
+            this.userAgent = userAgent;
+            return this;
+        }
+
+        public Builder setDriver(Browser browser, String path) {
+            this.browser = browser;
+            this.path = path;
+            return this;
+        }
+
+        public Builder addCookie(Cookie cookie) {
+            this.cookies.add(cookie);
+            return this;
+        }
+
+        public SeleniumFetcher build() {
+            return new SeleniumFetcher(browser, path, userAgent, cookies);
+        }
+
     }
 }

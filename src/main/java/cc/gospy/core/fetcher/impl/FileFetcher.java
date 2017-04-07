@@ -33,14 +33,8 @@ public class FileFetcher implements Fetcher {
         this.mimetypesFileTypeMap = new MimetypesFileTypeMap();
     }
 
-    public static class Builder {
-        public FileFetcher build() {
-            return new FileFetcher();
-        }
-    }
-
     public static FileFetcher getDefault() {
-        return new Builder().build();
+        return new FileFetcher();
     }
 
     @Override

@@ -46,22 +46,6 @@ public class RemoteProcessor implements Processor, RemoteComponent, Closeable {
         return new Builder();
     }
 
-    public static class Builder {
-        private String[] uri;
-
-        public Builder setUri(String... uri) {
-            this.uri = uri;
-            return this;
-        }
-
-        public RemoteProcessor build() throws Throwable {
-            if (uri == null) {
-                throw new RuntimeException("Uri list (for remote processor) not specified, please check your code.");
-            }
-            return new RemoteProcessor(uri);
-        }
-    }
-
     private void init(String[] uriList) {
         try {
             logger.info("Connecting to remote processor...");
@@ -117,6 +101,22 @@ public class RemoteProcessor implements Processor, RemoteComponent, Closeable {
             client.invoke("close");
         } catch (Throwable throwable) {
 //            throwable.printStackTrace();
+        }
+    }
+
+    public static class Builder {
+        private String[] uri;
+
+        public Builder setUri(String... uri) {
+            this.uri = uri;
+            return this;
+        }
+
+        public RemoteProcessor build() throws Throwable {
+            if (uri == null) {
+                throw new RuntimeException("Uri list (for remote processor) not specified, please check your code.");
+            }
+            return new RemoteProcessor(uri);
         }
     }
 }

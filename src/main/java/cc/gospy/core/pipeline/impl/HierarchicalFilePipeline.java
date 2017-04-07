@@ -16,11 +16,11 @@
 
 package cc.gospy.core.pipeline.impl;
 
+import cc.gospy.core.entity.Page;
+import cc.gospy.core.entity.Result;
 import cc.gospy.core.pipeline.PipeException;
 import cc.gospy.core.pipeline.Pipeline;
 import cc.gospy.core.util.StringHelper;
-import cc.gospy.core.entity.Page;
-import cc.gospy.core.entity.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +32,6 @@ import java.nio.channels.FileChannel;
 
 public class HierarchicalFilePipeline implements Pipeline {
     private static final Logger logger = LoggerFactory.getLogger(HierarchicalFilePipeline.class);
-    private static int counter = 0;
 
     private String basePath = "/";
     private File baseDir;
@@ -47,19 +46,6 @@ public class HierarchicalFilePipeline implements Pipeline {
         if (!baseDir.exists()) {
             logger.warn("Base directory ({}) not exists, create new one.", basePath);
             baseDir.mkdirs();
-        }
-    }
-
-    public static class Builder {
-        private String bp;
-
-        public Builder setBasePath(String basePath) {
-            bp = basePath;
-            return this;
-        }
-
-        public HierarchicalFilePipeline build() {
-            return new HierarchicalFilePipeline(bp);
         }
     }
 
@@ -104,5 +90,18 @@ public class HierarchicalFilePipeline implements Pipeline {
     @Override
     public Class getAcceptedDataType() {
         return byte[].class;
+    }
+
+    public static class Builder {
+        private String bp;
+
+        public Builder setBasePath(String basePath) {
+            bp = basePath;
+            return this;
+        }
+
+        public HierarchicalFilePipeline build() {
+            return new HierarchicalFilePipeline(bp);
+        }
     }
 }

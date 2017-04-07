@@ -44,22 +44,6 @@ public class RemotePipeline implements Pipeline, RemoteComponent, Closeable {
         return new Builder();
     }
 
-    public static class Builder {
-        private String[] uri;
-
-        public Builder setUri(String... uri) {
-            this.uri = uri;
-            return this;
-        }
-
-        public RemotePipeline build() throws Throwable {
-            if (uri == null) {
-                throw new RuntimeException("Uri list (for remote pipeline) not specified, please check your code.");
-            }
-            return new RemotePipeline(uri);
-        }
-    }
-
     private void init(String[] uriList) {
         try {
             logger.info("Connecting to remote pipeline...");
@@ -113,6 +97,22 @@ public class RemotePipeline implements Pipeline, RemoteComponent, Closeable {
             client.invoke("close");
         } catch (Throwable throwable) {
 //            throwable.printStackTrace();
+        }
+    }
+
+    public static class Builder {
+        private String[] uri;
+
+        public Builder setUri(String... uri) {
+            this.uri = uri;
+            return this;
+        }
+
+        public RemotePipeline build() throws Throwable {
+            if (uri == null) {
+                throw new RuntimeException("Uri list (for remote pipeline) not specified, please check your code.");
+            }
+            return new RemotePipeline(uri);
         }
     }
 }

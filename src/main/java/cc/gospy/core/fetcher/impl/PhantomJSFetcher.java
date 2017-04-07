@@ -35,7 +35,7 @@ import java.util.Collection;
 
 // for ajax rendered pages
 public class PhantomJSFetcher implements Fetcher, Closeable {
-    private WebDriver driver;
+    private WebDriver webDriver;
     private String userAgent;
     private Collection<Cookie> cookies;
 
@@ -45,13 +45,55 @@ public class PhantomJSFetcher implements Fetcher, Closeable {
         capabilities.setCapability("phantomjs.page.settings.resourceTimeout", timeout);
         capabilities.setCapability("phantomjs.page.settings.loadImages", loadImages);
         capabilities.setCapability("phantomjs.page.settings.userAgent", userAgent);
-        this.driver = new PhantomJSDriver(capabilities);
+        this.webDriver = new PhantomJSDriver(capabilities);
         this.userAgent = userAgent;
         this.cookies = cookies;
     }
 
     public static Builder custom() {
         return new Builder();
+    }
+
+    @Override
+    public Page fetch(Task task) throws FetchException {
+        try {
+            task.setUrl(task.getUrl().substring("phantomjs://".length()));
+            Page page = new Page();
+            long timer = System.currentTimeMillis();
+            if (cookies.size() > 0) {
+                cookies.forEach(cookie -> webDriver.manage().addCookie(cookie));
+            }
+            webDriver.get(task.getUrl());
+            byte[] bytes = webDriver.getPageSource().getBytes();
+            page.setResponseTime(System.currentTimeMillis() - timer);
+            task.addVisitCount();
+            page.setTask(task);
+            page.setContent(bytes);
+            // webDriver cannot get content-type form selenium :(
+            // see https://github.com/seleniumhq/selenium-google-code-issue-archive/issues/141#issuecomment-191404952
+            // using magic-match is a compromise, which might cause efficiency problems.
+            MagicMatch match = Magic.getMagicMatch(bytes);
+            page.setContentType(match.getMimeType());
+            return page;
+        } catch (Throwable throwable) {
+            throw new FetchException(throwable.getMessage(), throwable);
+        }
+    }
+
+    @Override
+    public String[] getAcceptedProtocols() {
+        return new String[]{"phantomjs"};
+    }
+
+    @Override
+    public String getUserAgent() {
+        return userAgent;
+    }
+
+    @Override
+    public void close() throws IOException {
+        webDriver.close();
+        webDriver.quit();
     }
 
     public static class Builder {
@@ -89,47 +131,5 @@ public class PhantomJSFetcher implements Fetcher, Closeable {
         public PhantomJSFetcher build() {
             return new PhantomJSFetcher(path, timeout, loadImages, userAgent, cookies);
         }
-    }
-
-    @Override
-    public Page fetch(Task task) throws FetchException {
-        try {
-            task.setUrl(task.getUrl().substring("phantomjs://".length()));
-            Page page = new Page();
-            long timer = System.currentTimeMillis();
-            if (cookies.size() > 0) {
-                cookies.forEach(cookie -> driver.manage().addCookie(cookie));
-            }
-            driver.get(task.getUrl());
-            byte[] bytes = driver.getPageSource().getBytes();
-            page.setResponseTime(System.currentTimeMillis() - timer);
-            task.addVisitCount();
-            page.setTask(task);
-            page.setContent(bytes);
-            // we cannot get content-type form selenium :(
-            // see https://github.com/seleniumhq/selenium-google-code-issue-archive/issues/141#issuecomment-191404952
-            // using magic-match is a compromise, which might cause efficiency problems.
-            MagicMatch match = Magic.getMagicMatch(bytes);
-            page.setContentType(match.getMimeType());
-            return page;
-        } catch (Throwable throwable) {
-            throw new FetchException(throwable.getMessage(), throwable);
-        }
-    }
-
-    @Override
-    public String[] getAcceptedProtocols() {
-        return new String[]{"phantomjs"};
-    }
-
-    @Override
-    public String getUserAgent() {
-        return userAgent;
-    }
-
-    @Override
-    public void close() throws IOException {
-        driver.close();
-        driver.quit();
     }
 }

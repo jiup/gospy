@@ -30,27 +30,12 @@ public class UniversalProcessor implements Processor {
         this.handler = handler;
     }
 
-    public static UniversalProcessor getDefault() {
-        return new Builder().build();
-    }
-
     public static Builder custom() {
         return new Builder();
     }
 
-    public static class Builder {
-        private Extractor<byte[], ?> de;
-
-        public <T> Builder setExtractor(Extractor<byte[], T> handler) {
-            de = handler;
-            return this;
-        }
-
-        public UniversalProcessor build() {
-            return new UniversalProcessor(de != null ? de :
-                    (Extractor<byte[], byte[]>) (page, document) -> new Result<>(null, document));
-        }
-
+    public static UniversalProcessor getDefault() {
+        return new Builder().build();
     }
 
     @Override
@@ -69,5 +54,20 @@ public class UniversalProcessor implements Processor {
     @Override
     public String[] getAcceptedContentType() {
         return new String[]{"*/*"};
+    }
+
+    public static class Builder {
+        private Extractor<byte[], ?> de;
+
+        public <T> Builder setExtractor(Extractor<byte[], T> handler) {
+            de = handler;
+            return this;
+        }
+
+        public UniversalProcessor build() {
+            return new UniversalProcessor(de != null ? de :
+                    (Extractor<byte[], byte[]>) (page, document) -> new Result<>(null, document));
+        }
+
     }
 }
