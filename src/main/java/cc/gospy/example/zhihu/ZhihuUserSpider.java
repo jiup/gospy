@@ -23,8 +23,8 @@ import cc.gospy.core.entity.Task;
 import cc.gospy.core.fetcher.Fetchers;
 import cc.gospy.core.pipeline.Pipelines;
 import cc.gospy.core.processor.Processors;
-import cc.gospy.core.processor.impl.SeleniumProcessor;
 import cc.gospy.core.scheduler.Schedulers;
+import cc.gospy.core.util.Browser;
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchWindowException;
 import org.openqa.selenium.WebDriverException;
@@ -47,7 +47,7 @@ public class ZhihuUserSpider {
                         .convertHttpTaskToSelenium()
                         .build())
                 .addProcessor(Processors.SeleniumProcessor.custom()
-                        .setKernel(SeleniumProcessor.Kernel.Chrome, chromeDriverPath)
+                        .setDriver(Browser.Chrome, chromeDriverPath)
                         .setWebDriverExecutor((page, driver) -> {
                             Collection<Task> newTasks = new HashSet<>();
                             boolean visited = false;

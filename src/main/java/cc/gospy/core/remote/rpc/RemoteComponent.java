@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package cc.gospy.core;
+package cc.gospy.core.remote.rpc;
 
 public interface RemoteComponent {
     String getIdentifier();

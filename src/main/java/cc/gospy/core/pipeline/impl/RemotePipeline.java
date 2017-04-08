@@ -16,7 +16,7 @@
 
 package cc.gospy.core.pipeline.impl;
 
-import cc.gospy.core.RemoteComponent;
+import cc.gospy.core.remote.rpc.RemoteComponent;
 import cc.gospy.core.entity.Result;
 import cc.gospy.core.pipeline.PipeException;
 import cc.gospy.core.pipeline.Pipeline;

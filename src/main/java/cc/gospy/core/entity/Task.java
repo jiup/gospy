@@ -26,9 +26,7 @@ import java.util.Map;
 
 public class Task implements Serializable, Comparable<Task> {
 
-    public enum Priority {EMERGENCY, HIGH, MEDIUM, LOW}
-
-    private Priority priority;
+    private int priority;
     private String url;
     private String host;
     private String protocol;
@@ -37,7 +35,7 @@ public class Task implements Serializable, Comparable<Task> {
     private long createTime;
     private long lastVisitTime;
     private int depth;
-    private int expectedVisitInSeconds; // in seconds, must less than 24 days, 0 to off
+    private int expectedVisitInSeconds; // 0 to off
     private int visitCount;
 
     // identify a unique task for duplicate remover
@@ -51,6 +49,10 @@ public class Task implements Serializable, Comparable<Task> {
     }
 
     public Task(Priority priority, String url, int depth, int expectedVisitInSeconds) {
+        this(priority.getValue(), url, depth, expectedVisitInSeconds);
+    }
+
+    public Task(int priority, String url, int depth, int expectedVisitInSeconds) {
         assert url != null;
         this.priority = priority;
         this.url = url;
@@ -75,7 +77,7 @@ public class Task implements Serializable, Comparable<Task> {
 
     @Override
     public int compareTo(Task task) {
-        return this.getPriority().ordinal() - task.getPriority().ordinal();
+        return this.getPriority() - task.getPriority();
     }
 
     @Override
@@ -92,7 +94,7 @@ public class Task implements Serializable, Comparable<Task> {
 
     @Override
     public String toString() {
-        return "Task{" + priority.name().charAt(0) + "-\"" + url + "\"}";
+        return "Task{" + priority + "-\"" + url + "\"}";
     }
 
     public void setUrl(String newUrl) {
@@ -109,6 +111,10 @@ public class Task implements Serializable, Comparable<Task> {
     }
 
     public void setPriority(Priority priority) {
+        this.setPriority(priority.getValue());
+    }
+
+    public void setPriority(int priority) {
         this.priority = priority;
     }
 
@@ -128,7 +134,7 @@ public class Task implements Serializable, Comparable<Task> {
         this.skipCheck = skipCheck;
     }
 
-    public Priority getPriority() {
+    public int getPriority() {
         return priority;
     }
 
@@ -170,6 +176,20 @@ public class Task implements Serializable, Comparable<Task> {
 
     public int getVisitCount() {
         return visitCount;
+    }
+
+    public enum Priority {
+        EMERGENCY(0), HIGH(10), MEDIUM(20), LOW(30);
+
+        private int value;
+
+        Priority(int value) {
+            this.value = value;
+        }
+
+        int getValue() {
+            return value;
+        }
     }
 
 }

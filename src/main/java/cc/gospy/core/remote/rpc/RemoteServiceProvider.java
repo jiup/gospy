@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package cc.gospy.core;
+package cc.gospy.core.remote.rpc;
 
 import cc.gospy.core.util.StringHelper;
 import hprose.server.HproseTcpServer;
@@ -46,31 +46,6 @@ public class RemoteServiceProvider {
         return new Builder();
     }
 
-    public static class Builder {
-        private String identifier;
-        private String uri;
-
-        public Builder setIdentifier(String identifier) {
-            this.identifier = identifier;
-            return this;
-        }
-
-        public Builder setOpenUri(String uri) {
-            this.uri = uri;
-            return this;
-        }
-
-        public RemoteServiceProvider build() {
-            if (identifier == null) {
-                identifier = StringHelper.getRandomIdentifier();
-            }
-            if (uri == null) {
-                throw new RuntimeException("Uri not specified, please check your code.");
-            }
-            return new RemoteServiceProvider(identifier, uri);
-        }
-    }
-
     public void start() throws IOException {
         server.start();
         logger.info("Remote provider has successfully started at {}:{}", server.getHost(), server.getPort());
@@ -98,5 +73,29 @@ public class RemoteServiceProvider {
         return this;
     }
 
+    public static class Builder {
+        private String identifier;
+        private String uri;
+
+        public Builder setIdentifier(String identifier) {
+            this.identifier = identifier;
+            return this;
+        }
+
+        public Builder setOpenUri(String uri) {
+            this.uri = uri;
+            return this;
+        }
+
+        public RemoteServiceProvider build() {
+            if (identifier == null) {
+                identifier = StringHelper.getRandomIdentifier();
+            }
+            if (uri == null) {
+                throw new RuntimeException("Uri not specified, please check your code.");
+            }
+            return new RemoteServiceProvider(identifier, uri);
+        }
+    }
 
 }

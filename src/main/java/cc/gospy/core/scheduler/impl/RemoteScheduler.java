@@ -16,7 +16,7 @@
 
 package cc.gospy.core.scheduler.impl;
 
-import cc.gospy.core.RemoteComponent;
+import cc.gospy.core.remote.rpc.RemoteComponent;
 import cc.gospy.core.entity.Task;
 import cc.gospy.core.scheduler.Observable;
 import cc.gospy.core.scheduler.Recoverable;
