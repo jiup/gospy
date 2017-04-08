@@ -16,8 +16,17 @@
 
 package cc.gospy.core.fetcher;
 
+import java.util.Random;
+
 @SuppressWarnings("unused")
 public class UserAgent {
+    private static int length = UserAgent.class.getFields().length;
+    private static Random random = new Random();
+
+    public static String random() {
+        return UserAgent.class.getFields()[random.nextInt(length)].getName();
+    }
+
     public static final String Default = "Gospy-HttpFetcher/3.10";
     public static final String Arora_0_6_0_Vista = "Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US) AppleWebKit/527  (KHTML, like Gecko, Safari/419.3) Arora/0.6 (Change: )";
     public static final String Avant_Browser_1_2 = "Avant Browser/1.2.789rel1 (http://www.avantbrowser.com)";

@@ -16,7 +16,6 @@
 
 package cc.gospy.core.pipeline;
 
-import cc.gospy.core.entity.Page;
 import cc.gospy.core.entity.Result;
 
 public interface Pipeline {

@@ -71,8 +71,8 @@ public class GeneralScheduler implements Scheduler, Observable, Recoverable {
         if (taskQueue.size() > 0) {
             Task task = taskQueue.poll();
             task.setLastVisitTime(System.currentTimeMillis());
-            duplicateRemover.record(task);
-            totalTaskOutputCount.getAndIncrement();
+            duplicateRemover.record(task); // add to duplicate remover
+            totalTaskOutputCount.incrementAndGet();
             return task;
         }
         return null;
@@ -91,7 +91,7 @@ public class GeneralScheduler implements Scheduler, Observable, Recoverable {
         if (isSuspend.get()) {
             return;
         }
-        totalTaskInputCount.getAndIncrement();
+        totalTaskInputCount.incrementAndGet();
         if (task.isCheckSkipping()) {
             addTask0(task);
             return;
@@ -100,7 +100,7 @@ public class GeneralScheduler implements Scheduler, Observable, Recoverable {
             return;
         }
         if (duplicateRemover.exists(task)) {
-            duplicateRemover.record(task);
+            duplicateRemover.record(task); // record a crash
         } else {
             addTask0(task);
         }

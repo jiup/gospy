@@ -24,10 +24,12 @@ import cc.gospy.core.fetcher.Fetchers;
 import cc.gospy.core.pipeline.Pipeline;
 import cc.gospy.core.pipeline.Pipelines;
 import cc.gospy.core.processor.*;
+import cc.gospy.core.scheduler.Observable;
 import cc.gospy.core.scheduler.*;
 import cc.gospy.core.util.Experimental;
 import cc.gospy.core.util.StringHelper;
 import cc.gospy.core.util.TaskBlockedException;
+import ch.qos.logback.classic.Level;
 import com.brandwatch.robots.RobotsConfig;
 import com.brandwatch.robots.RobotsFactory;
 import com.brandwatch.robots.RobotsService;
@@ -43,10 +45,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.net.URI;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
@@ -320,9 +319,22 @@ public class Gospy implements Observable {
         return addTask(task);
     }
 
+    public Gospy addTasks(List<String> urls) {
+        urls.forEach(url -> addTask(url));
+        return this;
+    }
+
     public Gospy setVisitGap(int timeMillis) {
         this.visitGapMillis = timeMillis;
         return this;
+    }
+
+    public void setLogLevel(Level logLevel) {
+        if (logger instanceof ch.qos.logback.classic.Logger) {
+            ch.qos.logback.classic.Logger logger =
+                    (ch.qos.logback.classic.Logger) LoggerFactory.getLogger("cc.gospy.core");
+            logger.setLevel(logLevel);
+        }
     }
 
     public static Builder custom() {

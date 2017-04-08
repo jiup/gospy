@@ -36,7 +36,7 @@ public class HashDuplicateRemover implements DuplicateRemover, Recoverable {
         synchronized (this) {
             AtomicInteger counter = tasks.get(task);
             if (counter != null) {
-                counter.getAndIncrement();
+                counter.incrementAndGet();
             } else {
                 tasks.put(task, new AtomicInteger(1));
             }
