@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.scheduler.queue;
+package cc.gospy.core.util.webdriver;
 
-public class RedisQueueWrapper {
+import org.openqa.selenium.WebDriver;
+
+public interface WebDriverInitializer {
+    WebDriver init(String driverPath);
 }

@@ -24,7 +24,7 @@ import cc.gospy.core.fetcher.Fetchers;
 import cc.gospy.core.pipeline.Pipelines;
 import cc.gospy.core.processor.Processors;
 import cc.gospy.core.scheduler.Schedulers;
-import cc.gospy.core.util.Browser;
+import cc.gospy.core.util.webdriver.Browser;
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchWindowException;
 import org.openqa.selenium.WebDriverException;

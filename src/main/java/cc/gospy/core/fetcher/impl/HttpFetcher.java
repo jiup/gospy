@@ -151,7 +151,7 @@ public class HttpFetcher implements Fetcher, Closeable {
         return fetcher;
     }
 
-    protected class ProxyPlainConnectionSocketFactory implements ConnectionSocketFactory {
+    protected class ProxyPlainConnectionSocketFactory extends PlainConnectionSocketFactory {
 
         @Override
         public Socket createSocket(HttpContext httpContext) throws IOException {
@@ -164,7 +164,8 @@ public class HttpFetcher implements Fetcher, Closeable {
                 final int connectTimeout,
                 final Socket socket, final HttpHost host,
                 final InetSocketAddress remoteAddress,
-                final InetSocketAddress localAddress, final HttpContext context
+                final InetSocketAddress localAddress,
+                final HttpContext context
         ) throws IOException {
             Socket socket0 = socket != null ? socket : createSocket(context);
             if (localAddress != null) {
@@ -415,7 +416,7 @@ public class HttpFetcher implements Fetcher, Closeable {
             return this;
         }
 
-        public Builder setSocksProxyAddress(InetSocketAddress proxyAddress) {
+        public Builder setSocks5ProxyAddress(InetSocketAddress proxyAddress) {
             fetcher.proxyAddress = proxyAddress;
             fetcher.useProxy = true;
             return this;

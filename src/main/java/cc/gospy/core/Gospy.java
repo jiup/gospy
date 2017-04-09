@@ -27,6 +27,7 @@ import cc.gospy.core.processor.*;
 import cc.gospy.core.scheduler.Observable;
 import cc.gospy.core.scheduler.*;
 import cc.gospy.core.util.Experimental;
+import cc.gospy.core.util.LoggerHelper;
 import cc.gospy.core.util.StringHelper;
 import cc.gospy.core.util.TaskBlockedException;
 import ch.qos.logback.classic.Level;
@@ -330,11 +331,7 @@ public class Gospy implements Observable {
     }
 
     public void setLogLevel(Level logLevel) {
-        if (logger instanceof ch.qos.logback.classic.Logger) {
-            ch.qos.logback.classic.Logger logger =
-                    (ch.qos.logback.classic.Logger) LoggerFactory.getLogger("cc.gospy.core");
-            logger.setLevel(logLevel);
-        }
+        LoggerHelper.setLevel("cc.gospy.core", logLevel);
     }
 
     public static Builder custom() {

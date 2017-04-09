@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.util;
+package cc.gospy.core.util.bloomfilter;
 
 import cc.gospy.core.entity.Task;
 import com.google.common.hash.BloomFilter;

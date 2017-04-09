@@ -16,6 +16,18 @@
 
 package cc.gospy.core.util;
 
-public class HttpProxyProvider {
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import org.slf4j.LoggerFactory;
 
+public class LoggerHelper {
+    public static void setLevel(String identifier, Level level) {
+        Logger logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(identifier);
+        logger.setLevel(level);
+    }
+
+    public static void setLevel(Class loggedClass, Level level) {
+        Logger logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(loggedClass);
+        logger.setLevel(level);
+    }
 }

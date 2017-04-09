@@ -21,7 +21,7 @@ import cc.gospy.core.entity.Task;
 import cc.gospy.core.fetcher.FetchException;
 import cc.gospy.core.fetcher.Fetcher;
 import cc.gospy.core.fetcher.UserAgent;
-import cc.gospy.core.util.Browser;
+import cc.gospy.core.util.webdriver.Browser;
 import net.sf.jmimemagic.Magic;
 import net.sf.jmimemagic.MagicMatch;
 import org.openqa.selenium.Cookie;

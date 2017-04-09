@@ -17,7 +17,7 @@
 package cc.gospy.core.scheduler.queue.impl;
 
 import cc.gospy.core.entity.Task;
-import cc.gospy.core.util.FileMappedQueue;
+import cc.gospy.core.util.base.FileMappedQueue;
 
 import java.io.IOException;
 

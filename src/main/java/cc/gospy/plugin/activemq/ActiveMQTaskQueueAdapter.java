@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.util;
+package cc.gospy.plugin.activemq;
 
-public class FileMappedBloomFilter {
+public class ActiveMQTaskQueueAdapter {
 }

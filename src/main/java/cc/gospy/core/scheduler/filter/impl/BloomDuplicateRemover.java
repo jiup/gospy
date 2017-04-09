@@ -20,7 +20,7 @@ import cc.gospy.core.entity.Task;
 import cc.gospy.core.scheduler.Recoverable;
 import cc.gospy.core.scheduler.filter.DuplicateRemover;
 import cc.gospy.core.util.Experimental;
-import cc.gospy.core.util.ScalableBloomFilter;
+import cc.gospy.core.util.bloomfilter.ScalableBloomFilter;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;

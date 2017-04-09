@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package cc.gospy.extension.proxy;
+package cc.gospy.plugin.proxy;
 
 import cc.gospy.core.entity.Page;
 import cc.gospy.core.entity.Task;
@@ -29,7 +29,7 @@ import java.util.List;
 
 public class HttpProxyCollector {
 
-    enum Source implements Strategy {
+    enum ProxySource implements Strategy {
         XiCiPuTong {
             @Override
             public List<Task> getTasks(int proxyCount) {
@@ -74,7 +74,7 @@ public class HttpProxyCollector {
 
             @Override
             public Processor getProcessor() {
-                return Source.XiCiPuTong.getProcessor();
+                return ProxySource.XiCiPuTong.getProcessor();
             }
         },
         XiCiHttp {
@@ -90,7 +90,7 @@ public class HttpProxyCollector {
 
             @Override
             public Processor getProcessor() {
-                return Source.XiCiPuTong.getProcessor();
+                return ProxySource.XiCiPuTong.getProcessor();
             }
         },
         XiCiHttps {
@@ -106,7 +106,7 @@ public class HttpProxyCollector {
 
             @Override
             public Processor getProcessor() {
-                return Source.XiCiPuTong.getProcessor();
+                return ProxySource.XiCiPuTong.getProcessor();
             }
         }
     }
@@ -117,14 +117,14 @@ public class HttpProxyCollector {
         Processor getProcessor();
     }
 
-    public static List<InetSocketAddress> getProxyIps(Source source, int count) {
+    public static List<InetSocketAddress> getProxyIps(Strategy proxySource, int count) {
         if (count <= 0)
             throw new RuntimeException("ip count must be positive");
 
         List<InetSocketAddress> addresses = new ArrayList<>();
         Fetcher fetcher = Fetchers.HttpFetcher.getDefault();
-        Processor processor = source.getProcessor();
-        for (Task task : source.getTasks(count)) {
+        Processor processor = proxySource.getProcessor();
+        for (Task task : proxySource.getTasks(count)) {
             try {
                 Page page = fetcher.fetch(task);
                 for (Object address : ((List) processor.process(task, page).getData())) {

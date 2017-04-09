@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.util;
+package cc.gospy.core.util.base;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

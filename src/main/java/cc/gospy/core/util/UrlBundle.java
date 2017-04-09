@@ -101,7 +101,7 @@ public class UrlBundle {
                         boolean upward = startValue <= endValue;
                         int step = params.length == 3 ? Integer.parseInt(params[2]) : (upward ? 1 : -1);
                         if (step == 0 || step > 0 && !upward || step < 0 && upward) {
-                            throw new RuntimeException("infinite iteration, please check 'step',  in group: " + firstGroup);
+                            throw new RuntimeException("infinite iteration, please check 'step', in group: " + firstGroup);
                         }
                         for (int i = startValue; upward ? i <= endValue : i >= endValue; i = i + step) {
                             children.add(rule.substring(0, startPos) + i + rule.substring(endPos + 1));

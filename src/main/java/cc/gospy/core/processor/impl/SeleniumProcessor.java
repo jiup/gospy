@@ -23,7 +23,7 @@ import cc.gospy.core.entity.Task;
 import cc.gospy.core.processor.Extractor;
 import cc.gospy.core.processor.ProcessException;
 import cc.gospy.core.processor.Processor;
-import cc.gospy.core.util.Browser;
+import cc.gospy.core.util.webdriver.Browser;
 import org.openqa.selenium.WebDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
