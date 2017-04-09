@@ -59,7 +59,7 @@ public class BaiduSpider {
                         .build())
                 .addFetcher(Fetchers.HttpFetcher.getDefault())
                 .addProcessor(Processors.XPathProcessor.custom()
-                        .extract("//*/h3/a/@href", (task, resultList) -> {
+                        .extract("//*/h3/a/@href", (task, resultList, returnedData) -> {
                             resultList.removeIf(s -> !s.startsWith("http://www.baidu.com/link"));
                             links.addAll(resultList);
                             currentPage.incrementAndGet();

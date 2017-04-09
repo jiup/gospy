@@ -72,19 +72,19 @@ public class TaobaoSearchSpider {
                         .setLoadImages(false)
                         .build())
                 .addProcessor(Processors.XPathProcessor.custom()
-                        .extract("/*//*[@id='mainsrp-itemlist']/div/div/div[1]/div/div[2]/div[2]/a/@href", (task, resultList) -> {
+                        .extract("/*//*[@id='mainsrp-itemlist']/div/div/div[1]/div/div[2]/div[2]/a/@href", (task, resultList, returnedData) -> {
                             resultList.forEach(link -> links.add(StringHelper.toAbsoluteUrl(task, link)));
                             return null;
                         })
-                        .extract("/*//*[@id='mainsrp-itemlist']/div/div/div[1]/div/div[2]/div[2]/a/allText()", (task, resultList) -> {
+                        .extract("/*//*[@id='mainsrp-itemlist']/div/div/div[1]/div/div[2]/div[2]/a/allText()", (task, resultList, returnedData) -> {
                             titles.addAll(resultList);
                             return null;
                         })
-                        .extract("/*//*[@id='J_itemlistPersonality']/div/div/div[2]/div[2]/a/@href", (task, resultList) -> {
+                        .extract("/*//*[@id='J_itemlistPersonality']/div/div/div[2]/div[2]/a/@href", (task, resultList, returnedData) -> {
                             resultList.forEach(link -> links.add(StringHelper.toAbsoluteUrl(task, link)));
                             return null;
                         })
-                        .extract("/*//*[@id='J_itemlistPersonality']/div/div/div[2]/div[2]/a/allText()", (task, resultList) -> {
+                        .extract("/*//*[@id='J_itemlistPersonality']/div/div/div[2]/div[2]/a/allText()", (task, resultList, returnedData) -> {
                             titles.addAll(resultList);
                             currentPage.incrementAndGet();
                             if (pageFrom <= currentPage.get() && currentPage.get() < pageTo) {

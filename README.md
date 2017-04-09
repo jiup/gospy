@@ -1,4 +1,8 @@
-# ![](http://7xp1jv.com1.z0.glb.clouddn.com/gospy/img/icon0?imageView/5/w/50)  Gospy: grab data with no pain!
+<p align="center">
+  <a href="http://www.gospy.cc/">
+     <img src="http://7xp1jv.com1.z0.glb.clouddn.com/gospy/img/banner" width="180"><hr>
+  </a>
+</p>
 
 Gospy is a flexible web crawler framework that allows you to develop complete web crawlers in few minutes.
 
@@ -18,7 +22,7 @@ It's minimalist and unified API design can greatly reduce the learning costs of 
 
 Release Version | JDK Version compatibility | Release Date | Links
 -- | -- | -- | --
-0.2.1 | 1.8+ | 07.04.2017 | [download](https://github.com/zhangjiupeng/gospy/releases)
+0.2.1 | 1.8+ | 07.04.2017 | [download jar](https://github.com/zhangjiupeng/gospy/releases)
 
 To add a dependency using Maven, use the following:
 ```

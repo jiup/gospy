@@ -27,12 +27,12 @@ public class XPathDemo {
                 .setScheduler(Schedulers.VerifiableScheduler.getDefault())
                 .addFetcher(Fetchers.HttpFetcher.getDefault())
                 .addProcessor(Processors.XPathProcessor.custom()
-                        .extract("//*[@id='u1']/a/text()", (task, resultList) -> {
+                        .extract("//*[@id='u1']/a/text()", (task, resultList, returnedData) -> {
                             System.out.println("Links text:");
                             resultList.forEach(System.out::println);
                             System.out.println();
                             return null;
-                        }).extract("//*[@id='u1]/a/@href", (task, resultList) -> {
+                        }).extract("//*[@id='u1]/a/@href", (task, resultList, returnedData) -> {
                             System.out.println("Links target:");
                             resultList.forEach(System.out::println);
                             System.out.println();

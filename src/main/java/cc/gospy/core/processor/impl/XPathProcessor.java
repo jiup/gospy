@@ -67,23 +67,24 @@ public class XPathProcessor implements Processor {
 
     @FunctionalInterface
     public interface ResultHandler {
-        Collection<Task> handle(Task task, Collection<String> resultList);
+        Collection<Task> handle(Task task, List<String> resultList, List returnedData);
     }
 
     @Override
     public Result<Collection<Task>> process(Task task, Page page) throws ProcessException {
         try {
             Collection<Task> tasks = new LinkedHashSet<>();
+            List resultData = new ArrayList();
             Document document = parse(page);
             handlerChain.forEach((xpath, handler) -> {
                 List<String> links = Xsoup.compile(xpath).evaluate(document).list();
-                Collection<Task> newTasks = handler.handle(task, links);
+                Collection<Task> newTasks = handler.handle(task, links, resultData);
                 if (newTasks != null) {
                     tasks.addAll(newTasks);
                 }
             });
             tasks.removeIf(filter.negate());
-            Result<Collection<Task>> result = new Result<>(tasks, tasks.size() > 0 ? tasks : null);
+            Result<Collection<Task>> result = new Result<>(tasks, resultData);
             result.setPage(page);
             return result;
         } catch (Throwable throwable) {
@@ -112,7 +113,7 @@ public class XPathProcessor implements Processor {
 
         public XPathProcessor build() {
             if (hc.size() == 0) {
-                return extract("//a/@href", (task, resultList) -> {
+                return extract("//a/@href", (task, resultList, resultData) -> {
                     Collection<Task> tasks = new ArrayList<>();
                     resultList.forEach(link -> tasks.add(new Task(link)));
                     return tasks;

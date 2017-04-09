@@ -64,7 +64,7 @@ public class GoogleSpider {
                         .before(request -> request.setConfig(RequestConfig.custom().setProxy(new HttpHost("127.0.0.1", 8118)).build()))
                         .build())
                 .addProcessor(Processors.XPathProcessor.custom()
-                        .extract("//*[@id='ires']/ol/div/h3/a/@href", (task, resultList) -> {
+                        .extract("//*[@id='ires']/ol/div/h3/a/@href", (task, resultList, returnedData) -> {
                             resultList.forEach(a -> {
                                 if (a.startsWith("/url?q=")) {
                                     String link = a.substring(7);

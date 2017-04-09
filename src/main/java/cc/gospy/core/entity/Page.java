@@ -72,10 +72,6 @@ public class Page implements Serializable {
         return extra;
     }
 
-    public void setExtra(Map<String, Object> extra) {
-        this.extra = extra;
-    }
-
     @Override
     public String toString() {
         return "Page{" +

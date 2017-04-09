@@ -383,7 +383,7 @@ public class Gospy implements Observable {
     }
 
     public static class Builder {
-        private String id = StringHelper.getRandomIdentifier();
+        private String id;
         private Scheduler sc = Schedulers.GeneralScheduler.getDefault();
         private Fetchers ff = new Fetchers();
         private PageProcessors ppf = new PageProcessors();
@@ -433,6 +433,9 @@ public class Gospy implements Observable {
         }
 
         public Gospy build() {
+            if (id == null) {
+                id = StringHelper.getRandomIdentifier();
+            }
             return new Gospy(id, sc, ff, ppf, pf, plf, eh, cfr);
         }
 

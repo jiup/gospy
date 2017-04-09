@@ -64,7 +64,7 @@ public class GoogleScholarSpider {
                         .before(request -> request.setConfig(RequestConfig.custom().setProxy(new HttpHost("127.0.0.1", 8118)).build()))
                         .build())
                 .addProcessor(Processors.XPathProcessor.custom()
-                        .extract("//*[@id='gs_ccl_results']/div/div/h3/a/@href", (task, resultList) -> {
+                        .extract("//*[@id='gs_ccl_results']/div/div/h3/a/@href", (task, resultList, returnedData) -> {
                             links.addAll(resultList);
                             currentPage.incrementAndGet();
                             if (pageFrom <= currentPage.get() && currentPage.get() < pageTo) {

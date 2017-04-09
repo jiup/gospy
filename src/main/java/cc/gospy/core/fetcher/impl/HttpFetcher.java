@@ -100,7 +100,7 @@ public class HttpFetcher implements Fetcher, Closeable {
                     for (Header header : response.getAllHeaders()) {
                         responseHeader.put(header.getName(), header.getValue());
                     }
-                    page.setExtra(responseHeader);
+                    page.getExtra().put("responseHeader", responseHeader);
                     return page;
                 }
         );
@@ -224,21 +224,21 @@ public class HttpFetcher implements Fetcher, Closeable {
 
     private CloseableHttpResponse doGet(String url, String cookie) throws IOException {
         HttpGet request = new HttpGet(url);
+        requestHandler.handle(request);
         request.setHeader("User-Agent", userAgent);
         if (cookie != null) {
             request.setHeader("Cookie", cookie);
         }
-        requestHandler.handle(request);
         return client.execute(request);
     }
 
     private CloseableHttpResponse doPost(String url, String cookie, Map<String, String> attributes) throws IOException {
         HttpPost request = new HttpPost(url);
+        requestHandler.handle(request);
         request.setHeader("User-Agent", userAgent);
         if (cookie != null) {
             request.setHeader("Cookie", cookie);
         }
-        requestHandler.handle(request);
         List<NameValuePair> pairs = new ArrayList<>();
         attributes.keySet().forEach(key -> pairs.add(new BasicNameValuePair(key, attributes.get(key).toString())));
         request.setEntity(new UrlEncodedFormEntity(pairs));
@@ -415,7 +415,7 @@ public class HttpFetcher implements Fetcher, Closeable {
             return this;
         }
 
-        public Builder setProxyAddress(InetSocketAddress proxyAddress) {
+        public Builder setSocksProxyAddress(InetSocketAddress proxyAddress) {
             fetcher.proxyAddress = proxyAddress;
             fetcher.useProxy = true;
             return this;
