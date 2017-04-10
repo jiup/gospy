@@ -6,7 +6,7 @@
 
 Gospy is a flexible web crawler framework that allows you to develop complete web crawlers in few minutes.
 
-It's minimalist and unified API design can greatly reduce the learning costs of new users. With it, you can better focus on the data itself, rather than the complicated web crawler design. If you are familiar with java and hoping to crawl some interesting data, just hold on, you will soon carry out your first crawler in few minutes. Ok, let's start!
+It's minimalist and unified API design can greatly reduce the learning costs of new users. With it, you can better focus on the data itself, rather than design the complicated web crawler from the beginning. If you are familiar with java and hoping to crawl some interesting data, just hold on, you will soon carry out your first crawler in few minutes. Ok, let's start!
 
 ## Features
 
@@ -44,7 +44,7 @@ Module division:
 
 ![](http://7xp1jv.com1.z0.glb.clouddn.com/gospy/img/single-infra.jpg?imageView/5/w/500)
 
-Cluster structure:
+Run in cluster:
 
 ## Quick start
 
