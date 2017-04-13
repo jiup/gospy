@@ -17,7 +17,7 @@
 package cc.gospy.core.scheduler;
 
 import cc.gospy.core.scheduler.impl.GeneralScheduler;
-import cc.gospy.core.scheduler.impl.RemoteScheduler;
+import cc.gospy.core.remote.hprose.RemoteScheduler;
 import cc.gospy.core.scheduler.impl.VerifiableScheduler;
 
 public class Schedulers {

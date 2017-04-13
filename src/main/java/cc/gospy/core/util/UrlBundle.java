@@ -30,8 +30,8 @@ public class UrlBundle {
     // Have Fun!
     // UrlBundle.parse("https://www.my_website.com/abc/s?{1~99}&p={10~-10~-3}&t={a~z&A~Z}").forEach(System.out::println);
 
-    public static List<String> parse(String rule) {
-        return recursiveParse(rule);
+    public static String[] parse(String rule) {
+        return recursiveParse(rule).toArray(new String[]{});
     }
 
     private static List<String> recursiveParse(String rule) {

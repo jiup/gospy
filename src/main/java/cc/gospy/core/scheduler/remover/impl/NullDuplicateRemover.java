@@ -14,12 +14,27 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.scheduler.filter;
+package cc.gospy.core.scheduler.remover.impl;
 
-import cc.gospy.core.scheduler.filter.impl.BloomDuplicateRemover;
-import cc.gospy.core.scheduler.filter.impl.HashDuplicateRemover;
+import cc.gospy.core.entity.Task;
+import cc.gospy.core.scheduler.remover.DuplicateRemover;
 
-public class DuplicateRemovers {
-    public static HashDuplicateRemover HashDuplicateRemover;
-    public static BloomDuplicateRemover BloomDuplicateRemover;
+public class NullDuplicateRemover implements DuplicateRemover {
+    @Override
+    public void record(Task task) {
+    }
+
+    @Override
+    public void delete(Task task) {
+    }
+
+    @Override
+    public boolean exists(Task task) {
+        return false;
+    }
+
+    @Override
+    public long size() {
+        return -1;
+    }
 }

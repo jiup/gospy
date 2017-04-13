@@ -52,7 +52,7 @@ public class UniversalProcessor implements Processor {
     }
 
     @Override
-    public String[] getAcceptedContentType() {
+    public String[] getAcceptedContentTypes() {
         return new String[]{"*/*"};
     }
 

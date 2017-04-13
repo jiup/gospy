@@ -4,6 +4,11 @@
   </a>
 </p>
 
+[![Join Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Gospy-Dev/Lobby?utm_source=share-link&utm_medium=link&utm_campaign=share-link)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/cc.gospy/gospy-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/cc.gospy/gospy-core)
+[![GitHub release](https://img.shields.io/github/release/zhangjiupeng/gospy.svg)](https://github.com/zhangjiupeng/gospy/releases)
+[![GitHub license](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](http://www.apache.org/licenses/LICENSE-2.0)
+
 Gospy is a flexible web crawler framework that allows you to develop complete web crawlers in few minutes.
 
 It's minimalist and unified API design can greatly reduce the learning costs of new users. With it, you can better focus on the data itself, rather than design the complicated web crawler from the beginning. If you are familiar with java and hoping to crawl some interesting data, just hold on, you will soon carry out your first crawler in few minutes. Ok, let's start!
@@ -11,7 +16,7 @@ It's minimalist and unified API design can greatly reduce the learning costs of 
 ## Features
 
 * [x] Portable, Flexible and Modular (you can only use one of the modules, or add your own development module into your Gospy-based crawler)
-* [x] Can operate in stand-alone (with multi-threaded) and distribute environments (by Hprose RPC)
+* [x] Can operate in stand-alone (with multi-threaded) and distribute environments (RabbitMQ or HProse)
 * [x] Built in `PhantomJs` and `Selenium`, you can directly call the `WebDriver` to write a browser-kernel based web crawler
 * [x] Element extraction based on RegEx, [XPath](https://github.com/code4craft/xsoup/) and [Jsoup](https://jsoup.org/), respectively, apply from simple to complex tasks.
 * [x] Supports annotation-based programming
@@ -22,7 +27,7 @@ It's minimalist and unified API design can greatly reduce the learning costs of 
 
 Release Version | JDK Version compatibility | Release Date | Links
 -- | -- | -- | --
-0.2.1 | 1.8+ | 07.04.2017 | [download jar](https://github.com/zhangjiupeng/gospy/releases)
+0.2.1-beta | 1.8+ | 07.04.2017 | [download jar](https://github.com/ZhangJiupeng/Gospy/releases/tag/v0.2.1)
 
 To add a dependency using Maven, use the following:
 ```

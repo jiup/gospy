@@ -21,12 +21,12 @@ import cc.gospy.core.entity.Task;
 import cc.gospy.core.scheduler.Observable;
 import cc.gospy.core.scheduler.Recoverable;
 import cc.gospy.core.scheduler.Scheduler;
-import cc.gospy.core.scheduler.filter.DuplicateRemover;
-import cc.gospy.core.scheduler.filter.impl.HashDuplicateRemover;
 import cc.gospy.core.scheduler.queue.LazyTaskQueue;
 import cc.gospy.core.scheduler.queue.TaskQueue;
 import cc.gospy.core.scheduler.queue.impl.FIFOTaskQueue;
 import cc.gospy.core.scheduler.queue.impl.TimingLazyTaskQueue;
+import cc.gospy.core.scheduler.remover.DuplicateRemover;
+import cc.gospy.core.scheduler.remover.impl.HashDuplicateRemover;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,7 +87,7 @@ public class GeneralScheduler implements Scheduler, Observable, Recoverable {
     }
 
     @Override
-    public synchronized void addTask(String executorAddress, Task task) {
+    public synchronized void addTask(String executorId, Task task) {
         if (isSuspend.get()) {
             return;
         }
@@ -107,11 +107,10 @@ public class GeneralScheduler implements Scheduler, Observable, Recoverable {
     }
 
     @Override
-    public void addLazyTask(String executorAddress, Task task) {
-        if (isSuspend.get()) {
-            return;
+    public void addLazyTask(String executorId, Task task) {
+        if (!isSuspend.get() && (task.isCheckSkipping() || taskFilter.test(task))) {
+            lazyTaskQueue.add(task);
         }
-        lazyTaskQueue.add(task);
     }
 
     @Override
@@ -216,33 +215,33 @@ public class GeneralScheduler implements Scheduler, Observable, Recoverable {
 
     public static class Builder {
         private GeneralScheduler scheduler;
-        private TaskQueue tq = new FIFOTaskQueue();
-        private LazyTaskQueue ltq = new TimingLazyTaskQueue(wakedTask -> scheduler.addTask(null, wakedTask));
-        private DuplicateRemover dr = new HashDuplicateRemover();
-        private TaskFilter tf = TaskFilter.ALLOW_ALL;
+        private TaskQueue taskQueue = new FIFOTaskQueue();
+        private LazyTaskQueue lazyTaskQueue = new TimingLazyTaskQueue(wakedTask -> scheduler.addTask(null, wakedTask));
+        private DuplicateRemover remover = new HashDuplicateRemover();
+        private TaskFilter filter = TaskFilter.ALLOW_ALL;
 
         public Builder setTaskQueue(TaskQueue taskQueue) {
-            tq = taskQueue;
+            this.taskQueue = taskQueue;
             return this;
         }
 
         public Builder setLazyTaskQueue(LazyTaskQueue lazyTaskQueue) {
-            ltq = lazyTaskQueue;
+            this.lazyTaskQueue = lazyTaskQueue;
             return this;
         }
 
-        public Builder setDuplicateRemover(DuplicateRemover duplicateRemover) {
-            dr = duplicateRemover;
+        public Builder setRemover(DuplicateRemover duplicateRemover) {
+            remover = duplicateRemover;
             return this;
         }
 
         public Builder setTaskFilter(TaskFilter taskFilter) {
-            tf = taskFilter;
+            filter = taskFilter;
             return this;
         }
 
         public GeneralScheduler build() {
-            return scheduler = new GeneralScheduler(tq, ltq, dr, tf);
+            return scheduler = new GeneralScheduler(taskQueue, lazyTaskQueue, remover, filter);
         }
     }
 

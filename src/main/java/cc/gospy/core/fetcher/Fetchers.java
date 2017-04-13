@@ -28,15 +28,19 @@ public class Fetchers {
     public static PhantomJSFetcher PhantomJSFetcher;
     public static SeleniumFetcher SeleniumFetcher;
     public static TransparentFetcher TransparentFetcher;
-    public static RemoteFetcher RemoteFetcher;
+    public static cc.gospy.core.remote.hprose.RemoteFetcher RemoteFetcher;
 
     private Map<String, Fetcher> fetchers = new HashMap<>();
 
     public void register(Fetcher fetcher) {
+        register(fetcher, fetcher.getAcceptedProtocols());
+    }
+
+    public void register(Fetcher fetcher, String[] acceptedProtocols) {
         if (fetcher == null) {
             throw new RuntimeException("fetcher not initialized, please check your code.");
         }
-        for (String protocol : fetcher.getAcceptedProtocols()) {
+        for (String protocol : acceptedProtocols) {
             fetchers.put(protocol, fetcher);
         }
     }

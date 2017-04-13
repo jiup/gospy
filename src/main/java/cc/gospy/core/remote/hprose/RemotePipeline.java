@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.processor.impl;
+package cc.gospy.core.remote.hprose;
 
-import cc.gospy.core.remote.rpc.RemoteComponent;
-import cc.gospy.core.entity.Page;
 import cc.gospy.core.entity.Result;
-import cc.gospy.core.entity.Task;
-import cc.gospy.core.processor.ProcessException;
-import cc.gospy.core.processor.Processor;
+import cc.gospy.core.pipeline.PipeException;
+import cc.gospy.core.pipeline.Pipeline;
+import cc.gospy.core.remote.RemoteComponent;
 import hprose.client.HproseClient;
 import hprose.io.HproseMode;
 import org.slf4j.Logger;
@@ -30,15 +28,15 @@ import org.slf4j.LoggerFactory;
 import java.io.Closeable;
 import java.io.IOException;
 
-public class RemoteProcessor implements Processor, RemoteComponent, Closeable {
-    private static Logger logger = LoggerFactory.getLogger(RemoteProcessor.class);
+public class RemotePipeline implements Pipeline, RemoteComponent, Closeable {
+    private static Logger logger = LoggerFactory.getLogger(RemotePipeline.class);
 
     private HproseClient client;
-    private Processor processor;
+    private Pipeline pipeline;
     private String identifier;
-    private String[] acceptedContentType;
+    private Class acceptedDataType;
 
-    private RemoteProcessor(String[] uriList) {
+    private RemotePipeline(String[] uriList) {
         this.init(uriList);
     }
 
@@ -48,16 +46,16 @@ public class RemoteProcessor implements Processor, RemoteComponent, Closeable {
 
     private void init(String[] uriList) {
         try {
-            logger.info("Connecting to remote processor...");
+            logger.info("Connecting to remote pipeline...");
             this.client = HproseClient.create(uriList, HproseMode.MemberMode);
-            this.processor = client.useService(Processor.class);
+            this.pipeline = client.useService(Pipeline.class);
             this.identifier = String.valueOf(client.invoke("getIdentifier"));
-            this.acceptedContentType = processor.getAcceptedContentType();
+            this.acceptedDataType = pipeline.getAcceptedDataType();
             client.setIdempotent(true);
             client.setRetry(2);
-            logger.info("Remote processor [{}] initialized.", identifier);
+            logger.info("Remote pipeline [{}] initialized.", identifier);
         } catch (Throwable throwable) {
-            logger.error("Remote processor initialization failed ({})", throwable.getMessage());
+            logger.error("Remote pipeline initialization failed ({})", throwable.getMessage());
             this.client.close();
             throwable.printStackTrace();
             throw new RuntimeException(throwable.getMessage());
@@ -65,17 +63,15 @@ public class RemoteProcessor implements Processor, RemoteComponent, Closeable {
     }
 
     @Override
-    public <T> Result<T> process(Task task, Page page) throws ProcessException {
-        Result<T> result = null;
-        if (task != null && page != null) {
-            result = processor.process(task, page);
+    public void pipe(Result<?> result) throws PipeException {
+        if (result != null) {
+            pipeline.pipe(result);
         }
-        return result;
     }
 
     @Override
-    public String[] getAcceptedContentType() {
-        return acceptedContentType;
+    public Class getAcceptedDataType() {
+        return acceptedDataType;
     }
 
     @Override
@@ -84,11 +80,11 @@ public class RemoteProcessor implements Processor, RemoteComponent, Closeable {
     }
 
     @Override
-    public void quit(String originator) {
+    public void shutdownProvider(String originator) {
         try {
-            client.invoke("quit", new Object[]{originator});
+            client.invoke("shutdownProvider", new Object[]{originator});
             client.close();
-            logger.info("Remote processor [{}] terminated.", identifier);
+            logger.info("Remote pipeline [{}] terminated.", identifier);
         } catch (Throwable throwable) {
             throwable.printStackTrace();
             throw new RuntimeException(throwable.getMessage());
@@ -112,11 +108,11 @@ public class RemoteProcessor implements Processor, RemoteComponent, Closeable {
             return this;
         }
 
-        public RemoteProcessor build() throws Throwable {
+        public RemotePipeline build() throws Throwable {
             if (uri == null) {
-                throw new RuntimeException("Uri list (for remote processor) not specified, please check your code.");
+                throw new RuntimeException("Uri list (for remote pipeline) not specified, please check your code.");
             }
-            return new RemoteProcessor(uri);
+            return new RemotePipeline(uri);
         }
     }
 }

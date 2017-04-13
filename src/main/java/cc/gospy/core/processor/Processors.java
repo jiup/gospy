@@ -29,15 +29,19 @@ public class Processors {
     public static UniversalProcessor UniversalProcessor;
     public static PhantomJSProcessor PhantomJSProcessor;
     public static SeleniumProcessor SeleniumProcessor;
-    public static RemoteProcessor RemoteProcessor;
+    public static cc.gospy.core.remote.hprose.RemoteProcessor RemoteProcessor;
 
     private Map<String, Processor> processors = new HashMap<>();
 
     public void register(Processor processor) {
+        register(processor, processor.getAcceptedContentTypes());
+    }
+
+    public void register(Processor processor, String[] acceptedContentTypes) {
         if (processor == null) {
             throw new RuntimeException("processor not initialized, please check your code.");
         }
-        for (String contentType : processor.getAcceptedContentType()) {
+        for (String contentType : acceptedContentTypes) {
             processors.put(contentType, processor);
         }
     }

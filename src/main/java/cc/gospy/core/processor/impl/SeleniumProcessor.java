@@ -95,7 +95,7 @@ public class SeleniumProcessor implements Processor, Closeable {
     }
 
     @Override
-    public String[] getAcceptedContentType() {
+    public String[] getAcceptedContentTypes() {
         return new String[]{"selenium"};
     }
 

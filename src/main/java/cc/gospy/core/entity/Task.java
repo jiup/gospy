@@ -18,6 +18,8 @@ package cc.gospy.core.entity;
 
 import com.google.common.hash.Funnel;
 import com.google.common.hash.Hashing;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.nio.charset.Charset;
@@ -25,6 +27,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Task implements Serializable, Comparable<Task> {
+    private static final Logger logger = LoggerFactory.getLogger(Task.class);
+
+    // identify a unique task for duplicate remover
+    public static final Funnel<Task> DIGEST = (task, primitiveSink) -> {
+        primitiveSink.putString(task.url, Charset.defaultCharset());
+        task.extra.forEach((k, v) -> primitiveSink.putString(k.concat("=").concat(v.toString().concat("\1")), Charset.defaultCharset()));
+    };
 
     private int priority;
     private String url;
@@ -37,12 +46,6 @@ public class Task implements Serializable, Comparable<Task> {
     private int depth;
     private int expectedVisitInSeconds; // 0 to off
     private int visitCount;
-
-    // identify a unique task for duplicate remover
-    public static final Funnel<Task> DIGEST = (task, primitiveSink) -> {
-        primitiveSink.putString(task.url, Charset.defaultCharset());
-        task.extra.forEach((k, v) -> primitiveSink.putString(k.concat("=").concat(v.toString().concat("\1")), Charset.defaultCharset()));
-    };
 
     public Task(String url) {
         this(Priority.MEDIUM, url, 0, 0);
@@ -71,30 +74,8 @@ public class Task implements Serializable, Comparable<Task> {
             host = !host.contains("/") ? host : host.substring(0, host.indexOf('/'));
         } else {
             protocol = null;
-            throw new RuntimeException("unresolved protocol: " + url);
+            logger.warn("Unresolved protocol, for url [{}]", url);
         }
-    }
-
-    @Override
-    public int compareTo(Task task) {
-        return this.getPriority() - task.getPriority();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        return this.hashCode() == o.hashCode();
-    }
-
-    @Override
-    public int hashCode() {
-        return Hashing.murmur3_32().newHasher().putObject(this, DIGEST).hash().hashCode();
-    }
-
-    @Override
-    public String toString() {
-        return "Task{" + priority + "-\"" + url + "\"}";
     }
 
     public void setUrl(String newUrl) {
@@ -176,6 +157,28 @@ public class Task implements Serializable, Comparable<Task> {
 
     public int getVisitCount() {
         return visitCount;
+    }
+
+    @Override
+    public int compareTo(Task task) {
+        return this.getPriority() - task.getPriority();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        return this.hashCode() == o.hashCode();
+    }
+
+    @Override
+    public int hashCode() {
+        return Hashing.murmur3_32().newHasher().putObject(this, DIGEST).hash().hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "Task-(" + priority + ")-[" + url + "]";
     }
 
     public enum Priority {

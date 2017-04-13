@@ -320,8 +320,17 @@ public class Gospy implements Observable {
         return addTask(task);
     }
 
-    public Gospy addTasks(List<String> urls) {
-        urls.forEach(url -> addTask(url));
+    public Gospy addTasks(Task... tasks) {
+        for (Task task : tasks) {
+            addTask(task);
+        }
+        return this;
+    }
+
+    public Gospy addTasks(String... urls) {
+        for (String url : urls) {
+            addTask(url);
+        }
         return this;
     }
 
@@ -409,6 +418,12 @@ public class Gospy implements Observable {
             return this;
         }
 
+        public Builder addFetcher(Fetcher fetcher, String... acceptedProtocols) {
+            ff.register(fetcher, acceptedProtocols);
+            logger.info("Custom fetcher binding: {} -> {}", Arrays.toString(acceptedProtocols), fetcher.getClass().getName());
+            return this;
+        }
+
         public Builder addPageProcessor(Class<? extends PageProcessor> pageProcessor) {
             ppf.register(pageProcessor);
             return this;
@@ -416,6 +431,12 @@ public class Gospy implements Observable {
 
         public Builder addProcessor(Processor processor) {
             pf.register(processor);
+            return this;
+        }
+
+        public Builder addProcessor(Processor processor, String... acceptedContentTypes) {
+            pf.register(processor, acceptedContentTypes);
+            logger.info("Custom processor binding: {} -> {}", Arrays.toString(acceptedContentTypes), processor.getClass().getName());
             return this;
         }
 

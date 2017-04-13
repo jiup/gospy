@@ -69,7 +69,7 @@ public class RegexProcessor implements Processor {
     }
 
     @Override
-    public String[] getAcceptedContentType() {
+    public String[] getAcceptedContentTypes() {
         return new String[]{"text/*"};
     }
 

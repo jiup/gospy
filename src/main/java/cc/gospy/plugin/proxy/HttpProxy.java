@@ -72,11 +72,12 @@ public class HttpProxy implements Comparable<HttpProxy> {
         return history.stream().filter(Boolean::booleanValue).count() * 1d / historyDepth;
     }
 
+    // override this method to apply for other evaluation strategies
     public double getScore() {
-        double index_0 = .5 * getSuccessRate();
-        double index_1 = .3 * (maxResponseTime != 0 ? (1 - averageResponseTime / maxResponseTime) : 1);
-        double index_2 = .2 * (maxVisitCount != 0 ? (1 - visitCount / maxVisitCount) : 1);
-        return index_0 + index_1 + index_2;
+        double index_0 = .5 * getSuccessRate(); // the success rate is an important factor, weight = 5
+        double index_1 = .3 * (maxResponseTime != 0 ? (1 - averageResponseTime / maxResponseTime) : 1); // we expect quick responses, weight = 3
+        double index_2 = .2 * (maxVisitCount != 0 ? (1 - visitCount / maxVisitCount) : 1); // frequently used ip will be weakened, weight = 2
+        return index_0 + index_1 + index_2; // from 0 to 1
     }
 
     @Override

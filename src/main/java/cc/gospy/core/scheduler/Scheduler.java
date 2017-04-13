@@ -21,9 +21,22 @@ import cc.gospy.core.entity.Task;
 public interface Scheduler {
     Task getTask(String fetcherId);
 
-    void addTask(String executorAddress, Task task);
+    void addTask(String executorId, Task task);
 
-    void addLazyTask(String executorAddress, Task task);
+    void addLazyTask(String executorId, Task task);
 
     void stop();
+
+    default Task getTask() {
+        return getTask("undefined");
+    }
+
+    default void addTask(Task task) {
+        addTask("unknown_executor", task);
+    }
+
+    default void addLazyTask(Task task) {
+        addLazyTask("unknown_executor", task);
+    }
+
 }

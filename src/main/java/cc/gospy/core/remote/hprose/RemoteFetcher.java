@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.fetcher.impl;
+package cc.gospy.core.remote.hprose;
 
-import cc.gospy.core.remote.rpc.RemoteComponent;
 import cc.gospy.core.entity.Page;
 import cc.gospy.core.entity.Task;
 import cc.gospy.core.fetcher.FetchException;
 import cc.gospy.core.fetcher.Fetcher;
+import cc.gospy.core.remote.RemoteComponent;
 import hprose.client.HproseClient;
 import hprose.io.HproseMode;
 import org.slf4j.Logger;
@@ -88,9 +88,9 @@ public class RemoteFetcher implements Fetcher, RemoteComponent, Closeable {
     }
 
     @Override
-    public void quit(String originator) {
+    public void shutdownProvider(String originator) {
         try {
-            client.invoke("quit", new Object[]{originator});
+            client.invoke("shutdownProvider", new Object[]{originator});
             client.close();
             logger.info("Remote fetcher [{}] terminated.", identifier);
         } catch (Throwable throwable) {

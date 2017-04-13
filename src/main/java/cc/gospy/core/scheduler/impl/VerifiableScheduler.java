@@ -20,24 +20,23 @@ import cc.gospy.core.TaskFilter;
 import cc.gospy.core.entity.Task;
 import cc.gospy.core.scheduler.ExitCallback;
 import cc.gospy.core.scheduler.Verifiable;
-import cc.gospy.core.scheduler.filter.DuplicateRemover;
-import cc.gospy.core.scheduler.filter.impl.HashDuplicateRemover;
 import cc.gospy.core.scheduler.queue.LazyTaskQueue;
 import cc.gospy.core.scheduler.queue.TaskQueue;
 import cc.gospy.core.scheduler.queue.impl.FIFOTaskQueue;
 import cc.gospy.core.scheduler.queue.impl.TimingLazyTaskQueue;
+import cc.gospy.core.scheduler.remover.DuplicateRemover;
+import cc.gospy.core.scheduler.remover.impl.HashDuplicateRemover;
 import cc.gospy.core.util.Experimental;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentSkipListSet;
 
 @Experimental
 public class VerifiableScheduler extends GeneralScheduler implements Verifiable {
     private static final Logger logger = LoggerFactory.getLogger(VerifiableScheduler.class);
 
-    private Set<Task> pendingTasks = new ConcurrentSkipListSet<>();
+    private Set<Task> pendingTasks = Collections.synchronizedSet(new LinkedHashSet<>());
     private Map<String, Long> totalTaskDistributeCounts = Collections.synchronizedMap(new LinkedHashMap<>());
     private Map<String, Long> pendingTaskDistributeCounts = Collections.synchronizedMap(new LinkedHashMap<>());
     private Thread checkerThread;
@@ -60,13 +59,13 @@ public class VerifiableScheduler extends GeneralScheduler implements Verifiable 
     }
 
     @Override
-    public synchronized void addTask(String executorAddress, Task task) {
-        super.addTask(executorAddress, task);
+    public synchronized void addTask(String executorId, Task task) {
+        super.addTask(executorId, task);
     }
 
     @Override
-    public void addLazyTask(String executorAddress, Task task) {
-        super.addLazyTask(executorAddress, task);
+    public void addLazyTask(String executorId, Task task) {
+        super.addLazyTask(executorId, task);
     }
 
     @Override
@@ -78,14 +77,14 @@ public class VerifiableScheduler extends GeneralScheduler implements Verifiable 
         }
         checkerTrigger();
         synchronized (pendingTasks) {
+            pendingTasks.add(task);
             synchronized (totalTaskDistributeCounts) {
-                synchronized (pendingTaskDistributeCounts) {
-                    pendingTasks.add(task);
-                    totalTaskDistributeCounts.put(fetcherId, totalTaskDistributeCounts.getOrDefault(fetcherId, 0L) + 1L);
-                    pendingTaskDistributeCounts.put(fetcherId, pendingTaskDistributeCounts.getOrDefault(fetcherId, 0L) + 1);
-                    return task;
-                }
+                totalTaskDistributeCounts.put(fetcherId, totalTaskDistributeCounts.getOrDefault(fetcherId, 0L) + 1);
             }
+            synchronized (pendingTaskDistributeCounts) {
+                pendingTaskDistributeCounts.put(fetcherId, pendingTaskDistributeCounts.getOrDefault(fetcherId, 0L) + 1);
+            }
+            return task;
         }
     }
 
@@ -195,41 +194,41 @@ public class VerifiableScheduler extends GeneralScheduler implements Verifiable 
 
     public static class Builder extends GeneralScheduler.Builder {
         private VerifiableScheduler scheduler;
-        private TaskQueue tq = new FIFOTaskQueue();
-        private LazyTaskQueue ltq = new TimingLazyTaskQueue(wakedTask -> scheduler.addTask(null, wakedTask));
-        private DuplicateRemover dr = new HashDuplicateRemover();
-        private TaskFilter tf = TaskFilter.ALLOW_ALL;
-        private ExitCallback ec = ExitCallback.DEFAULT;
-        private int pt = 10;
+        private TaskQueue taskQueue = new FIFOTaskQueue();
+        private LazyTaskQueue lazyTaskQueue = new TimingLazyTaskQueue(wakedTask -> scheduler.addTask(null, wakedTask));
+        private DuplicateRemover remover = new HashDuplicateRemover();
+        private TaskFilter filter = TaskFilter.ALLOW_ALL;
+        private ExitCallback exitCallback = ExitCallback.DEFAULT;
+        private int pendingTimeInSeconds = 10;
         private boolean ae = true;
 
         public Builder setTaskQueue(TaskQueue taskQueue) {
-            tq = taskQueue;
+            this.taskQueue = taskQueue;
             return this;
         }
 
         public Builder setLazyTaskQueue(LazyTaskQueue lazyTaskQueue) {
-            ltq = lazyTaskQueue;
+            this.lazyTaskQueue = lazyTaskQueue;
             return this;
         }
 
-        public Builder setDuplicateRemover(DuplicateRemover duplicateRemover) {
-            dr = duplicateRemover;
+        public Builder setRemover(DuplicateRemover duplicateRemover) {
+            remover = duplicateRemover;
             return this;
         }
 
         public Builder setExitCallback(ExitCallback callback) {
-            ec = callback;
+            exitCallback = callback;
             return this;
         }
 
         public Builder setTaskFilter(TaskFilter taskFilter) {
-            tf = taskFilter;
+            filter = taskFilter;
             return this;
         }
 
         public Builder setPendingTimeInSeconds(int pendingTimeInSeconds) {
-            pt = pendingTimeInSeconds;
+            this.pendingTimeInSeconds = pendingTimeInSeconds;
             return this;
         }
 
@@ -239,7 +238,7 @@ public class VerifiableScheduler extends GeneralScheduler implements Verifiable 
         }
 
         public VerifiableScheduler build() {
-            return scheduler = new VerifiableScheduler(tq, ltq, dr, tf, ec, pt, ae);
+            return scheduler = new VerifiableScheduler(taskQueue, lazyTaskQueue, remover, filter, exitCallback, pendingTimeInSeconds, ae);
         }
     }
 

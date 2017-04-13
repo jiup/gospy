@@ -68,25 +68,25 @@ public class ScalableBloomFilter implements Serializable {
     public void saveToFile(String dir) throws IOException {
         for (int i = 0; i < bloomFilters.size(); i++) {
             File file = new File(dir, this.getClass().getTypeName() + "$" + i + ".tmp");
-            logger.info("Saving bloom filter data ${} to file {}...", i, file.getPath());
+            logger.info("Saving bloom remover data ${} to file {}...", i, file.getPath());
             FileOutputStream outputStream = new FileOutputStream(file, false);
             bloomFilters.get(i).writeTo(outputStream);
             outputStream.close();
         }
-        logger.info("Bloom filter data [$0-${}] is successfully saved.", groupSize() - 1);
+        logger.info("Bloom remover data [$0-${}] is successfully saved.", groupSize() - 1);
     }
 
     public void readFromFile(String dir) throws IOException {
         File file;
         int p = 0;
         while ((file = new File(dir, this.getClass().getTypeName() + "$" + p + ".tmp")).exists()) {
-            logger.info("Reading bloom filter data ${} from file {}...", p, file.getPath());
+            logger.info("Reading bloom remover data ${} from file {}...", p, file.getPath());
             FileInputStream inputStream = new FileInputStream(file);
             this.bloomFilters.clear();
             bloomFilters.add(activateBloomFilter = BloomFilter.readFrom(inputStream, Task.DIGEST));
             p++;
         }
-        logger.info("Bloom filter data [$0-${}] is successfully loaded.", groupSize() - 1);
+        logger.info("Bloom remover data [$0-${}] is successfully loaded.", groupSize() - 1);
     }
 
     public double expectedFpp() {

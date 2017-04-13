@@ -18,8 +18,8 @@ package cc.gospy.core.pipeline;
 
 import cc.gospy.core.pipeline.impl.ConsolePipeline;
 import cc.gospy.core.pipeline.impl.HierarchicalFilePipeline;
-import cc.gospy.core.pipeline.impl.RemotePipeline;
 import cc.gospy.core.pipeline.impl.SimpleFilePipeline;
+import cc.gospy.core.remote.hprose.RemotePipeline;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Sets;
 

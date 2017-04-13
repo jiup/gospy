@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.scheduler.filter.impl;
+package cc.gospy.core.scheduler.remover.impl;
 
 import cc.gospy.core.entity.Task;
 import cc.gospy.core.scheduler.Recoverable;
-import cc.gospy.core.scheduler.filter.DuplicateRemover;
+import cc.gospy.core.scheduler.remover.DuplicateRemover;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,20 +61,20 @@ public class HashDuplicateRemover implements DuplicateRemover, Recoverable {
     @Override
     public synchronized void pause(String dir) throws Throwable {
         File file = new File(dir, this.getClass().getTypeName() + ".tmp");
-        logger.info("Saving hash filter data to file {}...", file.getPath());
+        logger.info("Saving hash remover data to file {}...", file.getPath());
         try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(file, false))) {
             outputStream.writeObject(tasks);
         }
-        logger.info("Hash filter data is successfully saved.");
+        logger.info("Hash remover data is successfully saved.");
     }
 
     @Override
     public synchronized void resume(String dir) throws Throwable {
         File file = new File(dir, this.getClass().getTypeName() + ".tmp");
-        logger.info("Reading hash filter data from file {}...", file.getPath());
+        logger.info("Reading hash remover data from file {}...", file.getPath());
         try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(file))) {
             tasks = (Map<Task, AtomicInteger>) inputStream.readObject();
         }
-        logger.info("Hash filter data is successfully loaded.");
+        logger.info("Hash remover data is successfully loaded.");
     }
 }

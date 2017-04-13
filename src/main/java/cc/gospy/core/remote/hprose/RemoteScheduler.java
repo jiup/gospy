@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.scheduler.impl;
+package cc.gospy.core.remote.hprose;
 
-import cc.gospy.core.remote.rpc.RemoteComponent;
 import cc.gospy.core.entity.Task;
+import cc.gospy.core.remote.RemoteComponent;
 import cc.gospy.core.scheduler.Observable;
 import cc.gospy.core.scheduler.Recoverable;
 import cc.gospy.core.scheduler.Scheduler;
@@ -169,9 +169,9 @@ public class RemoteScheduler implements Scheduler, RemoteComponent, Verifiable, 
     }
 
     @Override
-    public void quit(String originator) {
+    public void shutdownProvider(String originator) {
         try {
-            client.invoke("quit", new Object[]{originator});
+            client.invoke("shutdownProvider", new Object[]{originator});
             client.close();
             logger.info("Remote scheduler [{}] terminated.", identifier);
         } catch (Throwable throwable) {

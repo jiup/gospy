@@ -14,21 +14,22 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.scheduler.filter.impl;
+package cc.gospy.core.scheduler.remover.impl;
 
 import cc.gospy.core.entity.Task;
 import cc.gospy.core.scheduler.Recoverable;
-import cc.gospy.core.scheduler.filter.DuplicateRemover;
+import cc.gospy.core.scheduler.remover.DuplicateRemover;
 import cc.gospy.core.util.Experimental;
 import cc.gospy.core.util.bloomfilter.ScalableBloomFilter;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.ConcurrentSkipListSet;
 
 @Experimental
 public class BloomDuplicateRemover implements DuplicateRemover, Recoverable {
     private ScalableBloomFilter bloomFilter = new ScalableBloomFilter();
-    private Set<Task> taskWhiteList = new ConcurrentSkipListSet<>();
+    private Set<Task> taskWhiteList = Collections.synchronizedSet(new HashSet<>());
     private long counter;
 
     @Override

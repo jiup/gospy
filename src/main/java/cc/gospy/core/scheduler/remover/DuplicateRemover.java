@@ -14,22 +14,16 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.scheduler;
+package cc.gospy.core.scheduler.remover;
 
 import cc.gospy.core.entity.Task;
 
-import java.util.Map;
+public interface DuplicateRemover {
+    void record(Task task);
 
-public interface Verifiable {
-    void feedback(String fetcherId, Task task);
+    void delete(Task task);
 
-    long getPendingTaskSize();
+    boolean exists(Task task);
 
-    Map<String, Long> getTotalTaskDistributeCounts();
-
-    Map<String, Long> getPendingTaskDistributeCounts();
-
-    default void feedback(Task task) {
-        feedback("undefined", task);
-    }
+    long size();
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.remote.rpc;
+package cc.gospy.core.remote.hprose;
 
 import cc.gospy.core.util.StringHelper;
 import hprose.server.HproseTcpServer;
@@ -39,7 +39,7 @@ public class RemoteServiceProvider {
             throw new RuntimeException(e.getMessage());
         }
         server.add("getIdentifier", this);
-        server.add("quit", this);
+        server.add("shutdownProvider", this);
     }
 
     public static Builder custom() {

@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
-package cc.gospy.core.remote.rpc;
+package cc.gospy.core.remote.rabbitmq;
 
-public interface RemoteComponent {
-    String getIdentifier();
-    void quit(String originator);
+import cc.gospy.core.entity.Task;
+
+@FunctionalInterface
+public interface TaskDispatcher {
+    String dispatch(Task task);
 }

@@ -23,5 +23,5 @@ import cc.gospy.core.entity.Task;
 public interface Processor {
     <T> Result<T> process(Task task, Page page) throws ProcessException;
 
-    String[] getAcceptedContentType();
+    String[] getAcceptedContentTypes();
 }
