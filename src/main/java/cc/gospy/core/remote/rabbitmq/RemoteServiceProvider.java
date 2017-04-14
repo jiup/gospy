@@ -28,6 +28,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 import static cc.gospy.core.remote.rabbitmq.TaskQueue.*;
@@ -43,10 +45,12 @@ public class RemoteServiceProvider {
     private LazyTaskQueue lazyTaskQueue;
     private DuplicateRemover duplicateRemover;
     private TaskFilter taskFilter;
+    private Map arguments;
+    private boolean withPriority;
 
     private RemoteServiceProvider(DuplicateRemover remover, TaskFilter taskFilter,
                                   TaskDispatcher dispatcher, String host, int port, String virtualHost,
-                                  String username, String password, String... specialQueues) {
+                                  String username, String password, int ttlInSeconds, boolean withPriority, String... specialQueues) {
         this.lazyTaskQueue = new TimingLazyTaskQueue(wakedTask -> {
             try {
                 this.publish(wakedTask);
@@ -64,11 +68,22 @@ public class RemoteServiceProvider {
         this.factory.setUsername(username);
         this.factory.setPassword(password);
         this.specialQueues = specialQueues;
+        this.withPriority = withPriority;
+        this.arguments = new HashMap() {{
+            if (ttlInSeconds != -1) {
+                put("x-message-ttl", ttlInSeconds / 1000);
+                logger.info("Picked up x-message-ttl: {}", ttlInSeconds / 1000);
+            }
+            if (withPriority) {
+                put("x-max-priority", 255);
+                logger.info("Picked up x-max-priority: 255");
+            }
+        }};
     }
 
     public static RemoteServiceProvider getDefault() {
         return new RemoteServiceProvider(new HashDuplicateRemover(),
-                TaskFilter.ALLOW_ALL, task -> DEFAULT, "localhost", -1, "/", "guest", "guest");
+                TaskFilter.ALLOW_ALL, task -> DEFAULT, "localhost", -1, "/", "guest", "guest", -1, false);
     }
 
     public static Builder custom() {
@@ -94,7 +109,7 @@ public class RemoteServiceProvider {
 
     private void declareBase() throws IOException {
         channel.exchangeDeclare(EXCHANGE, "direct"); // task queue exchanger
-        channel.queueDeclare(DEFAULT, true, false, false, null); // default task queue
+        channel.queueDeclare(DEFAULT, true, false, false, getArgumentsOrNull()); // default task queue
         channel.queueBind(DEFAULT, EXCHANGE, DEFAULT); // bind queue to exchanger
         channel.queueDeclare(NEW_TASK_QUEUE, true, false, false, null); // feedback queue
         channel.queueDeclare(NEW_LAZY_TASK_QUEUE, true, false, false, null); // feedback queue
@@ -102,7 +117,7 @@ public class RemoteServiceProvider {
 
     private void declareSpecialQueues(String... specialQueues) throws IOException {
         for (String queueName : specialQueues) {
-            channel.queueDeclare(queueName, true, false, false, null);
+            channel.queueDeclare(queueName, true, false, false, getArgumentsOrNull());
             channel.queueBind(queueName, EXCHANGE, queueName);
         }
     }
@@ -144,8 +159,19 @@ public class RemoteServiceProvider {
         });
     }
 
+    private Map getArgumentsOrNull() {
+        return arguments.size() > 0 ? arguments : null;
+    }
+
     private void publish(Task task) throws IOException {
-        channel.basicPublish(EXCHANGE, dispatcher.dispatch(task), MessageProperties.PERSISTENT_BASIC, SerializationUtils.serialize(task));
+        AMQP.BasicProperties properties = !withPriority
+                ? MessageProperties.PERSISTENT_BASIC
+                : new AMQP.BasicProperties.Builder()
+                .contentType("application/octet-stream")
+                .deliveryMode(2)
+                .priority((int) task.getPriority())
+                .build();
+        channel.basicPublish(EXCHANGE, dispatcher.dispatch(task), properties, SerializationUtils.serialize(task));
         duplicateRemover.record(task);
     }
 
@@ -158,6 +184,8 @@ public class RemoteServiceProvider {
         private String virtualHost = "/";
         private String username = "guest";
         private String password = "guest";
+        private int ttlInSeconds = -1;
+        private boolean withPriority;
         private String[] specialQueues = {};
 
         public Builder setRemover(DuplicateRemover remover) {
@@ -205,8 +233,19 @@ public class RemoteServiceProvider {
             return this;
         }
 
+        public Builder setTimeToLive(int ttlInSeconds) {
+            this.ttlInSeconds = ttlInSeconds;
+            return this;
+        }
+
+        public Builder withPriority() {
+            this.withPriority = true;
+            return this;
+        }
+
         public RemoteServiceProvider build() {
-            return new RemoteServiceProvider(remover, filter, dispatcher, host, port, virtualHost, username, password, specialQueues);
+            return new RemoteServiceProvider(remover, filter, dispatcher, host, port,
+                    virtualHost, username, password, ttlInSeconds, withPriority, specialQueues);
         }
 
     }

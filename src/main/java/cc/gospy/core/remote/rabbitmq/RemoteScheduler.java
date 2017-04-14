@@ -243,12 +243,22 @@ public class RemoteScheduler implements Scheduler, RemoteComponent, Verifiable, 
 
     @Override
     public long getCurrentTaskQueueSize() {
+        try {
+            if (targetQueueNames.length > 0) {
+                if (targetQueueNames.length > 1) {
+                    logger.warn("Query to multiple queues, only the first one ({}) is visible.", targetQueueNames[0]);
+                }
+                return channel.queueDeclarePassive(targetQueueNames[0]).getMessageCount();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         return -1;
     }
 
     @Override
     public long getCurrentLazyTaskQueueSize() {
-        return -1;
+        return pendingTasks.size();
     }
 
     @Override

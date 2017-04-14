@@ -35,7 +35,7 @@ public class Task implements Serializable, Comparable<Task> {
         task.extra.forEach((k, v) -> primitiveSink.putString(k.concat("=").concat(v.toString().concat("\1")), Charset.defaultCharset()));
     };
 
-    private int priority;
+    private byte priority;
     private String url;
     private String host;
     private String protocol;
@@ -55,7 +55,7 @@ public class Task implements Serializable, Comparable<Task> {
         this(priority.getValue(), url, depth, expectedVisitInSeconds);
     }
 
-    public Task(int priority, String url, int depth, int expectedVisitInSeconds) {
+    public Task(byte priority, String url, int depth, int expectedVisitInSeconds) {
         assert url != null;
         this.priority = priority;
         this.url = url;
@@ -95,7 +95,7 @@ public class Task implements Serializable, Comparable<Task> {
         this.setPriority(priority.getValue());
     }
 
-    public void setPriority(int priority) {
+    public void setPriority(byte priority) {
         this.priority = priority;
     }
 
@@ -115,7 +115,7 @@ public class Task implements Serializable, Comparable<Task> {
         this.skipCheck = skipCheck;
     }
 
-    public int getPriority() {
+    public byte getPriority() {
         return priority;
     }
 
@@ -184,13 +184,13 @@ public class Task implements Serializable, Comparable<Task> {
     public enum Priority {
         EMERGENCY(0), HIGH(10), MEDIUM(20), LOW(30);
 
-        private int value;
+        private byte value;
 
         Priority(int value) {
-            this.value = value;
+            this.value = (byte) value;
         }
 
-        int getValue() {
+        byte getValue() {
             return value;
         }
     }
