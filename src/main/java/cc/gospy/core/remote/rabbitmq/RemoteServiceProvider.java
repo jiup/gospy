@@ -83,7 +83,8 @@ public class RemoteServiceProvider {
 
     public static RemoteServiceProvider getDefault() {
         return new RemoteServiceProvider(new HashDuplicateRemover(),
-                TaskFilter.ALLOW_ALL, task -> DEFAULT, "localhost", -1, "/", "guest", "guest", -1, false);
+                TaskFilter.ALLOW_ALL, TaskDispatcher.DEFAULT,
+                "localhost", -1, "/", "guest", "guest", -1, false);
     }
 
     public static Builder custom() {
@@ -171,7 +172,7 @@ public class RemoteServiceProvider {
                 .deliveryMode(2)
                 .priority((int) task.getPriority())
                 .build();
-        channel.basicPublish(EXCHANGE, dispatcher.dispatch(task), properties, SerializationUtils.serialize(task));
+        channel.basicPublish(EXCHANGE, dispatcher.getTargetQueue(task), properties, SerializationUtils.serialize(task));
         duplicateRemover.record(task);
     }
 

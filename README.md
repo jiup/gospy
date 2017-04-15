@@ -16,18 +16,19 @@ It's minimalist and unified API design can greatly reduce the learning costs of 
 ## Features
 
 * [x] Portable, Flexible and Modular (you can only use one of the modules, or add your own development module into your Gospy-based crawler)
-* [x] Can operate in stand-alone (with multi-threaded) and distribute environments (RabbitMQ or HProse)
-* [x] Built in `PhantomJs` and `Selenium`, you can directly call the `WebDriver` to write a browser-kernel based web crawler
+* [x] Can operate in stand-alone mode (with multi-thread) or distribute mode (RabbitMQ or Hprose) or even the both
+* [x] Built in `PhantomJs` and `Selenium`, you can directly call the `WebDriver` to build a browser-kernel based web crawler
 * [x] Element extraction based on RegEx, [XPath](https://github.com/code4craft/xsoup/) and [Jsoup](https://jsoup.org/), respectively, apply from simple to complex tasks.
-* [x] Supports annotation-based programming
-* [x] Practical structural abstraction, from scheduler to pipeline
-* [x] Provide robots.txt interpreter (easy to use if you need)
+* [x] Support object-oriented processing with annotations
+* [x] Practical structural abstraction, from task scheduling to data persistence
+* [x] Provide robots.txt [interpreter](https://github.com/BrandwatchLtd/robots/) (easy to use if you need)
 
 ## Install
+Download jar:
 
 Release Version | JDK Version compatibility | Release Date | Links
 -- | -- | -- | --
-0.2.1-beta | 1.8+ | 07.04.2017 | [download jar](https://github.com/ZhangJiupeng/Gospy/releases/tag/v0.2.1)
+0.2.1-beta | 1.8+ | 07.04.2017 | [download](https://github.com/ZhangJiupeng/Gospy/releases/tag/v0.2.1)
 
 To add a dependency using Maven, use the following:
 ```
@@ -47,9 +48,15 @@ dependencies {
 ## Learn about Gospy
 Module division:
 
-![](http://7xp1jv.com1.z0.glb.clouddn.com/gospy/img/single-infra.jpg?imageView/5/w/500)
+[![http://7xp1jv.com1.z0.glb.clouddn.com/gospy/img/single-infra.jpg](http://7xp1jv.com1.z0.glb.clouddn.com/gospy/img/single-infra.jpg?imageView/5/w/500)](http://7xp1jv.com1.z0.glb.clouddn.com/gospy/img/single-infra.jpg)
 
-Run in cluster:
+Run in cluster by Hprose:
+
+[![http://7xp1jv.com1.z0.glb.clouddn.com/gospy/img/cluster-hprose-infra.jpg](http://7xp1jv.com1.z0.glb.clouddn.com/gospy/img/cluster-hprose-infra.jpg?imageView/4/w/500)](http://7xp1jv.com1.z0.glb.clouddn.com/gospy/img/cluster-hprose-infra.jpg)
+
+Run in cluster under RabbitMQ-Server runtime:
+
+[![http://7xp1jv.com1.z0.glb.clouddn.com/gospy/img/cluster-rabbitmq-infra.jpg](http://7xp1jv.com1.z0.glb.clouddn.com/gospy/img/cluster-rabbitmq-infra.jpg?imageView/4/w/450)](http://7xp1jv.com1.z0.glb.clouddn.com/gospy/img/cluster-rabbitmq-infra.jpg)
 
 ## Quick start
 

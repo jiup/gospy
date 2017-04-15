@@ -18,7 +18,12 @@ package cc.gospy.core.remote.rabbitmq;
 
 import cc.gospy.core.entity.Task;
 
-@FunctionalInterface
 public interface TaskDispatcher {
-    String dispatch(Task task);
+    String getTargetQueue(Task task);
+
+    default String[] getSpecialQueueNames() {
+        return new String[]{};
+    }
+
+    TaskDispatcher DEFAULT = task -> TaskQueue.DEFAULT;
 }
