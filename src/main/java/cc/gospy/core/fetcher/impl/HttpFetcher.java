@@ -79,7 +79,7 @@ public class HttpFetcher implements Fetcher, Closeable {
     private HttpFetcher() {
         this(
                 request -> request.setConfig(RequestConfig.custom()
-                        .setRedirectsEnabled(false)
+                        .setRedirectsEnabled(true)
                         .setRelativeRedirectsAllowed(false)
                         .setCircularRedirectsAllowed(false)
                         .setConnectionRequestTimeout(_TIMEOUT)
