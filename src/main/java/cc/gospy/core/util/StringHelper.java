@@ -30,29 +30,7 @@ import java.util.concurrent.TimeoutException;
 
 public class StringHelper {
     private static final Logger logger = LoggerFactory.getLogger(StringHelper.class);
-    public static String myExternalIp;
-
-    static {
-        try {
-            logger.info("Querying external ip...");
-            FutureTask futureTask = new FutureTask<>(() -> {
-                URL ipEcho = new URL("http://ipecho.net/plain");
-                BufferedReader in = new BufferedReader(new InputStreamReader(ipEcho.openStream()));
-                String resultIp = in.readLine();
-                in.close();
-                return resultIp;
-            });
-            futureTask.run();
-            myExternalIp = (String) futureTask.get(3, TimeUnit.SECONDS);
-            logger.info("My external ip: {}", myExternalIp);
-        } catch (TimeoutException e) {
-            myExternalIp = "unknown ip";
-            logger.error("Get external ip failure, cause: Timeout (3 seconds)");
-        } catch (Exception e) {
-            myExternalIp = "unknown ip";
-            logger.error("Get external ip failure, cause: {}", e.getMessage());
-        }
-    }
+    private static String myExternalIp;
 
     public static String toAbsoluteUrl(final String protocol, final String host, final String parentUrl, final String anyUrl) {
         String res, path = anyUrl.trim();
@@ -163,7 +141,32 @@ public class StringHelper {
     }
 
     public static String getRandomIdentifier() {
-        return getRandomSerial().concat("_") + myExternalIp;
+        return getRandomSerial().concat("_") + getMyExternalIp();
+    }
+
+    public static String getMyExternalIp() {
+        if (myExternalIp == null) {
+            try {
+                logger.info("Querying external ip...");
+                FutureTask futureTask = new FutureTask<>(() -> {
+                    URL ipEcho = new URL("http://ipecho.net/plain");
+                    BufferedReader in = new BufferedReader(new InputStreamReader(ipEcho.openStream()));
+                    String resultIp = in.readLine();
+                    in.close();
+                    return resultIp;
+                });
+                futureTask.run();
+                myExternalIp = (String) futureTask.get(3, TimeUnit.SECONDS);
+                logger.info("My external ip: {}", myExternalIp);
+            } catch (TimeoutException e) {
+                myExternalIp = "unknown ip";
+                logger.error("Get external ip failure, cause: Timeout (3 seconds)");
+            } catch (Exception e) {
+                myExternalIp = "unknown ip";
+                logger.error("Get external ip failure, cause: {}", e.getMessage());
+            }
+        }
+        return myExternalIp;
     }
 
     @Experimental
