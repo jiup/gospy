@@ -28,10 +28,10 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
 public class SimpleFilePipeline implements Pipeline {
-    private String dir;
+    private String basePath;
 
-    private SimpleFilePipeline(String dir) {
-        this.dir = dir;
+    private SimpleFilePipeline(String basePath) {
+        this.basePath = basePath;
     }
 
     public static SimpleFilePipeline getDefault() {
@@ -46,14 +46,14 @@ public class SimpleFilePipeline implements Pipeline {
     public void pipe(Result result) throws PipeException {
         Page page = result.getPage();
         File file;
-        if (dir == null) {
+        if (basePath == null) {
             if (page.getExtra() != null && page.getExtra().get("savePath") != null) {
                 file = new File(page.getExtra().get("savePath").toString());
             } else {
                 throw new PipeException("runtime config: parameter [savePath] cannot found in page.extra, please check your code.");
             }
         } else {
-            file = new File(dir, StringHelper.toEscapedFileName(page.getTask().getUrl()));
+            file = new File(basePath, StringHelper.toEscapedFileName(page.getTask().getUrl()));
         }
         try {
             file.createNewFile();
@@ -71,15 +71,15 @@ public class SimpleFilePipeline implements Pipeline {
     }
 
     public static class Builder {
-        private String dir;
+        private String basePath;
 
-        public Builder setDir(String path) {
-            this.dir = path;
+        public Builder setBasePath(String basePath) {
+            this.basePath = basePath;
             return this;
         }
 
         public SimpleFilePipeline build() {
-            return new SimpleFilePipeline(dir);
+            return new SimpleFilePipeline(basePath);
         }
     }
 }
