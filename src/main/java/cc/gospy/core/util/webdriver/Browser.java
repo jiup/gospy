@@ -16,7 +16,6 @@
 
 package cc.gospy.core.util.webdriver;
 
-import cc.gospy.core.util.webdriver.WebDriverInitializer;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;

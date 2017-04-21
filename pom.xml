@@ -166,6 +166,13 @@
         </repository>
     </distributionManagement>
 
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
@@ -190,8 +197,8 @@
         </dependency>
         <dependency>
             <groupId>com.github.detro</groupId>
-            <artifactId>phantomjsdriver</artifactId>
-            <version>1.2.0</version>
+            <artifactId>ghostdriver</artifactId>
+            <version>2.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
@@ -252,7 +259,6 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>1.1.7</version>
-            <!--<scope>runtime</scope>-->
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -266,19 +272,19 @@
             <version>4.1.0</version>
         </dependency>
         <!--<dependency>-->
-            <!--<groupId>cc.agentx</groupId>-->
-            <!--<artifactId>agentx</artifactId>-->
-            <!--<version>1.2.1</version>-->
-            <!--<exclusions>-->
-                <!--<exclusion>-->
-                    <!--<groupId>org.slf4j</groupId>-->
-                    <!--<artifactId>slf4j-api</artifactId>-->
-                <!--</exclusion>-->
-                <!--<exclusion>-->
-                    <!--<groupId>ch.qos.logback</groupId>-->
-                    <!--<artifactId>logback-classic</artifactId>-->
-                <!--</exclusion>-->
-            <!--</exclusions>-->
+        <!--<groupId>cc.agentx</groupId>-->
+        <!--<artifactId>agentx</artifactId>-->
+        <!--<version>1.2.1</version>-->
+        <!--<exclusions>-->
+        <!--<exclusion>-->
+        <!--<groupId>org.slf4j</groupId>-->
+        <!--<artifactId>slf4j-api</artifactId>-->
+        <!--</exclusion>-->
+        <!--<exclusion>-->
+        <!--<groupId>ch.qos.logback</groupId>-->
+        <!--<artifactId>logback-classic</artifactId>-->
+        <!--</exclusion>-->
+        <!--</exclusions>-->
         <!--</dependency>-->
     </dependencies>
 </project>
