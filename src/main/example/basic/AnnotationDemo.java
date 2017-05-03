@@ -74,7 +74,8 @@ public class AnnotationDemo {
 
         @Override
         public Object[] getResultData() {
-            return Arrays.asList(allLinks).stream().filter(s -> s.matches("^https?://((?!javascript:|mailto:| ).)*")).toArray();
+            return Arrays.asList(allLinks).stream()
+                    .filter(s -> s.matches("^https?://((?!javascript:|mailto:| ).)*")).toArray();
         }
     }
 }
