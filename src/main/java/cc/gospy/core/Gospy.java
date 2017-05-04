@@ -145,6 +145,10 @@ public class Gospy implements Observable {
                             Collection<Task> tasks = handler.exceptionCaught(e, task, page);
                             if (tasks != null) {
                                 tasks.forEach(t -> scheduler.addTask(identifier, t));
+                                // response to the scheduler after declare new tasks
+                                if (scheduler instanceof Verifiable) {
+                                    ((Verifiable) scheduler).feedback(task);
+                                }
                             }
                         }
                     });

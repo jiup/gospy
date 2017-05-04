@@ -19,6 +19,7 @@ package cc.gospy.core;
 import cc.gospy.core.entity.Page;
 import cc.gospy.core.entity.Task;
 
+import java.util.Arrays;
 import java.util.Collection;
 
 @FunctionalInterface
@@ -27,6 +28,6 @@ public interface ExceptionHandler {
 
     ExceptionHandler DEFAULT = (throwable, task, page) -> {
         throwable.printStackTrace();
-        return null;
+        return Arrays.asList();
     };
 }

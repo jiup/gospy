@@ -80,8 +80,8 @@ public class HttpFetcher implements Fetcher, Closeable {
         this(
                 request -> request.setConfig(RequestConfig.custom()
                         .setRedirectsEnabled(true)
-                        .setRelativeRedirectsAllowed(false)
-                        .setCircularRedirectsAllowed(false)
+                        .setRelativeRedirectsAllowed(true)
+                        .setCircularRedirectsAllowed(true)
                         .setConnectionRequestTimeout(_TIMEOUT)
                         .setConnectTimeout(_TIMEOUT)
                         .setSocketTimeout(_TIMEOUT).build())

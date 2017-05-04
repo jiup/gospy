@@ -21,6 +21,12 @@ import ch.qos.logback.classic.Logger;
 import org.slf4j.LoggerFactory;
 
 public class LoggerHelper {
+
+    public static void setLevel(Level level) {
+        Logger root = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
+        root.setLevel(Level.WARN);
+    }
+
     public static void setLevel(String identifier, Level level) {
         Logger logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(identifier);
         logger.setLevel(level);
