@@ -18,6 +18,7 @@ package cc.gospy.core.scheduler.queue;
 
 import cc.gospy.core.entity.Task;
 
+import java.util.Iterator;
 import java.util.concurrent.PriorityBlockingQueue;
 
 public abstract class LazyTaskQueue extends TaskQueue {
@@ -39,9 +40,9 @@ public abstract class LazyTaskQueue extends TaskQueue {
         return task;
     }
 
-    public PriorityBlockingQueue<Task> dump() {
+    public Iterator<Task> dump() {
         try {
-            return lazyTaskQueue;
+            return lazyTaskQueue.iterator();
         } finally {
             lazyTaskQueue.clear();
         }

@@ -37,8 +37,8 @@ public class TimingLazyTaskQueue extends LazyTaskQueue {
     public TimingLazyTaskQueue(int initialCapacity, LazyTaskHandler handler) {
         super(handler);
         this.lazyTaskQueue = new PriorityBlockingQueue<>(initialCapacity, (t0, t1)
-                -> (int) ((t0.getLastVisitTime() + t0.getExpectedVisitInSeconds() * 1000)
-                - (t1.getLastVisitTime() + t1.getExpectedVisitInSeconds() * 1000)));
+                -> (t0.getLastVisitTime() + t0.getExpectedVisitInSeconds() * 1000)
+                - (t1.getLastVisitTime() + t1.getExpectedVisitInSeconds() * 1000) < 0 ? -1 : 1);
     }
 
     class TimingLazyTaskChecker implements Runnable {
@@ -62,10 +62,8 @@ public class TimingLazyTaskQueue extends LazyTaskQueue {
     @Override
     protected boolean ready() {
         Task peakTask = peek();
-        return peakTask != null &&
-                peakTask.getExpectedVisitInSeconds() != 0 &&
-                System.currentTimeMillis() - peakTask.getLastVisitTime()
-                        > peakTask.getExpectedVisitInSeconds() * 1000;
+        return peakTask != null && (peakTask.getExpectedVisitInSeconds() == 0 ||
+                (System.currentTimeMillis() - peakTask.getLastVisitTime() > peakTask.getExpectedVisitInSeconds() * 1000));
     }
 
     @Override

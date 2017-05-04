@@ -45,6 +45,9 @@ public class SimpleFilePipeline implements Pipeline {
     @Override
     public void pipe(Result result) throws PipeException {
         Page page = result.getPage();
+        if (page == null) {
+            throw new PipeException("result.page not exists");
+        }
         File file;
         if (basePath == null) {
             if (page.getExtra() != null && page.getExtra().get("savePath") != null) {

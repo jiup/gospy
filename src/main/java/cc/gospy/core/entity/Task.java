@@ -61,6 +61,7 @@ public class Task implements Serializable, Comparable<Task> {
         this.url = url;
         this.depth = depth;
         this.createTime = System.currentTimeMillis();
+        this.lastVisitTime = createTime;
         this.expectedVisitInSeconds = expectedVisitInSeconds;
         this.extra = new HashMap<>();
         this.resolveUrl();
@@ -161,6 +162,9 @@ public class Task implements Serializable, Comparable<Task> {
 
     @Override
     public int compareTo(Task task) {
+        if (this.getPriority() == task.getPriority()) {
+            return this.getCreateTime() < task.getCreateTime() ? -1 : 1;
+        }
         return this.getPriority() - task.getPriority();
     }
 

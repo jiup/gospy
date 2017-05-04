@@ -34,11 +34,11 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 
-public class JsoupProcessor implements Processor {
+public class JSoupProcessor implements Processor {
     private Extractor<Document, ?> handler;
     private TaskFilter filter;
 
-    private JsoupProcessor(Extractor<Document, ?> handler, TaskFilter filter) {
+    private JSoupProcessor(Extractor<Document, ?> handler, TaskFilter filter) {
         this.handler = handler;
         this.filter = filter;
     }
@@ -47,7 +47,7 @@ public class JsoupProcessor implements Processor {
         return new Builder();
     }
 
-    public static JsoupProcessor getDefault() {
+    public static JSoupProcessor getDefault() {
         return new Builder().build();
     }
 
@@ -150,8 +150,8 @@ public class JsoupProcessor implements Processor {
             return this;
         }
 
-        public JsoupProcessor build() {
-            return ha == null ? this.setPageLinkDocumentExtractor().build() : new JsoupProcessor(ha, fi);
+        public JSoupProcessor build() {
+            return ha == null ? this.setPageLinkDocumentExtractor().build() : new JSoupProcessor(ha, fi);
         }
     }
 

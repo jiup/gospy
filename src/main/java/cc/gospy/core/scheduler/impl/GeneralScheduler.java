@@ -169,7 +169,7 @@ public class GeneralScheduler implements Scheduler, Observable, Recoverable {
 
             // notice that the lazy-tasks will not lazy load later, they are
             // directly appended to the rear of the activate-task-queue.
-            lazyTaskQueue.dump().forEach(task -> taskQueue.add(task));
+            lazyTaskQueue.dump().forEachRemaining(task -> taskQueue.add(task));
             lazyTaskQueue.stop();
             outputStream.writeObject(taskQueue);
             outputStream.writeObject(taskFilter);
@@ -216,7 +216,7 @@ public class GeneralScheduler implements Scheduler, Observable, Recoverable {
     public static class Builder {
         private GeneralScheduler scheduler;
         private TaskQueue taskQueue = new FIFOTaskQueue();
-        private LazyTaskQueue lazyTaskQueue = new TimingLazyTaskQueue(wakedTask -> scheduler.addTask(null, wakedTask));
+        private LazyTaskQueue lazyTaskQueue = new TimingLazyTaskQueue(wakedTask -> taskQueue.add(wakedTask));
         private DuplicateRemover remover = new HashDuplicateRemover();
         private TaskFilter filter = TaskFilter.ALLOW_ALL;
 

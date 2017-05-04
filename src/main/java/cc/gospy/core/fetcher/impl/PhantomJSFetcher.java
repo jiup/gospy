@@ -57,7 +57,9 @@ public class PhantomJSFetcher implements Fetcher, Closeable {
     @Override
     public Page fetch(Task task) throws FetchException {
         try {
-            task.setUrl(task.getUrl().substring("phantomjs://".length()));
+            if (task.getUrl().startsWith("phantomjs://")) {
+                task.setUrl(task.getUrl().substring("phantomjs://".length()));
+            }
             Page page = new Page();
             long timer = System.currentTimeMillis();
             if (cookies.size() > 0) {

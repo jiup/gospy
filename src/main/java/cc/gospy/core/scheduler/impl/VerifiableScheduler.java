@@ -150,15 +150,16 @@ public class VerifiableScheduler extends GeneralScheduler implements Verifiable 
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                Iterator<Task> iterator = pendingTasks.iterator();
-                while (iterator.hasNext()) {
+                for (Iterator<Task> iterator = pendingTasks.iterator(); iterator.hasNext(); ) {
                     Task task = iterator.next();
                     if (System.currentTimeMillis() - task.getLastVisitTime() > pendingTimeInSeconds * 1000) {
                         // tasks are recommended to be inserted into head.
                         // notice that this does not apply to a FIFO queue!
                         task.setPriority(Task.Priority.EMERGENCY);
                         taskQueue.add(task);
-                        iterator.remove();
+                        if (task == null) {
+                            iterator.remove();
+                        }
                         logger.warn("{} pending timeout, re-add to queue.", task);
                     } else {
                         break;
@@ -195,7 +196,7 @@ public class VerifiableScheduler extends GeneralScheduler implements Verifiable 
     public static class Builder extends GeneralScheduler.Builder {
         private VerifiableScheduler scheduler;
         private TaskQueue taskQueue = new FIFOTaskQueue();
-        private LazyTaskQueue lazyTaskQueue = new TimingLazyTaskQueue(wakedTask -> scheduler.addTask(null, wakedTask));
+        private LazyTaskQueue lazyTaskQueue = new TimingLazyTaskQueue(wakedTask -> taskQueue.add(wakedTask));
         private DuplicateRemover remover = new HashDuplicateRemover();
         private TaskFilter filter = TaskFilter.ALLOW_ALL;
         private ExitCallback exitCallback = ExitCallback.DEFAULT;

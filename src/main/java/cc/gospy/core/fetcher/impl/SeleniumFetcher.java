@@ -56,7 +56,9 @@ public class SeleniumFetcher implements Fetcher, Closeable {
     @Override
     public Page fetch(Task task) throws FetchException {
         try {
-            task.setUrl(task.getUrl().substring("selenium://".length()));
+            if (task.getUrl().startsWith("selenium://")) {
+                task.setUrl(task.getUrl().substring("selenium://".length()));
+            }
             Page page = new Page();
             long timer = System.currentTimeMillis();
             if (cookies.size() > 0) {

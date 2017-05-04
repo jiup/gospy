@@ -23,7 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Processors {
-    public static JsoupProcessor JsoupProcessor;
+    public static JSoupProcessor JSoupProcessor;
     public static XPathProcessor XPathProcessor;
     public static RegexProcessor RegexProcessor;
     public static UniversalProcessor UniversalProcessor;

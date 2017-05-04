@@ -17,12 +17,41 @@
 package cc.gospy.core.scheduler.queue.impl;
 
 import cc.gospy.core.entity.Task;
+import cc.gospy.core.scheduler.queue.TaskQueue;
 import cc.gospy.core.util.base.FileMappedQueue;
 
 import java.io.IOException;
+import java.util.Iterator;
 
-public class FileMappedTaskQueue extends FileMappedQueue<Task> {
+public class FileMappedTaskQueue extends TaskQueue {
+    private FileMappedQueue<Task> tasks;
+
     public FileMappedTaskQueue(String dir) throws IOException {
-        super(dir);
+        tasks = new FileMappedQueue<>(dir);
+    }
+
+    @Override
+    public Iterator<Task> iterator() {
+        return tasks.iterator();
+    }
+
+    @Override
+    public int size() {
+        return tasks.size();
+    }
+
+    @Override
+    public boolean offer(Task task) {
+        return tasks.offer(task);
+    }
+
+    @Override
+    public Task poll() {
+        return tasks.poll();
+    }
+
+    @Override
+    public Task peek() {
+        return tasks.peek();
     }
 }
