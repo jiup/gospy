@@ -223,27 +223,37 @@ public class HttpFetcher implements Fetcher, Closeable {
 
     private CloseableHttpClient client;
 
-    private CloseableHttpResponse doGet(String url, String cookie) throws IOException {
+    private CloseableHttpResponse doGet(String url, String cookie, Map<String, String> header) throws IOException {
         HttpGet request = new HttpGet(url);
         requestHandler.handle(request);
         request.setHeader("User-Agent", userAgent);
         if (cookie != null) {
             request.setHeader("Cookie", cookie);
         }
+        setRequestHeader(request, header);
         return client.execute(request);
     }
 
-    private CloseableHttpResponse doPost(String url, String cookie, Map<String, String> attributes) throws IOException {
+    private CloseableHttpResponse doPost(String url, String cookie, Map<String, String> header, Map<String, String> attributes) throws IOException {
         HttpPost request = new HttpPost(url);
         requestHandler.handle(request);
         request.setHeader("User-Agent", userAgent);
         if (cookie != null) {
             request.setHeader("Cookie", cookie);
         }
+        setRequestHeader(request, header);
         List<NameValuePair> pairs = new ArrayList<>();
         attributes.keySet().forEach(key -> pairs.add(new BasicNameValuePair(key, attributes.get(key).toString())));
         request.setEntity(new UrlEncodedFormEntity(pairs));
         return client.execute(request);
+    }
+
+    private void setRequestHeader(HttpRequestBase request, Map<String, String> header) {
+        if (header != null) {
+            for (Map.Entry<String, String> entry : header.entrySet()) {
+                request.setHeader(entry.getKey(), entry.getValue());
+            }
+        }
     }
 
     private String getCookieString(Map<String, String> cookies) {
@@ -286,15 +296,20 @@ public class HttpFetcher implements Fetcher, Closeable {
             // send request
             long timer = System.currentTimeMillis();
             String url = task.getUrl();
+            Object obj;
             String cookies = null;
-            if (extra.get("cookies") != null) {
-                cookies = getCookieString((Map<String, String>) extra.get("cookies"));
-            } else if (extra.get("cookie") != null) {
-                cookies = extra.get("cookie").toString();
+            if ((obj = extra.get("cookies")) != null && obj instanceof Map) {
+                cookies = getCookieString((Map<String, String>) obj);
+            } else if ((obj = extra.get("cookie")) != null && obj instanceof String) {
+                cookies = obj.toString();
+            }
+            Map<String, String> headers = null;
+            if ((obj = extra.get("headers")) != null && obj instanceof Map) {
+                headers = (Map<String, String>) obj;
             }
             response = (extra != null && extra.get("post") != null) ?
-                    doPost(url, cookies, (Map<String, String>) extra.get("post")) :
-                    doGet(url, cookies);
+                    doPost(url, cookies, headers, (Map<String, String>) extra.get("post")) :
+                    doGet(url, cookies, headers);
             timer = System.currentTimeMillis() - timer;
 
             // load page
