@@ -118,7 +118,7 @@ public class JSoupProcessor implements Processor {
                         tasks.add(new Task(StringHelper.toAbsoluteUrl(task.getProtocol(), task.getHost(), task.getUrl(), link)));
                     }
                 }
-                return new Result<>(tasks, task.toString());
+                return new Result<>(tasks, null);
             });
         }
 
@@ -141,7 +141,7 @@ public class JSoupProcessor implements Processor {
                         tasks.add(new Task(StringHelper.toAbsoluteUrl(task.getProtocol(), task.getHost(), task.getUrl(), link)));
                     }
                 }
-                return new Result<>(tasks, task.toString());
+                return new Result<>(tasks, null);
             });
         }
 
