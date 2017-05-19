@@ -31,7 +31,7 @@ public interface ExitCallback {
         // process completely done (might in minutes), please turn off the auto exit.
         logger.info("All tasks are fed back, terminate in few seconds.");
         try {
-            Thread.currentThread().join(3000);
+            Thread.currentThread().join(5000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
