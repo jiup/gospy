@@ -56,7 +56,7 @@ public class VerifiableScheduler extends GeneralScheduler implements Verifiable 
         super(taskQueue, lazyTaskQueue, duplicateRemover, filter);
         this.pendingTimeInSeconds = pendingTimeInSeconds;
         this.callback = callback;
-        this.exitPending = exitThresholdInSeconds * 1000;
+        this.exitThreshold = exitThresholdInSeconds * 1000;
         this.autoExit = autoExit;
     }
 

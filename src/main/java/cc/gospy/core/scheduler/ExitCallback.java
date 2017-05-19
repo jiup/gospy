@@ -29,9 +29,9 @@ public interface ExitCallback {
         // we cannot ensure other components' (such as a pipeline) functions are finished. Thus,
         // if you are running your program in func mode and want to keep the subsequent
         // process completely done (might in minutes), please turn off the auto exit.
-        logger.info("All tasks are fed back, thus it will exit in few seconds.");
+        logger.info("All tasks are fed back, terminate in few seconds.");
         try {
-            Thread.currentThread().join(5000);
+            Thread.currentThread().join(3000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
