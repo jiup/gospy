@@ -51,10 +51,12 @@ public class VerifiableScheduler extends GeneralScheduler implements Verifiable 
                         TaskFilter filter,
                         ExitCallback callback,
                         int pendingTimeInSeconds,
+                        int exitThresholdInSeconds,
                         boolean autoExit) {
         super(taskQueue, lazyTaskQueue, duplicateRemover, filter);
         this.pendingTimeInSeconds = pendingTimeInSeconds;
         this.callback = callback;
+        this.exitPending = exitThresholdInSeconds * 1000;
         this.autoExit = autoExit;
     }
 
@@ -96,10 +98,21 @@ public class VerifiableScheduler extends GeneralScheduler implements Verifiable 
         }
     }
 
+    long exitPending;
+    long exitThreshold;
+
     @Experimental
     public void exitTrigger() {
         if (autoExit && pendingTasks.size() == 0 && taskQueue.size() == 0 && lazyTaskQueue.size() == 0) {
-            callback.onExit();
+            if (exitPending == 0) {
+                exitPending = System.currentTimeMillis(); // set pending start time
+            } else if (System.currentTimeMillis() - exitPending > exitThreshold) {
+                callback.onExit(); // trigger exit
+            }
+        } else {
+            if (exitPending != 0) {
+                exitPending = 0; // reset pending time
+            }
         }
     }
 
@@ -194,13 +207,13 @@ public class VerifiableScheduler extends GeneralScheduler implements Verifiable 
     }
 
     public static class Builder extends GeneralScheduler.Builder {
-        private VerifiableScheduler scheduler;
         private TaskQueue taskQueue = new FIFOTaskQueue();
         private LazyTaskQueue lazyTaskQueue = new TimingLazyTaskQueue(wakedTask -> taskQueue.add(wakedTask));
         private DuplicateRemover remover = new HashDuplicateRemover();
         private TaskFilter filter = TaskFilter.ALLOW_ALL;
         private ExitCallback exitCallback = ExitCallback.DEFAULT;
         private int pendingTimeInSeconds = 10;
+        private int exitThresholdInSeconds = 5;
         private boolean ae = true;
 
         public Builder setTaskQueue(TaskQueue taskQueue) {
@@ -233,13 +246,18 @@ public class VerifiableScheduler extends GeneralScheduler implements Verifiable 
             return this;
         }
 
+        public Builder setExitThresholdInSeconds(int exitThresholdInSeconds) {
+            this.exitThresholdInSeconds = exitThresholdInSeconds;
+            return this;
+        }
+
         public Builder setAutoExit(boolean autoExit) {
             ae = autoExit;
             return this;
         }
 
         public VerifiableScheduler build() {
-            return scheduler = new VerifiableScheduler(taskQueue, lazyTaskQueue, remover, filter, exitCallback, pendingTimeInSeconds, ae);
+            return new VerifiableScheduler(taskQueue, lazyTaskQueue, remover, filter, exitCallback, pendingTimeInSeconds, exitThresholdInSeconds, ae);
         }
     }
 

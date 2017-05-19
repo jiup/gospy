@@ -9,7 +9,7 @@
     <artifactId>gospy-core</artifactId>
     <packaging>jar</packaging>
     <name>gospy-core</name>
-    <version>0.2.1</version>
+    <version>0.2.2</version>
     <description>scalable web crawler framework</description>
     <url>http://www.gospy.cc/</url>
 

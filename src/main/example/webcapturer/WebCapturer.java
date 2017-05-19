@@ -80,7 +80,9 @@ public class WebCapturer {
                                 }
                             }
                             String name = StringHelper.toEscapedFileName(task.getUrl().substring(task.getUrl().lastIndexOf('/') + 1));
-                            name = name.endsWith(".html") ? name : name.concat(".html");
+                            if (page.getContentType().equals("text/html") && !name.endsWith(".html")) {
+                                name += ".html";
+                            }
                             String dir = StringHelper.cutOffProtocolAndHost(task.getUrl().substring(0, task.getUrl().lastIndexOf('/') + 1));
                             page.getExtra().put("savePath", URLDecoder.decode(dir.concat(name), Charset.defaultCharset().name()));
                             System.out.println("Saving [" + page.getExtra().get("savePath") + "] ...");
@@ -91,6 +93,6 @@ public class WebCapturer {
                 .addPipeline(Pipelines.HierarchicalFilePipeline.custom()
                         .setBasePath(base)
                         .build())
-                .build().addTask(target).start(1);
+                .build().addTask(target).start(100);
     }
 }
