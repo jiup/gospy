@@ -29,7 +29,7 @@ Download jar:
 Release Version | JDK Version compatibility | Release Date | Links
 -- | -- | -- | --
 0.2.1-beta | 1.8+ | 07.04.2017 | [download](https://github.com/ZhangJiupeng/Gospy/releases/tag/v0.2.1)
-0.2.2-beta | 1.8+ | 05.21.2017 | [download](https://github.com/ZhangJiupeng/Gospy/releases/tag/v0.2.2)
+0.2.2-beta | 1.8+ | 21.05.2017 | [download](https://github.com/ZhangJiupeng/Gospy/releases/tag/v0.2.2)
 
 To add a dependency using Maven, use the following:
 ```
@@ -77,7 +77,8 @@ Gospy.custom()
                 .setTaskQueue(new PriorityTaskQueue()) // specify a priority queue
                 .build())
         .addFetcher(Fetchers.HttpFetcher.custom()
-                .setAutoKeepAlive(false).before(request -> { // custom request
+                .setAutoKeepAlive(false)
+                .before(request -> { // custom request
                     request.setHeader("Accept", "text/html,image/webp,*/*;q=0.8");
                     request.setHeader("Accept-Encoding", "gzip, deflate, sdch");
                     request.setHeader("Accept-Language", "zh-CN,zh;q=0.8");
@@ -96,7 +97,6 @@ Gospy.custom()
         .addTask("https://www.baidu.com/img/bd_logo1.png")
         .addTasks(UrlBundle.parse("https://www.baidu.com/s?wd=gospy&pn={0~90~10}"))
         .start();
-
 ```
 
 Save page screenshot by PhantomJS:
@@ -105,7 +105,8 @@ String phantomJsPath = "/path/to/phantomjs.exe";
 String savePath = "D:/capture.png";
 Gospy.custom()
         .setScheduler(Schedulers.VerifiableScheduler.custom()
-                .setPendingTimeInSeconds(60).build())
+                .setPendingTimeInSeconds(60)
+                .build())
         .addFetcher(Fetchers.TransparentFetcher.getDefault())
         .addProcessor(Processors.PhantomJSProcessor.custom()
                 .setPhantomJsBinaryPath(phantomJsPath)
@@ -116,33 +117,46 @@ Gospy.custom()
                     return new Result<>();
                 })
                 .build())
-        .build().addTask("phantomjs://https://www.taobao.com").start();
-
+        .build()
+        .addTask("phantomjs://https://www.taobao.com")
+        .start();
 ```
 
 Crawl by annotated class:
 ```java
-@UrlPattern("http://www.baidu.com/.*\\.php") // 匹配该正则的请求会交付给该类进行处理
+@UrlPattern("http://www.baidu.com/.*\\.php") // task matches this regex will be processed
 public static class BaiduHomepageProcessor extends PageProcessor {
-    @ExtractBy.XPath("//*[@id='u1']/a/@href") // 根据元素Xpath将内容填充到集合中
+    @ExtractBy.XPath("/html/head/title/text()")
+    public String title;
+
+    @ExtractBy.XPath("//*[@id='u1']/a/@href") // fill element data by xpath
     @ExtractBy.XPath("//*[@id='head']/div/div[4]/div/div[2]/div[1]/div/a/@href")
     public Set<String> topBarLinks;
 
-    @ExtractBy.Regex(value = "id=\"su\" value=\"(.*?)\"", group = 1) 
+    @ExtractBy.Regex(value = "id=\"su\" value=\"(.*?)\"", group = 1) // fill by regex
     public String searchBtnValue;
 
+    @ExtractBy.XPath
+    public String[] allLinks;
+
     @Override
-    public void process() { // 填充内容后，在这里指定页面的处理过程
+    public void process() { 
+        // process after data filling
+        System.out.println("Task url      :" + task.getUrl());
+        System.out.println("Title         :" + title);
+        System.out.println("Search slogan :" + searchBtnValue);
+        System.out.println("Top bar links :");
         topBarLinks.forEach(System.out::println);
     }
 
     @Override
-    public Collection<Task> getNewTasks() { // 在这里指定下一轮爬取任务
+    public Collection<Task> getNewTasks() {
         return Arrays.asList(new Task("https://www.baidu.com/img/bd_logo1.png"));
     }
 
     @Override
-    public Object[] getResultData() { // 在这里指定需要持久化的数据
+    @Experimental
+    public Object[] getResultData() {
         return Arrays.asList(allLinks).stream()
                 .filter(s -> s.matches("^https?://((?!javascript:|mailto:| ).)*")).toArray();
     }
@@ -173,8 +187,8 @@ If you are interested in this project, please given stars. If you have any possi
 
 ## Thanks
 * [code4craft](https://github.com/code4craft) / [webmagic](https://github.com/code4craft/webmagic)
-* [code4craft](https://github.com/code4craft) / [xsoup](https://github.com/code4craft/xsoup) <[license](https://github.com/code4craft/xsoup/blob/master/LICENSE)>
-* [arimus](https://github.com/arimus) / [jmimemagic](https://github.com/arimus/jmimemagic) <[license](https://github.com/arimus/jmimemagic/blob/master/LICENSE)>
+* [code4craft](https://github.com/code4craft) / [xsoup](https://github.com/code4craft/xsoup) ***[license](https://github.com/code4craft/xsoup/blob/master/LICENSE)***
+* [arimus](https://github.com/arimus) / [jmimemagic](https://github.com/arimus/jmimemagic) ***[license](https://github.com/arimus/jmimemagic/blob/master/LICENSE)***
 
 ## License
 
