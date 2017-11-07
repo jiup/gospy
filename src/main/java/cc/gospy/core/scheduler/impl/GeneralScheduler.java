@@ -32,14 +32,14 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 
 public class GeneralScheduler implements Scheduler, Observable, Recoverable {
     private static final Logger logger = LoggerFactory.getLogger(GeneralScheduler.class);
 
-    private volatile AtomicLong totalTaskInputCount;
-    private volatile AtomicLong totalTaskOutputCount;
     private volatile AtomicBoolean isSuspend;
+    private final LongAdder totalTaskInput;
+    private final LongAdder totalTaskOutput;
     private long firstVisitTimeMillis;
 
     TaskQueue taskQueue;
@@ -55,8 +55,8 @@ public class GeneralScheduler implements Scheduler, Observable, Recoverable {
         this.lazyTaskQueue = lazyTaskQueue;
         this.duplicateRemover = duplicateRemover;
         this.taskFilter = filter;
-        this.totalTaskInputCount = new AtomicLong();
-        this.totalTaskOutputCount = new AtomicLong();
+        this.totalTaskInput = new LongAdder();
+        this.totalTaskOutput = new LongAdder();
         this.isSuspend = new AtomicBoolean();
     }
 
@@ -78,7 +78,7 @@ public class GeneralScheduler implements Scheduler, Observable, Recoverable {
                     }
                     return task;
                 } finally {
-                    totalTaskOutputCount.incrementAndGet();
+                    totalTaskOutput.increment();
                 }
             }
         }
@@ -102,7 +102,7 @@ public class GeneralScheduler implements Scheduler, Observable, Recoverable {
         if (isSuspend.get()) {
             return;
         }
-        totalTaskInputCount.incrementAndGet();
+        totalTaskInput.increment();
         if (task.isCheckSkipping()) {
             addTask0(task);
             return;
@@ -131,12 +131,12 @@ public class GeneralScheduler implements Scheduler, Observable, Recoverable {
 
     @Override
     public long getTotalTaskInputCount() {
-        return totalTaskInputCount.get();
+        return totalTaskInput.sum();
     }
 
     @Override
     public long getTotalTaskOutputCount() {
-        return totalTaskOutputCount.get();
+        return totalTaskOutput.sum();
     }
 
     @Override
@@ -178,8 +178,8 @@ public class GeneralScheduler implements Scheduler, Observable, Recoverable {
         logger.info("Writing scheduler data to {}", file.getPath());
         try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(file, false))) {
             outputStream.writeLong(firstVisitTimeMillis);
-            outputStream.writeLong(totalTaskInputCount.get());
-            outputStream.writeLong(totalTaskOutputCount.get());
+            outputStream.writeLong(totalTaskInput.sum());
+            outputStream.writeLong(totalTaskOutput.sum());
 
             // notice that the lazy-tasks will not lazy load later, they are
             // directly appended to the rear of the activate-task-queue.
@@ -214,8 +214,10 @@ public class GeneralScheduler implements Scheduler, Observable, Recoverable {
         logger.info("Reading scheduler data from {}", file.getPath());
         try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(file))) {
             this.firstVisitTimeMillis = inputStream.readLong();
-            this.totalTaskInputCount.set(inputStream.readLong());
-            this.totalTaskOutputCount.set(inputStream.readLong());
+            this.totalTaskInput.reset();
+            this.totalTaskOutput.reset();
+            this.totalTaskInput.add(inputStream.readLong());
+            this.totalTaskOutput.add(inputStream.readLong());
             this.taskQueue = (TaskQueue) inputStream.readObject();
             this.taskFilter = (TaskFilter) inputStream.readObject();
         }
