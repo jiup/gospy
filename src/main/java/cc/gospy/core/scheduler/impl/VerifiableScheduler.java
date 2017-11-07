@@ -31,14 +31,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @Experimental
 public class VerifiableScheduler extends GeneralScheduler implements Verifiable {
     private static final Logger logger = LoggerFactory.getLogger(VerifiableScheduler.class);
 
     private Set<Task> pendingTasks = Collections.synchronizedSet(new LinkedHashSet<>());
-    private Map<String, Long> totalTaskDistributeCounts = Collections.synchronizedMap(new LinkedHashMap<>());
-    private Map<String, Long> pendingTaskDistributeCounts = Collections.synchronizedMap(new LinkedHashMap<>());
+    private final Map<String, Long> totalTaskDistributeCounts = Collections.synchronizedMap(new LinkedHashMap<>());
+    private final Map<String, Long> pendingTaskDistributeCounts = Collections.synchronizedMap(new LinkedHashMap<>());
     private Thread checkerThread;
     private ExitCallback callback;
     private int pendingTimeInSeconds;
@@ -56,12 +57,12 @@ public class VerifiableScheduler extends GeneralScheduler implements Verifiable 
         super(taskQueue, lazyTaskQueue, duplicateRemover, filter);
         this.pendingTimeInSeconds = pendingTimeInSeconds;
         this.callback = callback;
-        this.exitThreshold = exitThresholdInSeconds * 1000;
+        this.exitVerifyTimeMillis = TimeUnit.SECONDS.toMillis(exitThresholdInSeconds);
         this.autoExit = autoExit;
     }
 
     @Override
-    public synchronized void addTask(String executorId, Task task) {
+    public void addTask(String executorId, Task task) {
         super.addTask(executorId, task);
     }
 
@@ -98,20 +99,20 @@ public class VerifiableScheduler extends GeneralScheduler implements Verifiable 
         }
     }
 
-    long exitPending;
-    long exitThreshold;
+    long exitPendingTimeMillis;
+    long exitVerifyTimeMillis;
 
     @Experimental
     public void exitTrigger() {
         if (autoExit && pendingTasks.size() == 0 && taskQueue.size() == 0 && lazyTaskQueue.size() == 0) {
-            if (exitPending == 0) {
-                exitPending = System.currentTimeMillis(); // set pending start time
-            } else if (System.currentTimeMillis() - exitPending > exitThreshold) {
+            if (exitPendingTimeMillis == 0) {
+                exitPendingTimeMillis = System.currentTimeMillis(); // set pending start time
+            } else if (System.currentTimeMillis() - exitPendingTimeMillis > exitVerifyTimeMillis) {
                 callback.onExit(); // trigger exit
             }
         } else {
-            if (exitPending != 0) {
-                exitPending = 0; // reset pending time
+            if (exitPendingTimeMillis != 0) {
+                exitPendingTimeMillis = 0; // reset pending time
             }
         }
     }
@@ -119,11 +120,11 @@ public class VerifiableScheduler extends GeneralScheduler implements Verifiable 
     @Override
     public void feedback(String fetcherId, Task task) {
         synchronized (pendingTasks) {
+            if (!pendingTasks.contains(task)) {
+                return; // task has been reported by someone
+            }
+            pendingTasks.remove(task);
             synchronized (pendingTaskDistributeCounts) {
-                if (!pendingTasks.contains(task)) {
-                    return; // task has been reported by someone
-                }
-                pendingTasks.remove(task);
                 if (pendingTaskDistributeCounts.getOrDefault(fetcherId, 1L) == 1L) {
                     pendingTaskDistributeCounts.remove(fetcherId);
                 } else {
@@ -159,20 +160,21 @@ public class VerifiableScheduler extends GeneralScheduler implements Verifiable 
         public void run() {
             while (checkerRunning) {
                 try {
-                    sleep(pendingTimeInSeconds * 1000);
+                    sleep(TimeUnit.SECONDS.toMillis(pendingTimeInSeconds));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
                 for (Iterator<Task> iterator = pendingTasks.iterator(); iterator.hasNext(); ) {
                     Task task = iterator.next();
-                    if (System.currentTimeMillis() - task.getLastVisitTime() > pendingTimeInSeconds * 1000) {
+                    if (task == null) {
+                        iterator.remove();
+                        continue;
+                    }
+                    if (System.currentTimeMillis() - task.getLastVisitTimeMillis() > TimeUnit.SECONDS.toMillis(pendingTimeInSeconds)) {
                         // tasks are recommended to be inserted into head.
                         // notice that this does not apply to a FIFO queue!
                         task.setPriority(Task.Priority.EMERGENCY);
                         taskQueue.add(task);
-                        if (task == null) {
-                            iterator.remove();
-                        }
                         logger.warn("{} pending timeout, re-add to queue.", task);
                     } else {
                         break;
@@ -190,11 +192,15 @@ public class VerifiableScheduler extends GeneralScheduler implements Verifiable 
     }
 
     @Override
-    public synchronized void pause(String dir) throws Throwable {
+    public void pause(String dir) throws Throwable {
         // abort receiving any feedback, moving the pending tasks back to the task queue
         // and wait for the future suspending.
-        pendingTasks.forEach(task -> task.setPriority(Task.Priority.EMERGENCY));
-        taskQueue.addAll(pendingTasks);
+        synchronized (pendingTasks) {
+            pendingTasks.forEach(task -> task.setPriority(Task.Priority.EMERGENCY));
+            synchronized (taskQueue) {
+                taskQueue.addAll(pendingTasks);
+            }
+        }
         super.pause(dir);
     }
 
@@ -251,6 +257,7 @@ public class VerifiableScheduler extends GeneralScheduler implements Verifiable 
             return this;
         }
 
+        @Experimental
         public Builder setAutoExit(boolean autoExit) {
             ae = autoExit;
             return this;

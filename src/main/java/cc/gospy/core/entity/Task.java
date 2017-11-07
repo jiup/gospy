@@ -41,8 +41,8 @@ public class Task implements Serializable, Comparable<Task> {
     private String protocol;
     private Map<String, Object> extra;
     private boolean skipCheck;
-    private long createTime;
-    private long lastVisitTime;
+    private long createTimeMillis;
+    private long lastVisitTimeMillis;
     private int depth;
     private int expectedVisitInSeconds; // 0 to off
     private int visitCount;
@@ -60,8 +60,8 @@ public class Task implements Serializable, Comparable<Task> {
         this.priority = priority;
         this.url = url;
         this.depth = depth;
-        this.createTime = System.currentTimeMillis();
-        this.lastVisitTime = createTime;
+        this.createTimeMillis = System.currentTimeMillis();
+        this.lastVisitTimeMillis = createTimeMillis;
         this.expectedVisitInSeconds = expectedVisitInSeconds;
         this.extra = new HashMap<>();
         this.resolveUrl();
@@ -104,8 +104,8 @@ public class Task implements Serializable, Comparable<Task> {
         this.expectedVisitInSeconds = expectedVisitInSeconds;
     }
 
-    public void setLastVisitTime(long lastVisitTime) {
-        this.lastVisitTime = lastVisitTime;
+    public void setLastVisitTimeMillis(long lastVisitTimeMillis) {
+        this.lastVisitTimeMillis = lastVisitTimeMillis;
     }
 
     public void setExtra(Map<String, Object> extra) {
@@ -140,12 +140,12 @@ public class Task implements Serializable, Comparable<Task> {
         return skipCheck;
     }
 
-    public long getCreateTime() {
-        return createTime;
+    public long getCreateTimeMillis() {
+        return createTimeMillis;
     }
 
-    public long getLastVisitTime() {
-        return lastVisitTime;
+    public long getLastVisitTimeMillis() {
+        return lastVisitTimeMillis;
     }
 
     public int getDepth() {
@@ -163,7 +163,7 @@ public class Task implements Serializable, Comparable<Task> {
     @Override
     public int compareTo(Task task) {
         if (this.getPriority() == task.getPriority()) {
-            return this.getCreateTime() < task.getCreateTime() ? -1 : 1;
+            return this.getCreateTimeMillis() < task.getCreateTimeMillis() ? -1 : 1;
         }
         return this.getPriority() - task.getPriority();
     }

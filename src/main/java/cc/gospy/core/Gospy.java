@@ -266,9 +266,7 @@ public class Gospy implements Observable {
     public void stop() {
         //stop scheduler
         this.running = false;
-        synchronized (this) {
-            notifyAll();
-        }
+        notifyAll();
         this.scheduler.stop();
 
         //stop fetchers
@@ -294,9 +292,8 @@ public class Gospy implements Observable {
 
         // stop thread pool
         threadPool.shutdownNow();
-        while (!threadPool.isTerminated()) {
-            // waiting for terminate.
-        }
+        // waiting for terminate.
+        while (!threadPool.isTerminated()) ;
         logger.info("Thread pool terminated.");
         threadPool = null;
     }

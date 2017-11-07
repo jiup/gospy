@@ -47,13 +47,13 @@ public class RemoteScheduler implements Scheduler, RemoteComponent, Verifiable, 
     private Connection connection;
     private Channel channel;
     private String[] targetQueueNames;
-    private Map<Task, Long> tasks;
     private ScheduledExecutorService checker;
     private int timeoutInSeconds;
 
-    private Map<Task, Long> pendingTasks = new LinkedHashMap<>();
-    private Map<String, Long> totalTaskDistributeCounts = Collections.synchronizedMap(new LinkedHashMap<>());
-    private Map<String, Long> pendingTaskDistributeCounts = Collections.synchronizedMap(new LinkedHashMap<>());
+    private final Map<Task, Long> tasks = new LinkedHashMap<>();
+    private final Map<Task, Long> pendingTasks = new LinkedHashMap<>();
+    private final Map<String, Long> totalTaskDistributeCounts = Collections.synchronizedMap(new LinkedHashMap<>());
+    private final Map<String, Long> pendingTaskDistributeCounts = Collections.synchronizedMap(new LinkedHashMap<>());
     private volatile AtomicLong totalTaskInputCount = new AtomicLong();
     private volatile AtomicLong totalTaskOutputCount = new AtomicLong();
     private volatile AtomicBoolean isSuspend = new AtomicBoolean(false);
@@ -61,7 +61,6 @@ public class RemoteScheduler implements Scheduler, RemoteComponent, Verifiable, 
 
     private RemoteScheduler(String host, int port, String virtualHost, String username, String password,
                             int qos, int timeoutInSeconds, String... targetQueue) {
-        this.tasks = new LinkedHashMap<>();
         this.checker = new ScheduledThreadPoolExecutor(qos + 1);
         this.timeoutInSeconds = timeoutInSeconds;
         try {
@@ -77,9 +76,7 @@ public class RemoteScheduler implements Scheduler, RemoteComponent, Verifiable, 
             this.declareTargets(targetQueueNames);
             this.setQos(qos);
             this.declareConsumers();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (TimeoutException e) {
+        } catch (TimeoutException | IOException e) {
             e.printStackTrace();
         }
     }
@@ -126,26 +123,25 @@ public class RemoteScheduler implements Scheduler, RemoteComponent, Verifiable, 
                     if (isSuspend.get()) {
                         channel.basicNack(envelope.getDeliveryTag(), false, true);
                     }
-                    Task task = (Task) SerializationUtils.deserialize(body);
+                    Task task = SerializationUtils.deserialize(body);
                     tasks.put(task, envelope.getDeliveryTag());
                     checker.schedule(() -> {
                         Task task0 = task;
                         synchronized (tasks) {
-                            synchronized (pendingTasks) {
-                                try {
-                                    if (tasks.containsKey(task0)) {
-                                        channel.basicNack(tasks.remove(task0), false, true);
-                                        logger.warn("Task {} pending timeout (not taken), re-add to default_task_queue.", task0);
-                                    } else {
+                            try {
+                                if (tasks.containsKey(task0)) {
+                                    channel.basicNack(tasks.remove(task0), false, true);
+                                    logger.warn("Task {} pending timeout (not taken), re-add to default_task_queue.", task0);
+                                } else {
+                                    synchronized (pendingTasks) {
                                         if (pendingTasks.containsKey(task0)) {
                                             channel.basicNack(pendingTasks.remove(task0), false, true);
                                             logger.warn("Task {} pending timeout (no feedback), re-add to default_task_queue.", task0);
-                                        } else {
                                         }
                                     }
-                                } catch (IOException e) {
-                                    e.printStackTrace();
                                 }
+                            } catch (IOException e) {
+                                e.printStackTrace();
                             }
                         }
                     }, timeoutInSeconds, TimeUnit.SECONDS);
@@ -173,8 +169,8 @@ public class RemoteScheduler implements Scheduler, RemoteComponent, Verifiable, 
         }
         if (tasks.size() > 0) {
             synchronized (tasks) {
+                Task task = tasks.keySet().iterator().next();
                 synchronized (pendingTasks) {
-                    Task task = tasks.keySet().iterator().next();
                     pendingTasks.put(task, tasks.remove(task));
                     synchronized (totalTaskDistributeCounts) {
                         totalTaskDistributeCounts.put(fetcherId, totalTaskDistributeCounts.getOrDefault(fetcherId, 0L) + 1);

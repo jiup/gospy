@@ -19,7 +19,7 @@ package cc.gospy.core.scheduler.queue;
 import cc.gospy.core.entity.Task;
 
 import java.util.Iterator;
-import java.util.concurrent.PriorityBlockingQueue;
+import java.util.PriorityQueue;
 
 public abstract class LazyTaskQueue extends TaskQueue {
     protected LazyTaskHandler handler;
@@ -30,13 +30,14 @@ public abstract class LazyTaskQueue extends TaskQueue {
 
     protected abstract boolean ready();
 
-    protected PriorityBlockingQueue<Task> lazyTaskQueue;
+    protected PriorityQueue<Task> lazyTaskQueue;
 
     @Override
-    public synchronized Task poll() {
-        assert lazyTaskQueue != null;
+    public Task poll() {
+        // assert lazyTaskQueue != null;
         Task task = ready() ? lazyTaskQueue.poll() : null;
-        if (task != null) handler.invoke(task);
+        if (task != null)
+            handler.invoke(task);
         return task;
     }
 

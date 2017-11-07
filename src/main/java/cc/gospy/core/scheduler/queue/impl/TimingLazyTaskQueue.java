@@ -23,7 +23,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
-import java.util.concurrent.PriorityBlockingQueue;
+import java.util.PriorityQueue;
+import java.util.concurrent.TimeUnit;
 
 public class TimingLazyTaskQueue extends LazyTaskQueue {
     private static final Logger logger = LoggerFactory.getLogger(TimingLazyTaskQueue.class);
@@ -31,21 +32,17 @@ public class TimingLazyTaskQueue extends LazyTaskQueue {
     private int checkPeriodInSeconds = 60;
 
     public TimingLazyTaskQueue(LazyTaskHandler handler) {
-        this(5, handler);
-    }
-
-    public TimingLazyTaskQueue(int initialCapacity, LazyTaskHandler handler) {
         super(handler);
-        this.lazyTaskQueue = new PriorityBlockingQueue<>(initialCapacity, (t0, t1)
-                -> (t0.getLastVisitTime() + t0.getExpectedVisitInSeconds() * 1000)
-                - (t1.getLastVisitTime() + t1.getExpectedVisitInSeconds() * 1000) < 0 ? -1 : 1);
+        this.lazyTaskQueue = new PriorityQueue<>((t0, t1)
+                -> (t0.getLastVisitTimeMillis() + TimeUnit.SECONDS.toMillis(t0.getExpectedVisitInSeconds()))
+                - (t1.getLastVisitTimeMillis() + TimeUnit.SECONDS.toMillis(t1.getExpectedVisitInSeconds())) < 0 ? -1 : 1);
     }
 
     class TimingLazyTaskChecker implements Runnable {
         public void run() {
             while (checkPeriodInSeconds != 0) {
                 try {
-                    Thread.sleep(checkPeriodInSeconds * 1000);
+                    Thread.sleep(TimeUnit.SECONDS.toMillis(checkPeriodInSeconds));
                     while (poll() != null) {
                         if (checkPeriodInSeconds == 0) break;
                     }
@@ -63,7 +60,8 @@ public class TimingLazyTaskQueue extends LazyTaskQueue {
     protected boolean ready() {
         Task peakTask = peek();
         return peakTask != null && (peakTask.getExpectedVisitInSeconds() == 0 ||
-                (System.currentTimeMillis() - peakTask.getLastVisitTime() > peakTask.getExpectedVisitInSeconds() * 1000));
+                (System.currentTimeMillis() - peakTask.getLastVisitTimeMillis() >
+                        TimeUnit.SECONDS.toMillis(peakTask.getExpectedVisitInSeconds())));
     }
 
     @Override
@@ -80,23 +78,31 @@ public class TimingLazyTaskQueue extends LazyTaskQueue {
     @Override
     public boolean add(Task task) {
         int taskExpectedRecallCycle = task.getExpectedVisitInSeconds();
-        if (taskExpectedRecallCycle > 0 && (checkPeriodInSeconds == 0 || taskExpectedRecallCycle < checkPeriodInSeconds)) {
-            checkPeriodInSeconds = taskExpectedRecallCycle;
+        if (taskExpectedRecallCycle > 0 && (checkPeriodInSeconds == 0
+                || taskExpectedRecallCycle < checkPeriodInSeconds)) {
+            checkPeriodInSeconds = taskExpectedRecallCycle; // update ticks
         }
         if (checkThread == null) {
             checkThread = new Thread(new TimingLazyTaskChecker());
             checkThread.start();
         }
-        return super.add(task);
+        synchronized (this) {
+            return super.add(task);
+        }
     }
 
     @Override
-    public synchronized Task poll() {
-        Task task = super.poll();
-        if (lazyTaskQueue.size() == 0) {
-            checkPeriodInSeconds = 0;
+    public Task poll() {
+        synchronized (this) {
+            try {
+                // return instantly even its null
+                return super.poll();
+            } finally {
+                if (lazyTaskQueue.size() == 0) {
+                    checkPeriodInSeconds = 0;
+                }
+            }
         }
-        return task;
     }
 
     @Override

@@ -61,33 +61,44 @@ public class GeneralScheduler implements Scheduler, Observable, Recoverable {
     }
 
     @Override
-    public synchronized Task getTask(String fetcherId) {
+    public Task getTask(String fetcherId) {
         if (isSuspend.get()) {
             return null;
         }
         if (firstVisitTimeMillis == 0) {
             firstVisitTimeMillis = System.currentTimeMillis();
         }
-        if (taskQueue.size() > 0) {
-            Task task = taskQueue.poll();
-            task.setLastVisitTime(System.currentTimeMillis());
-            duplicateRemover.record(task); // add to duplicate remover
-            totalTaskOutputCount.incrementAndGet();
-            return task;
+        synchronized (taskQueue) {
+            if (taskQueue.size() > 0) {
+                final Task task = taskQueue.poll();
+                try {
+                    task.setLastVisitTimeMillis(System.currentTimeMillis());
+                    synchronized (duplicateRemover) {
+                        duplicateRemover.record(task); // add to duplicate remover
+                    }
+                    return task;
+                } finally {
+                    totalTaskOutputCount.incrementAndGet();
+                }
+            }
         }
         return null;
     }
 
-    private void addTask0(Task task) {
+    private void addTask0(final Task task) {
         if (task.getExpectedVisitInSeconds() == 0) {
-            taskQueue.add(task);
+            synchronized (taskQueue) {
+                taskQueue.add(task);
+            }
         } else {
-            lazyTaskQueue.add(task);
+            synchronized (lazyTaskQueue) {
+                lazyTaskQueue.add(task);
+            }
         }
     }
 
     @Override
-    public synchronized void addTask(String executorId, Task task) {
+    public void addTask(String executorId, Task task) {
         if (isSuspend.get()) {
             return;
         }
@@ -150,12 +161,15 @@ public class GeneralScheduler implements Scheduler, Observable, Recoverable {
 
     @Override
     public synchronized void pause(String dir) throws Throwable {
-//        if (isSuspend.get()) {
+        if (isSuspend.get()) {
+            logger.error("the scheduler has already suspended.");
 //            throw new RuntimeException("the scheduler has already suspended.");
-//        }
+        }
 
         if (duplicateRemover instanceof Recoverable) {
-            ((Recoverable) duplicateRemover).pause(dir);
+            synchronized (duplicateRemover) {
+                ((Recoverable) duplicateRemover).pause(dir);
+            }
         } else {
             throw new RuntimeException(duplicateRemover.getClass().getTypeName() + " is not recoverable.");
         }
@@ -169,15 +183,19 @@ public class GeneralScheduler implements Scheduler, Observable, Recoverable {
 
             // notice that the lazy-tasks will not lazy load later, they are
             // directly appended to the rear of the activate-task-queue.
-            lazyTaskQueue.dump().forEachRemaining(task -> taskQueue.add(task));
-            lazyTaskQueue.stop();
-            outputStream.writeObject(taskQueue);
+            synchronized (taskQueue) {
+                synchronized (lazyTaskQueue) {
+                    lazyTaskQueue.dump().forEachRemaining(task -> taskQueue.add(task));
+                    lazyTaskQueue.stop();
+                }
+                outputStream.writeObject(taskQueue);
+                taskQueue.clear();
+            }
             outputStream.writeObject(taskFilter);
         }
-        taskQueue.clear();
-        logger.info("The scheduler is successfully suspended.");
 
         isSuspend.set(true);
+        logger.info("The scheduler is successfully suspended.");
     }
 
     @Override
@@ -216,7 +234,11 @@ public class GeneralScheduler implements Scheduler, Observable, Recoverable {
     public static class Builder {
         private GeneralScheduler scheduler;
         private TaskQueue taskQueue = new FIFOTaskQueue();
-        private LazyTaskQueue lazyTaskQueue = new TimingLazyTaskQueue(wakedTask -> taskQueue.add(wakedTask));
+        private LazyTaskQueue lazyTaskQueue = new TimingLazyTaskQueue(wakedTask -> {
+            synchronized (taskQueue) {
+                taskQueue.add(wakedTask);
+            }
+        });
         private DuplicateRemover remover = new HashDuplicateRemover();
         private TaskFilter filter = TaskFilter.ALLOW_ALL;
 

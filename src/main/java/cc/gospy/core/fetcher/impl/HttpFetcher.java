@@ -43,7 +43,6 @@ import org.apache.http.protocol.HttpContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.activation.MimetypesFileTypeMap;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
@@ -244,7 +243,7 @@ public class HttpFetcher implements Fetcher, Closeable {
         }
         setRequestHeader(request, header);
         List<NameValuePair> pairs = new ArrayList<>();
-        attributes.keySet().forEach(key -> pairs.add(new BasicNameValuePair(key, attributes.get(key).toString())));
+        attributes.keySet().forEach(key -> pairs.add(new BasicNameValuePair(key, attributes.get(key))));
         request.setEntity(new UrlEncodedFormEntity(pairs));
         return client.execute(request);
     }
@@ -257,7 +256,7 @@ public class HttpFetcher implements Fetcher, Closeable {
         }
     }
 
-    private String getCookieString(Map<String, String> cookies) {
+    private String getCookieString(Map cookies) {
         if (cookies != null) {
             StringBuilder builder = new StringBuilder();
             Iterator<Map.Entry<String, String>> iterator = cookies.entrySet().iterator();
@@ -300,16 +299,16 @@ public class HttpFetcher implements Fetcher, Closeable {
             Object obj;
             String cookies = null;
             if ((obj = extra.get("cookies")) != null && obj instanceof Map) {
-                cookies = getCookieString((Map<String, String>) obj);
+                cookies = getCookieString((Map) obj);
             } else if ((obj = extra.get("cookie")) != null && obj instanceof String) {
                 cookies = obj.toString();
             }
             Map<String, String> headers = null;
             if ((obj = extra.get("headers")) != null && obj instanceof Map) {
-                headers = (Map<String, String>) obj;
+                headers = (Map) obj;
             }
-            response = (extra != null && extra.get("post") != null) ?
-                    doPost(url, cookies, headers, (Map<String, String>) extra.get("post")) :
+            response = (extra.get("post") != null) ?
+                    doPost(url, cookies, headers, (Map) extra.get("post")) :
                     doGet(url, cookies, headers);
             timer = System.currentTimeMillis() - timer;
 
@@ -360,7 +359,7 @@ public class HttpFetcher implements Fetcher, Closeable {
             while (running) {
                 synchronized (this) {
                     try {
-                        wait(cleanPeriodSeconds * 1000);
+                        wait(TimeUnit.SECONDS.toMillis(cleanPeriodSeconds));
                         connectionManager.closeExpiredConnections();
                         connectionManager.closeIdleConnections(expireSeconds, TimeUnit.SECONDS);
                     } catch (InterruptedException e) {

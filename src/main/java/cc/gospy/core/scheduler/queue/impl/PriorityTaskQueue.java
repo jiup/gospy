@@ -20,17 +20,17 @@ import cc.gospy.core.entity.Task;
 import cc.gospy.core.scheduler.queue.TaskQueue;
 
 import java.util.Iterator;
-import java.util.concurrent.PriorityBlockingQueue;
+import java.util.PriorityQueue;
 
 public class PriorityTaskQueue extends TaskQueue {
-    private PriorityBlockingQueue<Task> taskQueue;
+    private final PriorityQueue<Task> taskQueue;
 
     public PriorityTaskQueue() {
         this(5);
     }
 
     public PriorityTaskQueue(int initialCapacity) {
-        this.taskQueue = new PriorityBlockingQueue<>(initialCapacity);
+        this.taskQueue = new PriorityQueue<>(initialCapacity);
     }
 
     @Override
@@ -44,8 +44,10 @@ public class PriorityTaskQueue extends TaskQueue {
     }
 
     @Override
-    public synchronized Task poll() {
-        return taskQueue.poll();
+    public Task poll() {
+        synchronized (taskQueue) {
+            return taskQueue.poll();
+        }
     }
 
     @Override
@@ -55,11 +57,15 @@ public class PriorityTaskQueue extends TaskQueue {
 
     @Override
     public boolean add(Task task) {
-        return taskQueue.add(task);
+        synchronized (taskQueue) {
+            return taskQueue.add(task);
+        }
     }
 
     @Override
     public boolean offer(Task task) {
-        return taskQueue.offer(task);
+        synchronized (taskQueue) {
+            return taskQueue.offer(task);
+        }
     }
 }
